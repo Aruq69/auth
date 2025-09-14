@@ -656,159 +656,105 @@ serve(async (req) => {
       });
     }
 
+    // Filter out emails we've already processed
+    const newEmails = [];
+    for (const emailData of realEmails) {
+      const { data: existingEmail } = await supabase
+        .from('emails')
+        .select('id')
+        .eq('message_id', emailData.id)
+        .maybeSingle();
+
+      if (!existingEmail) {
+        newEmails.push({
+          subject: emailData.subject,
+          sender: emailData.from,
+          content: emailData.body,
+          userId: user_id,
+          message_id: emailData.id,
+          received_date: emailData.date,
+          raw_content: JSON.stringify(emailData)
+        });
+      } else {
+        console.log(`⏭️ Email ${emailData.id} already processed, skipping`);
+      }
+    }
+
+    console.log(`📧 Found ${newEmails.length} new emails to classify out of ${realEmails.length} total`);
+
     let processedCount = 0;
     const emailSummaries = [];
-    // Process each real email with OpenAI analysis
-    for (const emailData of realEmails) {
+
+    if (newEmails.length > 0) {
+      // Use the improved classification function
+      console.log('🤖 Sending emails to enhanced classification system...');
+      
       try {
-        console.log(`🔍 Processing email: ${emailData.id}`);
-
-        // Check if we already processed this email
-        const { data: existingEmail } = await supabase
-          .from('emails')
-          .select('id')
-          .eq('message_id', emailData.id)
-          .maybeSingle();
-
-        if (existingEmail) {
-          console.log(`⏭️ Email ${emailData.id} already processed, skipping`);
-          continue;
-        }
-
-        // Analyze with OpenAI
-        const analysisPrompt = `
-        Analyze this email for security threats and spam/phishing detection:
-        
-        Subject: ${emailData.subject}
-        From: ${emailData.from}
-        Body: ${emailData.body}
-        
-        CRITICAL SECURITY INDICATORS (automatically classify as spam/high threat):
-        - Crypto wallet compromise claims
-        - Urgent financial security warnings  
-        - Requests for immediate action on accounts
-        - Suspicious domains (not official company domains)
-        - Threats of account suspension/termination
-        - Requests to verify/update payment information
-        - Prize/lottery notifications
-        - IRS/tax-related urgent notices
-        - Banking security alerts from non-bank domains
-        - Antivirus warnings from unknown sources
-        
-        ANALYSIS RULES:
-        1. If sender domain doesn't match claimed organization, classify as spam/high threat
-        2. If subject contains urgent crypto/financial warnings, classify as spam/high threat  
-        3. If sender uses suspicious/generic domains for financial/security claims, classify as spam/high threat
-        4. Be especially strict with financial, crypto, banking, and security-related emails
-        
-        Return ONLY a JSON response (no markdown formatting) with:
-        - classification: "spam", "legitimate", or "pending" (only these values are allowed)
-        - threat_level: "high", "medium", "low", or null
-        - confidence: number between 0-1
-        - keywords: array of suspicious keywords found
-        - reasoning: brief explanation
-        
-        IMPORTANT: Return raw JSON only, no \`\`\`json wrapper.
-        `;
-
-        const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${openaiApiKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            model: 'gpt-4o-mini',
-            messages: [
-              { role: 'system', content: 'You are a cybersecurity expert analyzing emails for threats. Always respond with valid JSON.' },
-              { role: 'user', content: analysisPrompt }
-            ],
-            temperature: 0.3,
-            max_tokens: 500,
-          }),
+        const classificationResponse = await supabase.functions.invoke('classify-email', {
+          body: { emails: newEmails }
         });
 
-        let analysis = {
-          classification: 'legitimate',
-          threat_level: null,
-          confidence: 0.8,
-          keywords: [],
-          reasoning: 'Default analysis'
-        };
+        if (classificationResponse.error) {
+          console.error('❌ Classification function error:', classificationResponse.error);
+          
+          // Fallback: process emails individually with basic classification
+          for (const emailData of newEmails) {
+            try {
+              const { data: insertedEmail, error: insertError } = await supabase
+                .from('emails')
+                .insert({
+                  user_id,
+                  message_id: emailData.message_id,
+                  subject: emailData.subject,
+                  sender: emailData.sender,
+                  content: emailData.content,
+                  raw_content: emailData.raw_content,
+                  classification: 'pending',
+                  threat_level: 'low',
+                  confidence: 0.5,
+                  keywords: [],
+                  received_date: emailData.received_date,
+                  processed_at: new Date().toISOString(),
+                })
+                .select()
+                .single();
 
-        if (openaiResponse.ok) {
-          const openaiData = await openaiResponse.json();
-          try {
-            let responseContent = openaiData.choices[0].message.content;
-            
-            // Clean up markdown formatting if present
-            if (responseContent.includes('```json')) {
-              responseContent = responseContent.replace(/```json\n?/g, '').replace(/\n?```/g, '');
-            }
-            
-            analysis = JSON.parse(responseContent);
-            
-            // Ensure classification is valid
-            const validClassifications = ['spam', 'legitimate', 'pending'];
-            if (!validClassifications.includes(analysis.classification)) {
-              // Map invalid classifications to valid ones
-              if (analysis.classification === 'phishing' || analysis.classification === 'suspicious') {
-                analysis.classification = 'spam';
-              } else {
-                analysis.classification = 'pending';
+              if (!insertError) {
+                processedCount++;
+                emailSummaries.push({
+                  id: emailData.message_id,
+                  subject: emailData.subject,
+                  from: emailData.sender,
+                  classification: 'pending',
+                  threat_level: 'low',
+                });
               }
+            } catch (fallbackError) {
+              console.error('❌ Fallback processing error:', fallbackError);
             }
-            
-            console.log(`✅ Analysis complete for ${emailData.id}:`, analysis.classification);
-          } catch (parseError) {
-            console.error('❌ Failed to parse OpenAI response:', parseError);
-            console.error('❌ Raw response:', openaiData.choices[0].message.content);
           }
         } else {
-          console.error('❌ OpenAI API error:', await openaiResponse.text());
+          console.log('✅ Classification function completed successfully');
+          const classificationData = classificationResponse.data;
+          
+          if (classificationData?.results) {
+            const successful = classificationData.results.filter(r => r.success);
+            processedCount = successful.length;
+            
+            // Get the processed emails for summary
+            for (const result of successful) {
+              emailSummaries.push({
+                subject: result.subject,
+                from: result.sender,
+                classification: result.classification,
+                threat_level: result.threat_level,
+              });
+            }
+          }
         }
-
-        // Store in database
-        const { data: insertedEmail, error: insertError } = await supabase
-          .from('emails')
-          .insert({
-            user_id,
-            message_id: emailData.id,
-            subject: emailData.subject,
-            sender: emailData.from,
-            content: emailData.body,
-            raw_content: JSON.stringify(emailData),
-            classification: analysis.classification,
-            threat_level: analysis.threat_level,
-            confidence: analysis.confidence,
-            keywords: analysis.keywords,
-            received_date: emailData.date,
-            processed_at: new Date().toISOString(),
-          })
-          .select()
-          .single();
-
-        if (insertError) {
-          console.error('❌ Database insert error:', insertError);
-          console.error('❌ Failed email data:', {
-            user_id,
-            message_id: emailData.id,
-            subject: emailData.subject
-          });
-        } else {
-          processedCount++;
-          console.log(`✅ Successfully inserted email ${emailData.id} into database`);
-          emailSummaries.push({
-            id: emailData.id,
-            subject: emailData.subject,
-            from: emailData.from,
-            classification: analysis.classification,
-            threat_level: analysis.threat_level,
-          });
-        }
-
-      } catch (error) {
-        console.error(`❌ Error processing email ${emailData.id}:`, error);
+      } catch (classificationError) {
+        console.error('❌ Classification system error:', classificationError);
+        // Continue with basic fallback processing
       }
     }
 
