@@ -862,8 +862,6 @@ export default Index;
                     </div>
                   </div>
                 )}
-              </div>
-            )}
           </DialogContent>
         </Dialog>
       </div>
