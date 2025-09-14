@@ -59,41 +59,41 @@ export default function NylasConnect({ onConnected }: NylasConnectProps) {
   };
 
   return (
-    <Card className="w-full max-w-2xl mx-auto">
-      <CardHeader className="text-center">
-        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-          <Mail className="h-8 w-8 text-primary" />
+    <Card className="bg-gradient-to-br from-card via-card to-muted/20 border-primary/20">
+      <CardHeader className="text-center pb-4">
+        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 ring-2 ring-primary/20">
+          <Mail className="h-6 w-6 text-primary" />
         </div>
-        <CardTitle className="text-2xl">Connect Your Email Account</CardTitle>
-        <CardDescription className="text-lg">
-          Secure your inbox with AI-powered threat detection across multiple email providers
+        <CardTitle className="text-xl">Connect Email Account</CardTitle>
+        <CardDescription>
+          Secure your inbox with AI-powered threat detection
         </CardDescription>
       </CardHeader>
       
-      <CardContent className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
-          <div className="flex flex-col items-center space-y-3 p-6 rounded-lg bg-muted/30 border">
-            <Shield className="h-8 w-8 text-green-500" />
-            <h3 className="font-semibold">Multi-Provider Support</h3>
-            <p className="text-sm text-muted-foreground">Gmail, Outlook, Yahoo, and more</p>
+      <CardContent className="space-y-4">
+        <div className="grid grid-cols-3 gap-3 text-center">
+          <div className="flex flex-col items-center space-y-2 p-3 rounded-lg bg-muted/30 border border-muted">
+            <Shield className="h-6 w-6 text-green-500" />
+            <h4 className="text-xs font-medium">Multi-Provider</h4>
+            <p className="text-xs text-muted-foreground">Gmail, Outlook, Yahoo</p>
           </div>
-          <div className="flex flex-col items-center space-y-3 p-6 rounded-lg bg-muted/30 border">
-            <Eye className="h-8 w-8 text-blue-500" />
-            <h3 className="font-semibold">Real-time Analysis</h3>
-            <p className="text-sm text-muted-foreground">AI-powered threat detection</p>
+          <div className="flex flex-col items-center space-y-2 p-3 rounded-lg bg-muted/30 border border-muted">
+            <Eye className="h-6 w-6 text-blue-500" />
+            <h4 className="text-xs font-medium">AI Analysis</h4>
+            <p className="text-xs text-muted-foreground">Real-time detection</p>
           </div>
-          <div className="flex flex-col items-center space-y-3 p-6 rounded-lg bg-muted/30 border">
-            <Database className="h-8 w-8 text-purple-500" />
-            <h3 className="font-semibold">Secure Storage</h3>
-            <p className="text-sm text-muted-foreground">Encrypted data protection</p>
+          <div className="flex flex-col items-center space-y-2 p-3 rounded-lg bg-muted/30 border border-muted">
+            <Database className="h-6 w-6 text-purple-500" />
+            <h4 className="text-xs font-medium">Secure Storage</h4>
+            <p className="text-xs text-muted-foreground">Encrypted data</p>
           </div>
         </div>
 
         <AlertDialog>
           <AlertDialogTrigger asChild>
             <Button 
-              size="lg" 
-              className="w-full" 
+              size="sm" 
+              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg transition-all duration-200 hover:shadow-xl" 
               disabled={isConnecting}
             >
               {isConnecting ? (
@@ -104,45 +104,64 @@ export default function NylasConnect({ onConnected }: NylasConnectProps) {
               ) : (
                 <>
                   <Mail className="mr-2 h-4 w-4" />
-                  Connect Email Account
+                  Connect Account
                 </>
               )}
             </Button>
           </AlertDialogTrigger>
           
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Email Account Permissions</AlertDialogTitle>
-              <AlertDialogDescription className="space-y-4">
-                <p>
-                  To perform security analysis, Mail Guard needs <strong>read-only access</strong> to your email account.
-                </p>
-                
-                <div className="bg-muted p-4 rounded-lg">
-                  <h4 className="font-semibold mb-2">What we'll access:</h4>
-                  <ul className="text-sm space-y-1">
-                    <li>• Email messages and metadata</li>
-                    <li>• Sender information and headers</li>
-                    <li>• Message content for threat analysis</li>
-                  </ul>
-                </div>
-                
-                <div className="bg-green-50 dark:bg-green-950 p-4 rounded-lg border border-green-200 dark:border-green-800">
-                  <h4 className="font-semibold text-green-800 dark:text-green-200 mb-2">Privacy & Security:</h4>
-                  <ul className="text-sm text-green-700 dark:text-green-300 space-y-1">
-                    <li>• Read-only access (we cannot send or delete emails)</li>
-                    <li>• Data encrypted and securely stored</li>
-                    <li>• Analysis performed by AI for threat detection only</li>
-                    <li>• You can revoke access anytime</li>
-                  </ul>
-                </div>
+          <AlertDialogContent className="max-w-md">
+            <AlertDialogHeader className="text-center space-y-4">
+              <div className="mx-auto w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+                <Shield className="h-6 w-6 text-primary" />
+              </div>
+              <AlertDialogTitle className="text-xl">Email Connection Permissions</AlertDialogTitle>
+              <AlertDialogDescription className="text-center text-muted-foreground">
+                Mail Guard requires read-only access to analyze your emails for security threats.
               </AlertDialogDescription>
             </AlertDialogHeader>
             
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={connectEmail}>
-                Continue to Email Provider
+            <div className="space-y-4 my-6">
+              <div className="bg-muted/50 p-4 rounded-lg space-y-3">
+                <div className="flex items-start space-x-3">
+                  <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></div>
+                  <div>
+                    <h4 className="font-medium text-sm">What we access</h4>
+                    <p className="text-xs text-muted-foreground">Email messages, headers, and sender information</p>
+                  </div>
+                </div>
+                <div className="flex items-start space-x-3">
+                  <div className="w-2 h-2 bg-green-500 rounded-full mt-2 flex-shrink-0"></div>
+                  <div>
+                    <h4 className="font-medium text-sm">Read-only access</h4>
+                    <p className="text-xs text-muted-foreground">We cannot send, delete, or modify your emails</p>
+                  </div>
+                </div>
+                <div className="flex items-start space-x-3">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+                  <div>
+                    <h4 className="font-medium text-sm">Secure & encrypted</h4>
+                    <p className="text-xs text-muted-foreground">All data is encrypted and securely stored</p>
+                  </div>
+                </div>
+                <div className="flex items-start space-x-3">
+                  <div className="w-2 h-2 bg-purple-500 rounded-full mt-2 flex-shrink-0"></div>
+                  <div>
+                    <h4 className="font-medium text-sm">Revoke anytime</h4>
+                    <p className="text-xs text-muted-foreground">You can disconnect your account at any time</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <AlertDialogFooter className="flex space-x-2">
+              <AlertDialogCancel className="flex-1">Cancel</AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={connectEmail}
+                className="flex-1 bg-primary hover:bg-primary/90"
+              >
+                <Shield className="mr-2 h-4 w-4" />
+                Authorize Access
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
