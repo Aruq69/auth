@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import EmailSubmissionForm from "@/components/EmailSubmissionForm";
 import ChatAssistant from "@/components/ChatAssistant";
-import GmailConnect from "@/components/GmailConnect";
+import NylasConnect from "@/components/NylasConnect";
 
 interface Email {
   id: string;
@@ -45,7 +45,7 @@ const Index = () => {
     }
     
     if (user) {
-      checkGmailConnection();
+      checkNylasConnection();
       const timer = setTimeout(() => {
         fetchEmails();
       }, 0);
@@ -86,30 +86,30 @@ const Index = () => {
     }
   };
 
-  const fetchGmailEmails = async () => {
+  const fetchNylasEmails = async () => {
     if (!user) {
-      console.log('❌ No user found for Gmail fetch');
+      console.log('❌ No user found for Nylas fetch');
       return;
     }
     
     setLoading(true);
-    console.log('🚀 STARTING GMAIL EMAIL FETCH for user:', user.id);
+    console.log('🚀 STARTING NYLAS EMAIL FETCH for user:', user.id);
     try {
-      // First check if we have Gmail tokens
+      // First check if we have Nylas tokens
       const { data: tokenCheck, error: tokenError } = await supabase
-        .from('gmail_tokens')
+        .from('nylas_tokens')
         .select('*')
         .eq('user_id', user.id)
         .maybeSingle();
       
-      console.log('🔍 Gmail token check result:', { tokenCheck, tokenError });
+      console.log('🔍 Nylas token check result:', { tokenCheck, tokenError });
       console.log('📅 Token expires at:', tokenCheck?.expires_at);
       
       if (tokenError) {
         console.error('❌ Token check database error:', tokenError);
         toast({
           title: "Database error",
-          description: "Failed to check Gmail connection.",
+          description: "Failed to check email connection.",
           variant: "destructive",
         });
         setLoading(false);
@@ -117,49 +117,49 @@ const Index = () => {
       }
       
       if (!tokenCheck) {
-        console.log('❌ No Gmail tokens found - user needs to connect Gmail first');
+        console.log('❌ No Nylas tokens found - user needs to connect email first');
         toast({
-          title: "Gmail not connected",
-          description: "Please connect your Gmail account first.",
+          title: "Email not connected",
+          description: "Please connect your email account first.",
           variant: "destructive",
         });
         setLoading(false);
         return;
       }
 
-      const { data, error } = await supabase.functions.invoke('fetch-gmail-emails', {
+      const { data, error } = await supabase.functions.invoke('fetch-nylas-emails', {
         body: { user_id: user.id },
       });
 
-      console.log('📊 Gmail fetch response data:', data);
-      console.log('⚠️ Gmail fetch response error:', error);
+      console.log('📊 Nylas fetch response data:', data);
+      console.log('⚠️ Nylas fetch response error:', error);
 
       if (error) {
-        console.error('🚨 Gmail fetch function error details:', error);
+        console.error('🚨 Nylas fetch function error details:', error);
         toast({
-          title: "Gmail fetch failed",
-          description: error.message || "Failed to fetch Gmail emails. Please try again.",
+          title: "Email fetch failed",
+          description: error.message || "Failed to fetch emails. Please try again.",
           variant: "destructive",
         });
         return;
       }
 
       if (data && data.error) {
-        console.error('🚨 Gmail fetch returned application error:', data.error);
+        console.error('🚨 Nylas fetch returned application error:', data.error);
         toast({
-          title: "Gmail fetch failed",
+          title: "Email fetch failed",
           description: data.error,
           variant: "destructive",
         });
         return;
       }
 
-      console.log('🎉 Gmail fetch successful! Total emails processed:', data?.total || 0);
+      console.log('🎉 Nylas fetch successful! Total emails processed:', data?.total || 0);
       console.log('📧 Email processing summary:', data?.summary || 'No summary available');
       
       toast({
-        title: "Gmail sync complete!",
-        description: `Successfully analyzed ${data?.total || 0} emails from Gmail`,
+        title: "Email sync complete!",
+        description: `Successfully analyzed ${data?.total || 0} emails from ${data?.provider || 'your email account'}`,
       });
 
       // Refresh the local email list
@@ -167,15 +167,15 @@ const Index = () => {
       fetchEmails();
 
     } catch (error) {
-      console.error('🚨 CRITICAL GMAIL FETCH ERROR:', error);
+      console.error('🚨 CRITICAL NYLAS FETCH ERROR:', error);
       toast({
         title: "Error",
-        description: "An unexpected error occurred while fetching Gmail emails.",
+        description: "An unexpected error occurred while fetching emails.",
         variant: "destructive",
       });
     } finally {
       setLoading(false);
-      console.log('✅ Gmail email fetch process completed');
+      console.log('✅ Nylas email fetch process completed');
     }
   };
 
@@ -223,12 +223,12 @@ const Index = () => {
     }
   };
 
-  const checkGmailConnection = async () => {
+  const checkNylasConnection = async () => {
     if (!user) return;
     
     try {
       const { data, error } = await supabase
-        .from('gmail_tokens')
+        .from('nylas_tokens')
         .select('id')
         .eq('user_id', user.id)
         .maybeSingle();
@@ -243,16 +243,16 @@ const Index = () => {
     if (!user) return;
     
     try {
-      // Remove Gmail tokens
+      // Remove Nylas tokens
       await supabase
-        .from('gmail_tokens')
+        .from('nylas_tokens')
         .delete()
         .eq('user_id', user.id);
       
       setGmailConnected(false);
       toast({
         title: "Unsynced",
-        description: "Gmail connection removed successfully.",
+        description: "Email connection removed successfully.",
       });
     } catch (error) {
       toast({
@@ -361,9 +361,9 @@ const Index = () => {
           </div>
           <div className="flex items-center space-x-4">
             {gmailConnected && (
-              <Button onClick={fetchGmailEmails} disabled={loading} variant="outline" className="border-primary/30 hover:border-primary/50 hover-button">
+              <Button onClick={fetchNylasEmails} disabled={loading} variant="outline" className="border-primary/30 hover:border-primary/50 hover-button">
                 <Activity className="h-4 w-4 mr-2" />
-                Refresh Gmail
+                Refresh Emails
               </Button>
             )}
             <Button onClick={fetchEmails} disabled={loading} variant="outline" className="border-primary/30 hover:border-primary/50 hover-button">
@@ -434,9 +434,9 @@ const Index = () => {
           </Card>
         </div>
 
-        {/* Gmail Connection */}
+        {/* Email Connection */}
         {!gmailConnected && (
-          <GmailConnect onConnected={checkGmailConnection} />
+          <NylasConnect onConnected={checkNylasConnection} />
         )}
 
         {/* Email Submission Form */}
