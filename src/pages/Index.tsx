@@ -258,8 +258,21 @@ const Index = () => {
   );
 
   const threatStats = emails.reduce((acc, email) => {
-    const level = email.threat_level?.toLowerCase() || 'unknown';
-    acc[level] = (acc[level] || 0) + 1;
+    // Map classification to threat levels for dashboard display
+    let displayCategory;
+    if (email.classification === 'spam' && email.threat_level === 'high') {
+      displayCategory = 'high';
+    } else if (email.classification === 'spam' && email.threat_level === 'medium') {
+      displayCategory = 'medium'; 
+    } else if (email.classification === 'legitimate' || email.threat_level === 'low') {
+      displayCategory = 'low'; // Legitimate emails count as low risk
+    } else if (email.classification === 'pending') {
+      displayCategory = 'medium'; // Pending emails count as medium risk
+    } else {
+      displayCategory = 'unknown';
+    }
+    
+    acc[displayCategory] = (acc[displayCategory] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
 
