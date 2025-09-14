@@ -6,11 +6,9 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Shield, Mail, AlertTriangle, CheckCircle, Clock, Search, User, Zap, Activity, Eye, Lock } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/components/auth/AuthProvider";
 import { useToast } from "@/hooks/use-toast";
 import EmailSubmissionForm from "@/components/EmailSubmissionForm";
 import ChatAssistant from "@/components/ChatAssistant";
-import Auth from "@/pages/Auth";
 
 interface Email {
   id: string;
@@ -29,14 +27,11 @@ const Index = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [gmailConnected, setGmailConnected] = useState(false);
   const [selectedEmail, setSelectedEmail] = useState<Email | null>(null);
-  const { user, signOut, loading: authLoading } = useAuth();
   const { toast } = useToast();
 
   useEffect(() => {
-    if (user) {
-      checkGmailConnection();
-    }
-  }, [user]);
+    checkGmailConnection();
+  }, []);
 
   useEffect(() => {
     // Defer API call to move it out of critical rendering path
@@ -47,7 +42,6 @@ const Index = () => {
   }, []);
 
   const fetchEmails = async () => {
-    if (!user) return;
     
     try {
       const { data, error } = await supabase
@@ -79,12 +73,11 @@ const Index = () => {
   };
 
   const fetchGmailEmails = async () => {
-    if (!user) return;
     
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('fetch-gmail-emails', {
-        body: { userId: user.id },
+        body: {},
       });
 
       if (error) {
@@ -118,13 +111,11 @@ const Index = () => {
   };
 
   const checkGmailConnection = async () => {
-    if (!user) return;
     
     try {
       const { data, error } = await supabase
         .from('gmail_tokens')
         .select('id')
-        .eq('user_id', user.id)
         .maybeSingle();
       
       setGmailConnected(!!data && !error);
@@ -136,18 +127,14 @@ const Index = () => {
   const handleUnsync = async () => {
     try {
       // Remove Gmail tokens
-      if (user) {
-        await supabase
-          .from('gmail_tokens')
-          .delete()
-          .eq('user_id', user.id);
-      }
+      await supabase
+        .from('gmail_tokens')
+        .delete();
       
-      await signOut();
       setGmailConnected(false);
       toast({
         title: "Unsynced",
-        description: "Gmail connection removed and signed out successfully.",
+        description: "Gmail connection removed successfully.",
       });
     } catch (error) {
       toast({
@@ -159,15 +146,6 @@ const Index = () => {
   };
 
   const connectGmail = async () => {
-    if (!user) {
-      toast({
-        title: "Authentication required",
-        description: "Please sign in to connect Gmail.",
-        variant: "destructive",
-      });
-      return;
-    }
-
     try {
       const { data, error } = await supabase.functions.invoke('gmail-auth', {
         body: { action: 'get_auth_url' },
@@ -225,23 +203,6 @@ const Index = () => {
     return acc;
   }, {} as Record<string, number>);
 
-  // Show loading spinner while checking auth
-  if (authLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <Shield className="h-12 w-12 text-primary mx-auto mb-4 animate-pulse" />
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Show auth page if not authenticated
-  if (!user) {
-    return <Auth />;
-  }
-
   return (
     <div className="min-h-screen bg-background matrix-bg">
       <div className="mx-auto max-w-7xl space-y-6 p-6">
@@ -262,10 +223,6 @@ const Index = () => {
             </div>
           </div>
           <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2 text-sm text-muted-foreground border border-primary/20 rounded-lg px-3 py-2 bg-card/50">
-              <User className="h-4 w-4" />
-              <span>{user.email}</span>
-            </div>
             {gmailConnected && (
               <Button onClick={fetchGmailEmails} disabled={loading} variant="outline" className="border-primary/30 hover:border-primary/50">
                 <Activity className="h-4 w-4 mr-2" />
