@@ -68,65 +68,76 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-6">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen bg-background matrix-bg flex items-center justify-center p-6">
+      <Card className="w-full max-w-md cyber-card">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <Shield className="h-12 w-12 text-primary" />
+            <div className="relative">
+              <Shield className="h-12 w-12 text-primary cyber-text-glow cyber-pulse" />
+              <div className="absolute inset-0 h-12 w-12 border border-primary/30 rounded-full animate-ping" />
+            </div>
           </div>
-          <CardTitle className="text-2xl font-bold">
-            {isSignUp ? "Create Account" : "Sign In"}
+          <CardTitle className="text-2xl font-bold cyber-text-glow">
+            {isSignUp ? "CREATE ACCOUNT" : "SIGN IN"}
           </CardTitle>
           <CardDescription>
             {isSignUp 
-              ? "Create a new account to access Cyber Mail Check"
-              : "Sign in to your Cyber Mail Check account"
+              ? "Join the Cyber Mail Defense System"
+              : "Access your Cyber Mail Defense System"
             }
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
-              <Alert variant="destructive">
+              <Alert variant="destructive" className="cyber-card threat-high">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
             
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" className="text-primary">Email</Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Mail className="absolute left-3 top-3 h-4 w-4 text-primary" />
                 <Input
                   id="email"
                   type="email"
                   placeholder="Enter your email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 bg-muted/50 border-primary/20 focus:border-primary/50"
                   required
                 />
               </div>
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password" className="text-primary">Password</Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Lock className="absolute left-3 top-3 h-4 w-4 text-primary" />
                 <Input
                   id="password"
                   type="password"
                   placeholder="Enter your password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 bg-muted/50 border-primary/20 focus:border-primary/50"
                   required
                   minLength={6}
                 />
               </div>
             </div>
             
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button 
+              type="submit" 
+              className={`w-full transition-all duration-300 ${
+                isSignUp 
+                  ? 'cyber-button' 
+                  : 'bg-accent hover:bg-accent/80 text-accent-foreground hover:shadow-[0_0_20px_hsl(142_69%_58%/0.5)]'
+              }`}
+              disabled={loading}
+            >
               {loading ? "Loading..." : (isSignUp ? "Create Account" : "Sign In")}
             </Button>
           </form>
@@ -141,7 +152,7 @@ const Auth = () => {
                     setIsSignUp(false);
                     setError(null);
                   }}
-                  className="text-primary hover:underline"
+                  className="text-accent hover:text-accent/80 font-medium transition-colors"
                 >
                   Sign in
                 </button>
@@ -155,7 +166,7 @@ const Auth = () => {
                     setIsSignUp(true);
                     setError(null);
                   }}
-                  className="text-primary hover:underline"
+                  className="text-primary hover:text-primary/80 font-medium transition-colors"
                 >
                   Create account
                 </button>

@@ -10,6 +10,7 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { useToast } from "@/hooks/use-toast";
 import EmailSubmissionForm from "@/components/EmailSubmissionForm";
 import GmailConnect from "@/components/GmailConnect";
+import ChatAssistant from "@/components/ChatAssistant";
 
 interface Email {
   id: string;
@@ -27,6 +28,7 @@ const Index = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [gmailConnected, setGmailConnected] = useState(false);
+  const [selectedEmail, setSelectedEmail] = useState<Email | null>(null);
   const { user, signOut, loading: authLoading } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -235,7 +237,7 @@ const Index = () => {
               <Mail className="h-4 w-4 mr-2" />
               Refresh
             </Button>
-            <Button onClick={handleSignOut} variant="outline" className="border-destructive/30 hover:border-destructive/50">
+            <Button onClick={handleSignOut} variant="outline" className="border-destructive/30 hover:border-destructive/50 hover:bg-destructive hover:text-destructive-foreground transition-all duration-300">
               <LogOut className="h-4 w-4 mr-2" />
               Sign Out
             </Button>
@@ -297,113 +299,130 @@ const Index = () => {
         {/* Email Submission Form */}
         <EmailSubmissionForm onEmailSubmitted={fetchEmails} />
 
-        {/* Search Interface */}
-        <Card className="cyber-card">
-          <CardContent className="pt-6">
-            <div className="relative">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-primary" />
-              <Input
-                placeholder="Search emails by subject or sender..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 bg-muted/50 border-primary/20 focus:border-primary/50"
-              />
-              <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-primary to-transparent opacity-50" />
-            </div>
-          </CardContent>
-        </Card>
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Column - Email Analysis */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Search Interface */}
+            <Card className="cyber-card">
+              <CardContent className="pt-6">
+                <div className="relative">
+                  <Search className="absolute left-3 top-3 h-4 w-4 text-primary" />
+                  <Input
+                    placeholder="Search emails by subject or sender..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10 bg-muted/50 border-primary/20 focus:border-primary/50"
+                  />
+                  <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-primary to-transparent opacity-50" />
+                </div>
+              </CardContent>
+            </Card>
 
-        {/* Threat Analysis Dashboard */}
-        <Card className="cyber-card">
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Zap className="h-5 w-5 text-primary cyber-text-glow" />
-              <span className="cyber-text-glow">THREAT ANALYSIS RESULTS</span>
-            </CardTitle>
-            <CardDescription>
-              Real-time security assessment and threat classification
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="text-center space-y-4">
-                  <div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
-                  <div className="text-primary cyber-text-glow">SCANNING EMAIL THREATS...</div>
-                </div>
-              </div>
-            ) : filteredEmails.length === 0 ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="text-center space-y-4">
-                  <Shield className="h-12 w-12 text-muted-foreground mx-auto opacity-50" />
-                  <div className="text-muted-foreground">No email threats detected</div>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {filteredEmails.map((email) => {
-                  const threatClass = email.threat_level === 'high' ? 'threat-high' : 
-                                    email.threat_level === 'medium' ? 'threat-medium' : 'threat-low';
-                  
-                  return (
-                    <div key={email.id} className={`cyber-card ${threatClass} p-4 hover:scale-[1.02] transition-all duration-300`}>
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1 space-y-3">
-                          <div className="flex items-center space-x-3">
-                            {getThreatIcon(email.threat_level)}
-                            <span className="font-medium text-foreground">{email.subject}</span>
-                            {email.threat_level && (
-                              <Badge 
-                                variant={getThreatBadgeVariant(email.threat_level)}
-                                className="cyber-text-glow"
-                              >
-                                {email.threat_level.toUpperCase()}
-                              </Badge>
-                            )}
-                            {email.classification && (
-                              <Badge variant="outline" className="border-primary/30 text-primary">
-                                {email.classification}
-                              </Badge>
-                            )}
-                          </div>
-                          <div className="text-sm text-muted-foreground">
-                            <span className="text-primary">From:</span> {email.sender} • 
-                            <span className="text-primary ml-2">Date:</span> {new Date(email.received_date).toLocaleDateString()}
-                          </div>
-                          {email.keywords && email.keywords.length > 0 && (
-                            <div className="flex flex-wrap gap-2">
-                              {email.keywords.slice(0, 3).map((keyword, index) => (
-                                <span
-                                  key={index}
-                                  className="inline-block bg-primary/20 text-primary px-2 py-1 text-xs rounded border border-primary/30"
-                                >
-                                  {keyword}
-                                </span>
-                              ))}
-                              {email.keywords.length > 3 && (
-                                <span className="inline-block bg-secondary/20 text-secondary px-2 py-1 text-xs rounded border border-secondary/30">
-                                  +{email.keywords.length - 3} more
-                                </span>
+            {/* Threat Analysis Dashboard */}
+            <Card className="cyber-card">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Zap className="h-5 w-5 text-primary cyber-text-glow" />
+                  <span className="cyber-text-glow">THREAT ANALYSIS RESULTS</span>
+                </CardTitle>
+                <CardDescription>
+                  Real-time security assessment and threat classification
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {loading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <div className="text-center space-y-4">
+                      <div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+                      <div className="text-primary cyber-text-glow">SCANNING EMAIL THREATS...</div>
+                    </div>
+                  </div>
+                ) : filteredEmails.length === 0 ? (
+                  <div className="flex items-center justify-center py-12">
+                    <div className="text-center space-y-4">
+                      <Shield className="h-12 w-12 text-muted-foreground mx-auto opacity-50" />
+                      <div className="text-muted-foreground">No email threats detected</div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {filteredEmails.map((email) => {
+                      const threatClass = email.threat_level === 'high' ? 'threat-high' : 
+                                        email.threat_level === 'medium' ? 'threat-medium' : 'threat-low';
+                      
+                      return (
+                        <div 
+                          key={email.id} 
+                          className={`cyber-card ${threatClass} p-4 hover:scale-[1.02] transition-all duration-300 cursor-pointer ${
+                            selectedEmail?.id === email.id ? 'ring-2 ring-primary' : ''
+                          }`}
+                          onClick={() => setSelectedEmail(email)}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1 space-y-3">
+                              <div className="flex items-center space-x-3">
+                                {getThreatIcon(email.threat_level)}
+                                <span className="font-medium text-foreground">{email.subject}</span>
+                                {email.threat_level && (
+                                  <Badge 
+                                    variant={getThreatBadgeVariant(email.threat_level)}
+                                    className="cyber-text-glow"
+                                  >
+                                    {email.threat_level.toUpperCase()}
+                                  </Badge>
+                                )}
+                                {email.classification && (
+                                  <Badge variant="outline" className="border-primary/30 text-primary">
+                                    {email.classification}
+                                  </Badge>
+                                )}
+                              </div>
+                              <div className="text-sm text-muted-foreground">
+                                <span className="text-primary">From:</span> {email.sender} • 
+                                <span className="text-primary ml-2">Date:</span> {new Date(email.received_date).toLocaleDateString()}
+                              </div>
+                              {email.keywords && email.keywords.length > 0 && (
+                                <div className="flex flex-wrap gap-2">
+                                  {email.keywords.slice(0, 3).map((keyword, index) => (
+                                    <span
+                                      key={index}
+                                      className="inline-block bg-primary/20 text-primary px-2 py-1 text-xs rounded border border-primary/30"
+                                    >
+                                      {keyword}
+                                    </span>
+                                  ))}
+                                  {email.keywords.length > 3 && (
+                                    <span className="inline-block bg-secondary/20 text-secondary px-2 py-1 text-xs rounded border border-secondary/30">
+                                      +{email.keywords.length - 3} more
+                                    </span>
+                                  )}
+                                </div>
                               )}
                             </div>
-                          )}
-                        </div>
-                        {email.confidence && (
-                          <div className="text-right">
-                            <div className="text-lg font-bold text-primary cyber-text-glow">
-                              {Math.round(email.confidence * 100)}%
-                            </div>
-                            <div className="text-xs text-muted-foreground">CONFIDENCE</div>
+                            {email.confidence && (
+                              <div className="text-right">
+                                <div className="text-lg font-bold text-primary cyber-text-glow">
+                                  {Math.round(email.confidence * 100)}%
+                                </div>
+                                <div className="text-xs text-muted-foreground">CONFIDENCE</div>
+                              </div>
+                            )}
                           </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Right Column - Chat Assistant */}
+          <div className="lg:col-span-1">
+            <ChatAssistant selectedEmail={selectedEmail} />
+          </div>
+        </div>
       </div>
     </div>
   );
