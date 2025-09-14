@@ -32,13 +32,14 @@ const ChatAssistant = ({ selectedEmail }: ChatAssistantProps) => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      content: "Hello! I'm your cybersecurity assistant. I can help explain email classifications, analyze spam indicators, and answer any questions about email security. How can I help you today?",
+      content: "Hello! I'm MAIL GUARD AI, your advanced cybersecurity assistant. I specialize in email threat analysis and can help explain classifications, analyze spam indicators, and answer any questions about email security. How can I help you today?",
       isBot: true,
       timestamp: new Date()
     }
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -68,12 +69,17 @@ const ChatAssistant = ({ selectedEmail }: ChatAssistantProps) => {
     setMessages(prev => [...prev, userMessage]);
     setInput("");
     setIsLoading(true);
+    setIsTyping(true);
 
     try {
+      // Prepare conversation history (last 10 messages for context)
+      const conversationHistory = messages.slice(-10);
+
       const { data, error } = await supabase.functions.invoke('chat-assistant', {
         body: {
           message: input,
-          emailData: selectedEmail
+          emailData: selectedEmail,
+          conversationHistory: conversationHistory
         },
       });
 
@@ -81,17 +87,27 @@ const ChatAssistant = ({ selectedEmail }: ChatAssistantProps) => {
         throw new Error(error.message || 'Failed to get response from assistant');
       }
 
-      const botMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        content: data.response,
-        isBot: true,
-        timestamp: new Date()
-      };
+      if (!data.response) {
+        throw new Error('No response received from assistant');
+      }
 
-      setMessages(prev => [...prev, botMessage]);
+      // Simulate typing delay for better UX
+      setTimeout(() => {
+        setIsTyping(false);
+        const botMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          content: data.response,
+          isBot: true,
+          timestamp: new Date()
+        };
+
+        setMessages(prev => [...prev, botMessage]);
+      }, 800);
 
     } catch (error) {
       console.error('Chat error:', error);
+      setIsTyping(false);
+      
       toast({
         title: "Chat Error",
         description: "Failed to get response from the assistant. Please try again.",
@@ -100,7 +116,7 @@ const ChatAssistant = ({ selectedEmail }: ChatAssistantProps) => {
 
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: "I apologize, but I'm having trouble responding right now. Please try again in a moment.",
+        content: "I apologize, but I'm experiencing connectivity issues. Please try your question again in a moment.",
         isBot: true,
         timestamp: new Date()
       };
@@ -121,7 +137,7 @@ const ChatAssistant = ({ selectedEmail }: ChatAssistantProps) => {
   const askAboutEmail = () => {
     if (!selectedEmail) return;
     
-    const question = `Can you explain why this email was classified as "${selectedEmail.classification}" with a ${selectedEmail.threat_level} threat level? The subject is "${selectedEmail.subject}" and it's from "${selectedEmail.sender}".`;
+    const question = `Can you explain why this email was classified as "${selectedEmail.classification}" with a ${selectedEmail.threat_level} threat level? The subject is "${selectedEmail.subject}" and it's from "${selectedEmail.sender}". Please provide a detailed breakdown of the security analysis.`;
     setInput(question);
   };
 
@@ -179,13 +195,17 @@ const ChatAssistant = ({ selectedEmail }: ChatAssistantProps) => {
                 </div>
               </div>
             ))}
-            {isLoading && (
+            {(isLoading && isTyping) && (
               <div className="flex justify-start">
                 <div className="bg-primary/10 border border-primary/20 rounded-lg p-3 max-w-[80%]">
                   <div className="flex items-center space-x-2">
                     <Bot className="h-4 w-4 text-primary" />
-                    <Loader2 className="h-4 w-4 text-primary animate-spin" />
-                    <span className="text-sm text-muted-foreground">Analyzing...</span>
+                    <div className="flex space-x-1">
+                      <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
+                      <div className="w-2 h-2 bg-primary rounded-full animate-pulse delay-100"></div>
+                      <div className="w-2 h-2 bg-primary rounded-full animate-pulse delay-200"></div>
+                    </div>
+                    <span className="text-sm text-muted-foreground">MAIL GUARD AI is analyzing...</span>
                   </div>
                 </div>
               </div>
@@ -198,9 +218,9 @@ const ChatAssistant = ({ selectedEmail }: ChatAssistantProps) => {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyPress={handleKeyPress}
-            placeholder="Ask about email security..."
+            placeholder="Ask MAIL GUARD AI about email security..."
             disabled={isLoading}
-            className="flex-1 bg-muted/50 border-primary/20 focus:border-primary/50"
+            className="flex-1 bg-muted/50 border-primary/20 focus:border-primary/50 cyber-input"
           />
           <Button
             onClick={sendMessage}

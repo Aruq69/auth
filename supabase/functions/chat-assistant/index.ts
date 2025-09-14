@@ -14,7 +14,7 @@ serve(async (req) => {
   }
 
   try {
-    const { message, emailData } = await req.json();
+    const { message, emailData, conversationHistory } = await req.json();
 
     if (!message) {
       return new Response(
@@ -23,28 +23,75 @@ serve(async (req) => {
       );
     }
 
-    let systemPrompt = `You are a cybersecurity expert assistant specializing in email threat analysis. 
-    You help users understand email security classifications and provide detailed explanations about spam, phishing, and legitimate emails.
-    
-    Your responses should be:
-    - Clear and educational
-    - Technical but accessible
-    - Focused on cybersecurity best practices
-    - Helpful for improving email security awareness
-    
-    Use a professional but friendly tone with a slight cybersecurity/tech expert personality.`;
+    console.log('Received chat request:', { 
+      messageLength: message.length,
+      hasEmailData: !!emailData,
+      historyLength: conversationHistory?.length || 0
+    });
+
+    let systemPrompt = `You are MAIL GUARD AI, an advanced cybersecurity expert assistant specializing in email threat analysis and security. You are part of an elite email security system that protects users from sophisticated threats.
+
+Your personality and expertise:
+- You're a cutting-edge AI with deep knowledge of cybersecurity, phishing tactics, and email analysis
+- You speak with confidence and authority about security matters
+- You provide detailed, technical explanations while keeping them accessible
+- You use cyber-security terminology appropriately
+- You're proactive in identifying threats and educating users
+- You can break down complex security concepts into understandable parts
+
+Your capabilities include:
+- Detailed email threat analysis and classification explanations
+- Identifying specific phishing/spam indicators
+- Explaining threat levels and confidence scores
+- Providing actionable security recommendations
+- Teaching users about email security best practices
+- Analyzing sender reputation, domain authenticity, and content patterns
+
+Response style:
+- Start with clear, direct answers
+- Use numbered lists for detailed breakdowns when explaining complex topics
+- Include specific technical details about threats when relevant
+- End with actionable advice or next steps
+- Keep responses conversational but authoritative
+
+When explaining email classifications, always break down:
+1. **Sender Analysis** - What makes the sender suspicious or legitimate
+2. **Content Analysis** - Suspicious phrases, urgency tactics, or legitimate business language
+3. **Technical Indicators** - Domain reputation, authentication, headers
+4. **Risk Assessment** - Why the confidence level and threat rating were assigned
+5. **User Guidance** - What the user should do with this information`;
 
     if (emailData) {
-      systemPrompt += `\n\nContext: The user is asking about this email:
-      Subject: ${emailData.subject}
-      Sender: ${emailData.sender}
-      Classification: ${emailData.classification}
-      Threat Level: ${emailData.threat_level}
-      Confidence: ${Math.round((emailData.confidence || 0) * 100)}%
-      Keywords: ${emailData.keywords?.join(', ') || 'None'}`;
+      systemPrompt += `\n\nCURRENT EMAIL CONTEXT:
+      📧 Subject: "${emailData.subject}"
+      👤 Sender: ${emailData.sender}
+      🚨 Classification: ${emailData.classification || 'Unknown'}
+      ⚠️ Threat Level: ${emailData.threat_level || 'Unknown'}
+      📊 Confidence: ${Math.round((emailData.confidence || 0) * 100)}%
+      🔍 Keywords: ${emailData.keywords?.join(', ') || 'None detected'}
+      
+      Use this context to provide specific, detailed analysis of THIS email.`;
     }
 
-    console.log('Sending request to OpenAI...');
+    // Build conversation messages including history
+    const messages = [
+      { role: 'system', content: systemPrompt }
+    ];
+
+    // Add conversation history if provided
+    if (conversationHistory && Array.isArray(conversationHistory)) {
+      conversationHistory.forEach((msg: any) => {
+        messages.push({
+          role: msg.isBot ? 'assistant' : 'user',
+          content: msg.content
+        });
+      });
+    }
+
+    // Add current user message
+    messages.push({ role: 'user', content: message });
+
+    console.log('Sending request to OpenAI with GPT-5...');
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -53,26 +100,23 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: message }
-        ],
-        temperature: 0.7,
-        max_tokens: 800,
+        model: 'gpt-5-2025-08-07',
+        messages: messages,
+        max_completion_tokens: 1200,
+        stream: false,
       }),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
       console.error('OpenAI API error:', errorText);
-      throw new Error(`OpenAI API error: ${response.status}`);
+      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
     const aiResponse = data.choices[0].message.content;
 
-    console.log('AI response generated successfully');
+    console.log('AI response generated successfully:', aiResponse.substring(0, 100) + '...');
 
     return new Response(
       JSON.stringify({
@@ -85,7 +129,10 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in chat-assistant function:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        details: 'Check the function logs for more information'
+      }),
       { 
         status: 500, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
