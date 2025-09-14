@@ -38,6 +38,9 @@ serve(async (req) => {
     
     const { action, code } = jsonBody;
     console.log('Parsed action:', action, 'code present:', !!code);
+    
+    // Get the origin from the request headers to make it dynamic
+    const origin = req.headers.get('origin') || req.headers.get('referer')?.replace(/\/[^\/]*$/, '') || 'https://preview--whereabouts-tracker-pro.lovable.app';
 
     // Handle auth URL generation
     if (action === 'get_auth_url') {
@@ -51,7 +54,7 @@ serve(async (req) => {
       }
 
       const scope = 'https://www.googleapis.com/auth/gmail.readonly';
-      const redirectUri = `https://preview--whereabouts-tracker-pro.lovable.app/gmail-callback`;
+      const redirectUri = `${origin}/gmail-callback`;
       
       const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
       authUrl.searchParams.set('client_id', googleClientId);
@@ -90,7 +93,7 @@ serve(async (req) => {
           client_secret: googleClientSecret!,
           code,
           grant_type: 'authorization_code',
-          redirect_uri: `https://preview--whereabouts-tracker-pro.lovable.app/gmail-callback`,
+          redirect_uri: `${origin}/gmail-callback`,
         }),
       });
 
