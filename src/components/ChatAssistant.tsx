@@ -241,12 +241,12 @@ const ChatAssistant = ({ selectedEmail, emails = [] }: ChatAssistantProps) => {
 
   return (
     <div className="h-[700px] flex flex-col">
-      <Card className="cyber-card flex-1 flex flex-col overflow-hidden">
+      <Card className="flex-1 flex flex-col overflow-hidden">
         <CardHeader className="pb-2 flex-shrink-0">
           <CardTitle className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <div className="relative">
-              <Bot className="h-5 w-5 text-primary cyber-text-glow" />
+              <Bot className="h-5 w-5 text-primary" />
               <div className={`absolute -top-1 -right-1 w-3 h-3 rounded-full ${
                 systemStatus === 'active' ? 'bg-green-500' :
                 systemStatus === 'scanning' ? 'bg-yellow-500 animate-pulse' :
@@ -254,7 +254,7 @@ const ChatAssistant = ({ selectedEmail, emails = [] }: ChatAssistantProps) => {
               }`} />
             </div>
             <div>
-              <span className="cyber-text-glow">MAIL GUARD ASSISTANT</span>
+              <span>MAIL GUARD ASSISTANT</span>
               <div className="flex items-center space-x-2 mt-1">
                 <Badge variant={systemStatus === 'active' ? 'default' : systemStatus === 'scanning' ? 'secondary' : 'outline'} className="text-xs">
                   {systemStatus === 'active' ? '🟢 ACTIVE' : systemStatus === 'scanning' ? '🟡 SCANNING' : '⚪ IDLE'}
@@ -268,7 +268,7 @@ const ChatAssistant = ({ selectedEmail, emails = [] }: ChatAssistantProps) => {
           </div>
           <div className="text-right">
             <div className="text-xs text-muted-foreground">Threat Detection</div>
-            <div className="text-lg font-bold cyber-text-glow">
+            <div className="text-lg font-bold">
               {((animatedStats.high + animatedStats.medium) / Math.max(animatedStats.total, 1) * 100).toFixed(1)}%
             </div>
           </div>
@@ -399,7 +399,7 @@ const ChatAssistant = ({ selectedEmail, emails = [] }: ChatAssistantProps) => {
           <Button
             onClick={sendMessage}
             disabled={!input.trim() || isLoading}
-            className="cyber-button px-3"
+            className="px-3"
           >
             {isLoading ? (
               <Loader2 className="h-4 w-4 animate-spin" />

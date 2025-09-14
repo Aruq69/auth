@@ -57,11 +57,11 @@ const GmailConnect = ({ onConnected }: GmailConnectProps) => {
   };
 
   return (
-    <Card className="cyber-card">
+    <Card>
       <CardHeader>
         <CardTitle className="flex items-center space-x-2">
-          <Shield className="h-5 w-5 text-primary cyber-text-glow" />
-          <span className="cyber-text-glow">Connect Gmail Account</span>
+          <Shield className="h-5 w-5 text-primary" />
+          <span>Connect Gmail Account</span>
         </CardTitle>
         <CardDescription>
           Connect your Gmail account to analyze real emails for security threats
@@ -81,7 +81,7 @@ const GmailConnect = ({ onConnected }: GmailConnectProps) => {
           <Button 
             onClick={connectGmail}
             disabled={isConnecting}
-            className="w-full cyber-button"
+            className="w-full"
             size="lg"
           >
             {isConnecting ? (

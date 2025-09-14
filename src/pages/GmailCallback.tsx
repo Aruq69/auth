@@ -100,16 +100,16 @@ const GmailCallback = () => {
   }, [searchParams, navigate, toast, user]);
 
   return (
-    <div className="min-h-screen bg-background matrix-bg flex items-center justify-center">
+    <div className="min-h-screen bg-background flex items-center justify-center">
       <div className="max-w-md w-full mx-auto p-6">
-        <div className="cyber-card p-8 text-center space-y-6">
+        <div className="p-8 text-center space-y-6 max-w-md border rounded-lg bg-card">
           <div className="relative">
-            <Shield className="h-16 w-16 text-primary mx-auto cyber-text-glow cyber-pulse" />
+            <Shield className="h-16 w-16 text-primary mx-auto" />
             <div className="absolute inset-0 h-16 w-16 border border-primary/30 rounded-full animate-ping mx-auto" />
           </div>
           
           <div className="space-y-4">
-            <h1 className="text-2xl font-bold cyber-text-glow bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
               GMAIL CONNECTION
             </h1>
             

@@ -322,17 +322,17 @@ const Index = () => {
   }, {} as Record<string, number>);
 
   return (
-    <div className="min-h-screen bg-background matrix-bg">
+    <div className="min-h-screen bg-background">{" "}
       <div className="mx-auto max-w-7xl space-y-6 p-6">
         {/* Cyber Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <div className="relative">
-              <Shield className="h-10 w-10 text-primary cyber-text-glow cyber-pulse" />
+              <Shield className="h-10 w-10 text-primary" />
               <div className="absolute inset-0 h-10 w-10 border border-primary/30 rounded-full animate-ping" />
             </div>
             <div>
-              <h1 className="text-4xl font-bold cyber-text-glow bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
                 MAIL GUARD
               </h1>
               <p className="text-muted-foreground">
@@ -376,18 +376,18 @@ const Index = () => {
 
         {/* Threat Level Dashboard */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <Card className="cyber-card">
+          <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">TOTAL EMAILS</CardTitle>
               <Mail className="h-4 w-4 text-primary" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-primary cyber-text-glow">{emails.length}</div>
+              <div className="text-3xl font-bold text-primary">{emails.length}</div>
               <div className="text-xs text-muted-foreground mt-1">Active monitoring</div>
             </CardContent>
           </Card>
           
-          <Card className="cyber-card threat-high">
+          <Card className="threat-high">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">HIGH THREATS</CardTitle>
               <AlertTriangle className="h-4 w-4 text-destructive" />
@@ -398,7 +398,7 @@ const Index = () => {
             </CardContent>
           </Card>
           
-          <Card className="cyber-card threat-medium">
+          <Card className="threat-medium">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">MEDIUM THREATS</CardTitle>
               <Clock className="h-4 w-4 text-yellow-500" />
@@ -409,7 +409,7 @@ const Index = () => {
             </CardContent>
           </Card>
           
-          <Card className="cyber-card threat-low">
+          <Card className="threat-low">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">SAFE EMAILS</CardTitle>
               <CheckCircle className="h-4 w-4 text-accent" />
@@ -423,7 +423,7 @@ const Index = () => {
 
         {/* Gmail Connection */}
         {!gmailConnected && (
-          <Card className="cyber-card">
+          <Card>
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
                 <Mail className="h-5 w-5 text-primary" />
@@ -463,7 +463,7 @@ const Index = () => {
           {/* Left Column - Email Analysis */}
           <div className="lg:col-span-2 space-y-6">
             {/* Search Interface */}
-            <Card className="cyber-card">
+            <Card>
               <CardContent className="pt-6">
                 <div className="relative">
                   <Search className="absolute left-3 top-3 h-4 w-4 text-primary" />
@@ -479,11 +479,11 @@ const Index = () => {
             </Card>
 
             {/* Threat Analysis Dashboard */}
-            <Card className="cyber-card">
+            <Card>
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
-                  <Zap className="h-5 w-5 text-primary cyber-text-glow" />
-                  <span className="cyber-text-glow">THREAT ANALYSIS RESULTS</span>
+                  <Zap className="h-5 w-5 text-primary" />
+                  <span>THREAT ANALYSIS RESULTS</span>
                 </CardTitle>
                 <CardDescription>
                   Real-time security assessment and threat classification
@@ -494,7 +494,7 @@ const Index = () => {
                   <div className="flex items-center justify-center py-12">
                     <div className="text-center space-y-4">
                       <div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
-                      <div className="text-primary cyber-text-glow">SCANNING EMAIL THREATS...</div>
+                      <div className="text-primary">SCANNING EMAIL THREATS...</div>
                     </div>
                   </div>
                 ) : filteredEmails.length === 0 ? (
@@ -513,7 +513,7 @@ const Index = () => {
                       return (
                         <div 
                           key={email.id} 
-                          className={`cyber-card ${threatClass} p-4 hover:scale-[1.02] transition-all duration-300 cursor-pointer ${
+                          className={`${threatClass} p-4 hover:scale-[1.02] transition-all duration-300 cursor-pointer border rounded-lg ${
                             selectedEmail?.id === email.id ? 'ring-2 ring-primary' : ''
                           }`}
                           onClick={() => {
@@ -529,7 +529,7 @@ const Index = () => {
                                 {email.threat_level && (
                                   <Badge 
                                     variant={getThreatBadgeVariant(email.threat_level)}
-                                    className="cyber-text-glow"
+                                    className=""
                                   >
                                     {email.threat_level.toUpperCase()}
                                   </Badge>
@@ -564,7 +564,7 @@ const Index = () => {
                             </div>
                             {email.confidence && (
                               <div className="text-right">
-                                <div className="text-lg font-bold text-primary cyber-text-glow">
+                                <div className="text-lg font-bold text-primary">
                                   {Math.round(email.confidence * 100)}%
                                 </div>
                                 <div className="text-xs text-muted-foreground">CONFIDENCE</div>
@@ -588,11 +588,11 @@ const Index = () => {
 
         {/* Email Details Dialog */}
         <Dialog open={showEmailDialog} onOpenChange={setShowEmailDialog}>
-          <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto cyber-card">
+          <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="flex items-center space-x-3">
-                <Mail className="h-6 w-6 text-primary cyber-text-glow" />
-                <span className="text-xl cyber-text-glow">EMAIL ANALYSIS REPORT</span>
+                <Mail className="h-6 w-6 text-primary" />
+                <span className="text-xl">EMAIL ANALYSIS REPORT</span>
                 {selectedEmail?.threat_level && (
                   <Badge variant={getThreatBadgeVariant(selectedEmail.threat_level)}>
                     {selectedEmail.threat_level.toUpperCase()} THREAT
@@ -607,7 +607,7 @@ const Index = () => {
             {selectedEmail && (
               <div className="space-y-6 mt-6">
                 {/* Security Status Banner */}
-                <div className={`cyber-card p-4 border-2 ${
+                <div className={`p-4 border-2 rounded-lg ${
                   selectedEmail.threat_level === 'high' ? 'border-destructive' :
                   selectedEmail.threat_level === 'medium' ? 'border-yellow-500' :
                   'border-accent'
@@ -630,7 +630,7 @@ const Index = () => {
                 {/* Email Details Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Email Info */}
-                  <Card className="cyber-card">
+                  <Card>
                     <CardHeader>
                       <CardTitle className="text-sm text-primary">📧 EMAIL DETAILS</CardTitle>
                     </CardHeader>
@@ -655,7 +655,7 @@ const Index = () => {
                   </Card>
 
                   {/* Analysis Results */}
-                  <Card className="cyber-card">
+                  <Card>
                     <CardHeader>
                       <CardTitle className="text-sm text-primary">🔍 ANALYSIS RESULTS</CardTitle>
                     </CardHeader>
@@ -691,7 +691,7 @@ const Index = () => {
 
                 {/* Keywords */}
                 {selectedEmail.keywords && selectedEmail.keywords.length > 0 && (
-                  <Card className="cyber-card">
+                  <Card>
                     <CardHeader>
                       <CardTitle className="text-sm text-primary">🔍 DETECTED KEYWORDS</CardTitle>
                     </CardHeader>
@@ -711,7 +711,7 @@ const Index = () => {
                 )}
 
                 {/* Email Content */}
-                <Card className="cyber-card">
+                <Card>
                   <CardHeader>
                     <CardTitle className="text-sm text-primary">📄 EMAIL CONTENT</CardTitle>
                   </CardHeader>
@@ -741,7 +741,7 @@ const Index = () => {
                   </Button>
                   <Button
                     onClick={() => setShowEmailDialog(false)}
-                    className="cyber-button"
+                    className=""
                   >
                     Close Viewer
                   </Button>

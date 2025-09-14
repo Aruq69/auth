@@ -97,16 +97,16 @@ const EmailSubmissionForm = ({ onEmailSubmitted }: EmailSubmissionFormProps) => 
   };
 
   return (
-    <Card className="cyber-card">
+    <Card>
       <CardHeader>
         <CardTitle className="flex items-center space-x-2">
-          <Shield className="h-5 w-5 text-primary cyber-text-glow" />
+          <Shield className="h-5 w-5 text-primary" />
           <span>Submit Email for Analysis</span>
         </CardTitle>
         <CardDescription>
           Enter email details to store and analyze for spam and security threats
         </CardDescription>
-        <Alert className="cyber-card">
+        <Alert>
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
             AI analysis is temporarily simplified to avoid authentication issues. 
@@ -158,7 +158,7 @@ const EmailSubmissionForm = ({ onEmailSubmitted }: EmailSubmissionFormProps) => 
           <Button 
             type="submit" 
             disabled={isSubmitting || !subject.trim() || !sender.trim() || !content.trim()}
-            className="w-full cyber-button"
+            className="w-full"
           >
             {isSubmitting ? (
               <>

@@ -110,89 +110,15 @@
 }
 
 @layer components {
-  .cyber-card {
-    @apply relative;
-    background: linear-gradient(145deg, hsl(220 15% 12%), hsl(220 15% 8%));
-    border: 1px solid hsl(196 100% 50% / 0.2);
-    box-shadow: var(--glow-cyber);
-    transition: var(--transition-cyber);
-  }
-  
-  .cyber-card:hover {
-    border-color: hsl(196 100% 50% / 0.4);
-    box-shadow: var(--glow-cyber), 0 0 30px hsl(196 100% 50% / 0.3);
-  }
-  
-  .cyber-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 1px;
-    background: var(--gradient-cyber);
-    opacity: 0.6;
-  }
-  
   .threat-high {
     @apply border-destructive/30;
-    box-shadow: var(--glow-threat-high);
   }
   
   .threat-medium {
     @apply border-yellow-500/30;
-    box-shadow: 0 0 15px hsl(45 93% 47% / 0.3);
   }
   
   .threat-low {
     @apply border-accent/30;
-    box-shadow: 0 0 15px hsl(142 69% 58% / 0.3);
-  }
-  
-  .cyber-button {
-    @apply relative overflow-hidden;
-    background: var(--gradient-cyber);
-    transition: var(--transition-cyber);
-  }
-  
-  .cyber-button:hover {
-    box-shadow: var(--glow-cyber);
-    transform: translateY(-1px);
-  }
-  
-  .cyber-text-glow {
-    text-shadow: 0 0 10px hsl(196 100% 50% / 0.8);
-  }
-  
-  .cyber-pulse {
-    animation: cyber-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  }
-  
-  @keyframes cyber-pulse {
-    0%, 100% {
-      opacity: 1;
-    }
-    50% {
-      opacity: .5;
-    }
-  }
-  
-  .cyber-scan {
-    animation: cyber-scan 1.5s ease-in-out infinite;
-  }
-  
-  @keyframes cyber-scan {
-    0% {
-      transform: translateX(-100%);
-    }
-    100% {
-      transform: translateX(100%);
-    }
-  }
-  
-  .matrix-bg {
-    background-image: 
-      radial-gradient(circle at 25% 25%, hsl(196 100% 50% / 0.1) 0%, transparent 50%),
-      radial-gradient(circle at 75% 75%, hsl(271 81% 56% / 0.1) 0%, transparent 50%);
   }
 }
