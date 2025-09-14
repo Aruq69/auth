@@ -19,10 +19,12 @@ serve(async (req) => {
   try {
     const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
 
-    // Get Gmail token (without user filtering since we removed auth)
+    // Get Gmail token (using default user_id since we removed auth)
+    const defaultUserId = '00000000-0000-0000-0000-000000000000';
     const { data: tokenData, error: tokenError } = await supabase
       .from('gmail_tokens')
       .select('access_token, refresh_token')
+      .eq('user_id', defaultUserId)
       .single();
 
     if (tokenError || !tokenData) {
@@ -151,6 +153,7 @@ serve(async (req) => {
           .from('emails')
           .select('id')
           .eq('gmail_id', message.id)
+          .eq('user_id', defaultUserId)
           .single();
 
         if (!existingEmail) {
@@ -158,6 +161,7 @@ serve(async (req) => {
           const { error: insertError } = await supabase
             .from('emails')
             .insert({
+              user_id: defaultUserId,
               gmail_id: message.id,
               subject,
               sender,

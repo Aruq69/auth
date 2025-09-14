@@ -111,11 +111,12 @@ const Index = () => {
   };
 
   const checkGmailConnection = async () => {
-    
     try {
+      const defaultUserId = '00000000-0000-0000-0000-000000000000';
       const { data, error } = await supabase
         .from('gmail_tokens')
         .select('id')
+        .eq('user_id', defaultUserId)
         .maybeSingle();
       
       setGmailConnected(!!data && !error);
@@ -127,9 +128,11 @@ const Index = () => {
   const handleUnsync = async () => {
     try {
       // Remove Gmail tokens
+      const defaultUserId = '00000000-0000-0000-0000-000000000000';
       await supabase
         .from('gmail_tokens')
-        .delete();
+        .delete()
+        .eq('user_id', defaultUserId);
       
       setGmailConnected(false);
       toast({
