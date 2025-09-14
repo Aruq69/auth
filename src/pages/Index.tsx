@@ -147,7 +147,9 @@ const Index = () => {
 
   const connectGmail = async () => {
     try {
+      console.log('Gmail connect button clicked!');
       console.log('Starting Gmail connection...');
+      
       const { data, error } = await supabase.functions.invoke('gmail-auth', {
         body: { action: 'get_auth_url' },
       });
@@ -179,7 +181,7 @@ const Index = () => {
       console.error('Gmail connection error:', error);
       toast({
         title: "Error",
-        description: "An unexpected error occurred. Please try again.",
+        description: `An unexpected error occurred: ${error.message}`,
         variant: "destructive",
       });
     }
@@ -352,7 +354,10 @@ const Index = () => {
                     </DialogDescription>
                   </DialogHeader>
                   <div className="flex space-x-3 pt-4">
-                    <Button onClick={connectGmail} className="flex-1">
+                    <Button onClick={(e) => {
+                      e.preventDefault();
+                      connectGmail();
+                    }} className="flex-1">
                       <Shield className="h-4 w-4 mr-2" />
                       Sync Gmail
                     </Button>
