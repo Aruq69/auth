@@ -21,8 +21,10 @@ serve(async (req) => {
     
     // Get user_id from request body
     const { user_id } = await req.json();
+    console.log('Received user_id:', user_id);
     
     if (!user_id) {
+      console.error('Missing user_id in request');
       return new Response(
         JSON.stringify({ error: 'user_id is required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -30,6 +32,7 @@ serve(async (req) => {
     }
 
     // Get Gmail token for the authenticated user
+    console.log('Looking for Gmail tokens for user:', user_id);
     const { data: tokenData, error: tokenError } = await supabase
       .from('gmail_tokens')
       .select('access_token, refresh_token')
@@ -37,11 +40,15 @@ serve(async (req) => {
       .single();
 
     if (tokenError || !tokenData) {
+      console.error('Gmail token error:', tokenError);
+      console.log('Token data:', tokenData);
       return new Response(
         JSON.stringify({ error: 'No Gmail access token found. Please connect your Gmail account.' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    console.log('Found Gmail token for user, fetching emails...');
 
     // Fetch emails from Gmail API
     const gmailResponse = await fetch(

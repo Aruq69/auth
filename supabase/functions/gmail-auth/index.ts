@@ -107,8 +107,8 @@ serve(async (req) => {
       // Create Supabase client
       const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
 
-      // Get user_id from request body
-      const { user_id } = await request.json();
+      // Get user_id from the already parsed jsonBody
+      const { user_id } = jsonBody;
       
       if (!user_id) {
         return new Response(
