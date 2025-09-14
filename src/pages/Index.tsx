@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Shield, Mail, AlertTriangle, CheckCircle, Clock, Search, User, Zap, Activity, Eye, Lock, LogOut } from "lucide-react";
+import { Shield, Mail, AlertTriangle, CheckCircle, Clock, Search, User, Zap, Activity, Eye, Lock, LogOut, Plus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -86,9 +86,30 @@ const Index = () => {
     
     setLoading(true);
     try {
+      // First check if we have Gmail tokens
+      const { data: tokenCheck } = await supabase
+        .from('gmail_tokens')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+      
+      console.log('Gmail token check:', tokenCheck);
+      
+      if (!tokenCheck) {
+        toast({
+          title: "Gmail not connected",
+          description: "Please connect your Gmail account first.",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+
       const { data, error } = await supabase.functions.invoke('fetch-gmail-emails', {
         body: { user_id: user.id },
       });
+
+      console.log('Gmail fetch response:', { data, error });
 
       if (error) {
         console.error('Gmail fetch error:', error);
@@ -117,6 +138,50 @@ const Index = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Add test data function for debugging
+  const addTestEmails = async () => {
+    if (!user) return;
+    
+    const testEmails = [
+      {
+        user_id: user.id,
+        message_id: 'test-1',
+        subject: 'Suspicious Login Attempt',
+        sender: 'security@phishing-site.com',
+        content: 'Click here to verify your account immediately!',
+        classification: 'spam',
+        threat_level: 'high',
+        confidence: 0.95,
+        keywords: ['urgent', 'verify', 'click here'],
+        received_date: new Date().toISOString(),
+      },
+      {
+        user_id: user.id,
+        message_id: 'test-2',
+        subject: 'Meeting Reminder',
+        sender: 'colleague@company.com',
+        content: 'Don\'t forget our meeting tomorrow at 2 PM.',
+        classification: 'legitimate',
+        threat_level: 'low',
+        confidence: 0.98,
+        keywords: ['meeting', 'reminder'],
+        received_date: new Date(Date.now() - 86400000).toISOString(),
+      }
+    ];
+
+    const { error } = await supabase
+      .from('emails')
+      .insert(testEmails);
+    
+    if (!error) {
+      toast({
+        title: "Test emails added",
+        description: "Added sample emails for testing",
+      });
+      fetchEmails();
     }
   };
 
@@ -266,6 +331,10 @@ const Index = () => {
             <Button onClick={fetchEmails} disabled={loading} variant="outline" className="border-primary/30 hover:border-primary/50">
               <Mail className="h-4 w-4 mr-2" />
               Refresh
+            </Button>
+            <Button onClick={addTestEmails} variant="outline" className="border-accent/30 hover:border-accent/50">
+              <Plus className="h-4 w-4 mr-2" />
+              Add Test Emails
             </Button>
             {gmailConnected && (
               <Button onClick={handleUnsync} variant="outline" className="border-destructive/30 hover:border-destructive/50 hover:bg-destructive hover:text-destructive-foreground transition-all duration-300">
