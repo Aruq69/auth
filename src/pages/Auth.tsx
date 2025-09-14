@@ -22,7 +22,8 @@ const Auth = () => {
 
   useEffect(() => {
     if (user) {
-      navigate("/");
+      console.log('User is authenticated, redirecting to dashboard...');
+      navigate("/", { replace: true });
     }
   }, [user, navigate]);
 
