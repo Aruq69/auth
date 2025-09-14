@@ -714,8 +714,6 @@ const Index = () => {
 };
 
 export default Index;
-        <Dialog open={showEmailDialog} onOpenChange={setShowEmailDialog}>
-          <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden cyber-card p-0">
             <div className="flex flex-col h-full max-h-[90vh]">
               {/* Header with cybersecurity styling */}
               <div className="border-b border-primary/20 bg-gradient-to-r from-primary/5 to-secondary/5 p-6">
@@ -744,15 +742,15 @@ export default Index;
                   </DialogDescription>
                 </DialogHeader>
               </div>
-              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+      </div>
+    </div>
+  );
+};
 
-              {/* Scrollable Content */}
-              <div className="flex-1 overflow-y-auto p-6">
-                {selectedEmail && (
-                  <div className="space-y-8">
-            <DialogHeader>
-              <DialogTitle className="flex items-center space-x-2">
-                <Mail className="h-5 w-5 text-primary" />
+export default Index;
                 <span>Email Details</span>
                 {selectedEmail?.threat_level && (
                   <Badge variant={getThreatBadgeVariant(selectedEmail.threat_level)}>
