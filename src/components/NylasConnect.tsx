@@ -71,18 +71,18 @@ export default function NylasConnect({ onConnected }: NylasConnectProps) {
       </CardHeader>
       
       <CardContent className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
-          <div className="flex flex-col items-center space-y-2">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+          <div className="flex flex-col items-center space-y-3 p-6 rounded-lg bg-muted/30 border">
             <Shield className="h-8 w-8 text-green-500" />
             <h3 className="font-semibold">Multi-Provider Support</h3>
             <p className="text-sm text-muted-foreground">Gmail, Outlook, Yahoo, and more</p>
           </div>
-          <div className="flex flex-col items-center space-y-2">
+          <div className="flex flex-col items-center space-y-3 p-6 rounded-lg bg-muted/30 border">
             <Eye className="h-8 w-8 text-blue-500" />
             <h3 className="font-semibold">Real-time Analysis</h3>
             <p className="text-sm text-muted-foreground">AI-powered threat detection</p>
           </div>
-          <div className="flex flex-col items-center space-y-2">
+          <div className="flex flex-col items-center space-y-3 p-6 rounded-lg bg-muted/30 border">
             <Database className="h-8 w-8 text-purple-500" />
             <h3 className="font-semibold">Secure Storage</h3>
             <p className="text-sm text-muted-foreground">Encrypted data protection</p>
