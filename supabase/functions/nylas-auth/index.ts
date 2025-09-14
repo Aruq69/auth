@@ -33,8 +33,8 @@ serve(async (req) => {
     if (action === 'get_auth_url') {
       console.log('🔗 Generating Nylas OAuth URL...');
       
-      // Generate Nylas OAuth URL with correct redirect URI for Lovable
-      const redirectUri = `https://ntqeccpwqtjmxlqjfcdb.lovable.app/nylas-callback`;
+      // For testing, try using a localhost redirect that might be pre-configured
+      const redirectUri = `http://localhost:3000/nylas-callback`;
       
       const authUrl = new URL('https://api.nylas.com/v3/connect/auth');
       authUrl.searchParams.set('client_id', nylasApiKey);
@@ -66,7 +66,7 @@ serve(async (req) => {
       }
 
       // Use the same redirect URI as in auth URL generation
-      const redirectUri = `https://ntqeccpwqtjmxlqjfcdb.lovable.app/nylas-callback`;
+      const redirectUri = `http://localhost:3000/nylas-callback`;
 
       // Exchange code for access token using Nylas API
       const tokenResponse = await fetch('https://api.nylas.com/v3/connect/token', {
