@@ -714,9 +714,6 @@ const Index = () => {
 };
 
 export default Index;
-            <div className="flex flex-col h-full max-h-[90vh]">
-              {/* Header with cybersecurity styling */}
-              <div className="border-b border-primary/20 bg-gradient-to-r from-primary/5 to-secondary/5 p-6">
                 <DialogHeader>
                   <DialogTitle className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
@@ -741,232 +738,130 @@ export default Index;
                     Complete email content analysis and security assessment
                   </DialogDescription>
                 </DialogHeader>
-              </div>
-            )}
-          </DialogContent>
-        </Dialog>
-      </div>
-    </div>
-  );
-};
-
-export default Index;
-                <span>Email Details</span>
-                {selectedEmail?.threat_level && (
-                  <Badge variant={getThreatBadgeVariant(selectedEmail.threat_level)}>
-                    {selectedEmail.threat_level.toUpperCase()}
-                  </Badge>
-                )}
-              </DialogTitle>
-              <DialogDescription>
-                Complete email content and security analysis
-              </DialogDescription>
-            </DialogHeader>
-            
-            {selectedEmail && (
-                <div className="space-y-8">
-                  {/* Security Status Banner */}
-                  <div className={`cyber-card p-4 border-2 ${
-                    selectedEmail.threat_level === 'high' ? 'border-destructive threat-high' :
-                    selectedEmail.threat_level === 'medium' ? 'border-yellow-500 threat-medium' :
-                    'border-accent threat-low'
-                  }`}>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        {getThreatIcon(selectedEmail.threat_level)}
-                        <div>
-                          <h3 className="font-semibold text-lg">
-                            Security Status: {selectedEmail.threat_level?.toUpperCase() || 'UNKNOWN'}
-                          </h3>
-                          <p className="text-sm text-muted-foreground">
-                            Classification: {selectedEmail.classification || 'Unclassified'}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-3xl font-bold cyber-text-glow">
-                          {selectedEmail.confidence ? Math.round(selectedEmail.confidence * 100) : 'N/A'}%
-                        </div>
-                        <div className="text-xs text-muted-foreground">CONFIDENCE</div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Email Metadata Grid */}
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {/* Left Column - Email Details */}
-                    <div className="space-y-6">
-                      <Card className="cyber-card">
-                        <CardHeader>
-                          <CardTitle className="text-sm text-primary">📧 EMAIL INFORMATION</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
+                
+                {selectedEmail && (
+                  <div className="space-y-6 mt-6">
+                    {/* Security Status Banner */}
+                    <div className={`cyber-card p-4 border-2 ${
+                      selectedEmail.threat_level === 'high' ? 'border-destructive' :
+                      selectedEmail.threat_level === 'medium' ? 'border-yellow-500' :
+                      'border-accent'
+                    }`}>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          {getThreatIcon(selectedEmail.threat_level)}
                           <div>
-                            <label className="text-xs font-medium text-primary uppercase tracking-wider">Subject</label>
-                            <p className="text-foreground font-medium mt-1 p-2 bg-muted/20 rounded border">
-                              {selectedEmail.subject}
+                            <h3 className="font-semibold text-lg">
+                              Security Status: {selectedEmail.threat_level?.toUpperCase() || 'UNKNOWN'}
+                            </h3>
+                            <p className="text-sm text-muted-foreground">
+                              Classification: {selectedEmail.classification || 'Unclassified'}
                             </p>
                           </div>
-                          <div>
-                            <label className="text-xs font-medium text-primary uppercase tracking-wider">Sender</label>
-                            <p className="text-foreground mt-1 p-2 bg-muted/20 rounded border font-mono">
-                              {selectedEmail.sender}
-                            </p>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-3xl font-bold cyber-text-glow">
+                            {selectedEmail.confidence ? Math.round(selectedEmail.confidence * 100) : 'N/A'}%
                           </div>
-                          <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <label className="text-xs font-medium text-primary uppercase tracking-wider">Date Received</label>
-                              <p className="text-foreground mt-1 p-2 bg-muted/20 rounded border text-sm">
-                                {new Date(selectedEmail.received_date).toLocaleString()}
-                              </p>
-                            </div>
-                            <div>
-                              <label className="text-xs font-medium text-primary uppercase tracking-wider">Message ID</label>
-                              <p className="text-foreground mt-1 p-2 bg-muted/20 rounded border text-xs font-mono truncate">
-                                {selectedEmail.message_id}
-                              </p>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </div>
-
-                    {/* Right Column - Security Analysis */}
-                    <div className="space-y-6">
-                      <Card className="cyber-card">
-                        <CardHeader>
-                          <CardTitle className="text-sm text-primary">🛡️ SECURITY ANALYSIS</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                          <div className="grid grid-cols-2 gap-4">
-                            <div className="text-center p-3 bg-muted/10 rounded border">
-                              <div className="text-lg font-bold text-primary">
-                                {selectedEmail.threat_level?.toUpperCase() || 'N/A'}
-                              </div>
-                              <div className="text-xs text-muted-foreground">Threat Level</div>
-                            </div>
-                            <div className="text-center p-3 bg-muted/10 rounded border">
-                              <div className="text-lg font-bold text-secondary">
-                                {selectedEmail.classification?.toUpperCase() || 'N/A'}
-                              </div>
-                              <div className="text-xs text-muted-foreground">Classification</div>
-                            </div>
-                          </div>
-                          
-                          {/* Keywords */}
-                          {selectedEmail.keywords && selectedEmail.keywords.length > 0 && (
-                            <div>
-                              <label className="text-xs font-medium text-primary uppercase tracking-wider">Detected Keywords</label>
-                              <div className="flex flex-wrap gap-2 mt-2">
-                                {selectedEmail.keywords.map((keyword, index) => (
-                                  <span
-                                    key={index}
-                                    className="inline-block bg-primary/20 text-primary px-2 py-1 text-xs rounded border border-primary/30 cyber-text-glow"
-                                  >
-                                    {keyword}
-                                  </span>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                        </CardContent>
-                      </Card>
-                    </div>
-                  </div>
-
-                  {/* Email Content Section */}
-                  <Card className="cyber-card">
-                    <CardHeader>
-                      <CardTitle className="text-sm text-primary flex items-center space-x-2">
-                        <Eye className="h-4 w-4" />
-                        <span>📄 EMAIL CONTENT</span>
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="bg-background/50 p-6 rounded-lg border-2 border-muted/20 min-h-[300px] max-h-[400px] overflow-y-auto">
-                        <div className="prose prose-sm max-w-none">
-                          <pre className="whitespace-pre-wrap text-sm text-foreground font-mono leading-relaxed">
-                            {selectedEmail.content || selectedEmail.raw_content || 'No content available'}
-                          </pre>
+                          <div className="text-xs text-muted-foreground">CONFIDENCE</div>
                         </div>
                       </div>
-                    </CardContent>
-                  </Card>
+                    </div>
 
-                  {/* Raw Content Section (if different from processed content) */}
-                  {selectedEmail.raw_content && selectedEmail.raw_content !== selectedEmail.content && (
+                    {/* Email Information */}
                     <Card className="cyber-card">
                       <CardHeader>
-                        <CardTitle className="text-sm text-primary flex items-center space-x-2">
-                          <Eye className="h-4 w-4" />
-                          <span>🔍 RAW EMAIL SOURCE</span>
-                        </CardTitle>
-                        <CardDescription>
-                          Original email source code and headers
-                        </CardDescription>
+                        <CardTitle className="text-sm text-primary">📧 EMAIL INFORMATION</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div>
+                          <label className="text-xs font-medium text-primary uppercase">Subject</label>
+                          <p className="text-foreground font-medium p-2 bg-muted/20 rounded border">
+                            {selectedEmail.subject}
+                          </p>
+                        </div>
+                        <div>
+                          <label className="text-xs font-medium text-primary uppercase">Sender</label>
+                          <p className="text-foreground p-2 bg-muted/20 rounded border font-mono">
+                            {selectedEmail.sender}
+                          </p>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="text-xs font-medium text-primary uppercase">Date</label>
+                            <p className="text-foreground p-2 bg-muted/20 rounded border text-sm">
+                              {new Date(selectedEmail.received_date).toLocaleString()}
+                            </p>
+                          </div>
+                          <div>
+                            <label className="text-xs font-medium text-primary uppercase">Message ID</label>
+                            <p className="text-foreground p-2 bg-muted/20 rounded border text-xs font-mono">
+                              {selectedEmail.message_id}
+                            </p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Keywords */}
+                    {selectedEmail.keywords && selectedEmail.keywords.length > 0 && (
+                      <Card className="cyber-card">
+                        <CardHeader>
+                          <CardTitle className="text-sm text-primary">🔍 DETECTED KEYWORDS</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="flex flex-wrap gap-2">
+                            {selectedEmail.keywords.map((keyword, index) => (
+                              <span
+                                key={index}
+                                className="inline-block bg-primary/20 text-primary px-3 py-1 text-sm rounded border border-primary/30"
+                              >
+                                {keyword}
+                              </span>
+                            ))}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {/* Email Content */}
+                    <Card className="cyber-card">
+                      <CardHeader>
+                        <CardTitle className="text-sm text-primary">📄 EMAIL CONTENT</CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <div className="bg-background/30 p-4 rounded-lg border border-muted/20 max-h-[300px] overflow-y-auto">
-                          <pre className="whitespace-pre-wrap text-xs text-muted-foreground font-mono">
-                            {selectedEmail.raw_content}
+                        <div className="bg-background/50 p-6 rounded-lg border-2 border-muted/20 min-h-[300px] max-h-[400px] overflow-y-auto">
+                          <pre className="whitespace-pre-wrap text-sm text-foreground font-mono">
+                            {selectedEmail.content || selectedEmail.raw_content || 'No content available'}
                           </pre>
                         </div>
                       </CardContent>
                     </Card>
-                  )}
 
-                  {/* Action Buttons */}
-                  <div className="flex justify-between items-center pt-4 border-t border-primary/20">
-                    <div className="flex space-x-2">
+                    {/* Action Buttons */}
+                    <div className="flex justify-between items-center pt-4 border-t border-primary/20">
                       <Button
                         variant="outline"
                         size="sm"
-                        className="border-primary/30 hover:border-primary/50"
                         onClick={() => {
                           navigator.clipboard.writeText(selectedEmail.content || selectedEmail.raw_content || '');
                           toast({
                             title: "Content Copied",
-                            description: "Email content has been copied to clipboard",
+                            description: "Email content copied to clipboard",
                           });
                         }}
                       >
                         📋 Copy Content
                       </Button>
                       <Button
-                        variant="outline"
-                        size="sm"
-                        className="border-secondary/30 hover:border-secondary/50"
-                        onClick={() => {
-                          const emailData = {
-                            subject: selectedEmail.subject,
-                            sender: selectedEmail.sender,
-                            date: selectedEmail.received_date,
-                            classification: selectedEmail.classification,
-                            threat_level: selectedEmail.threat_level,
-                            confidence: selectedEmail.confidence,
-                            keywords: selectedEmail.keywords,
-                            content: selectedEmail.content
-                          };
-                          navigator.clipboard.writeText(JSON.stringify(emailData, null, 2));
-                          toast({
-                            title: "Data Exported",
-                            description: "Email analysis data copied as JSON",
-                          });
-                        }}
+                        onClick={() => setShowEmailDialog(false)}
+                        className="cyber-button"
                       >
-                        📤 Export Analysis
+                        Close Viewer
                       </Button>
                     </div>
-                    <Button
-                      onClick={() => setShowEmailDialog(false)}
-                      className="cyber-button"
-                    >
-                      Close Viewer
-                    </Button>
                   </div>
                 )}
-              </div>
-            </div>
           </DialogContent>
         </Dialog>
       </div>
