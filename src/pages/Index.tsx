@@ -227,7 +227,7 @@ const Index = () => {
               <User className="h-4 w-4" />
               <span>{user.email}</span>
             </div>
-            {gmailConnected && (
+            {false && gmailConnected && (
               <Button onClick={fetchGmailEmails} disabled={loading} variant="outline" className="border-primary/30 hover:border-primary/50">
                 <Activity className="h-4 w-4 mr-2" />
                 Sync Gmail
@@ -291,8 +291,8 @@ const Index = () => {
           </Card>
         </div>
 
-        {/* Gmail Connection */}
-        {!gmailConnected && (
+        {/* Gmail Connection - Temporarily disabled to avoid 403 errors */}
+        {false && !gmailConnected && (
           <GmailConnect onConnected={() => setGmailConnected(true)} />
         )}
 

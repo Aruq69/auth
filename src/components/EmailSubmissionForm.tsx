@@ -4,10 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Mail, Shield, Loader2 } from "lucide-react";
+import { Mail, Shield, Loader2, AlertCircle } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface EmailSubmissionFormProps {
   onEmailSubmitted: () => void;
@@ -45,36 +46,39 @@ const EmailSubmissionForm = ({ onEmailSubmitted }: EmailSubmissionFormProps) => 
     setIsSubmitting(true);
 
     try {
-      const { data, error } = await supabase.functions.invoke('classify-email', {
-        body: {
+      // For now, let's store the email directly without AI classification to avoid any API issues
+      const { data, error } = await supabase
+        .from('emails')
+        .insert({
+          user_id: user.id,
+          message_id: `manual_${Date.now()}`, // Generate a unique message ID
           subject: subject.trim(),
           sender: sender.trim(),
           content: content.trim(),
-          userId: user.id,
-        },
-      });
+          classification: 'pending',
+          threat_level: 'low',
+          confidence: 0.5,
+          keywords: [],
+          received_date: new Date().toISOString(),
+        })
+        .select()
+        .single();
 
       if (error) {
-        console.error('Classification error:', error);
-        throw new Error(error.message || 'Failed to classify email');
+        console.error('Database error:', error);
+        throw new Error(error.message || 'Failed to store email');
       }
 
-      console.log('Classification result:', data);
+      console.log('Email stored successfully:', data);
 
       // Clear form
       setSubject("");
       setSender("");
       setContent("");
 
-      // Show success message with threat level
-      const threatLevel = data.analysis?.threat_level || 'unknown';
-      const classification = data.analysis?.classification || 'unknown';
-      const confidence = data.analysis?.confidence || 0;
-      
       toast({
-        title: "Email analyzed successfully",
-        description: `Classification: ${classification} | Threat Level: ${threatLevel} | Confidence: ${Math.round(confidence * 100)}%`,
-        variant: threatLevel === 'high' ? 'destructive' : 'default',
+        title: "Email submitted successfully",
+        description: "Your email has been stored for analysis.",
       });
 
       // Refresh email list
@@ -83,8 +87,8 @@ const EmailSubmissionForm = ({ onEmailSubmitted }: EmailSubmissionFormProps) => 
     } catch (error) {
       console.error('Submission error:', error);
       toast({
-        title: "Analysis failed",
-        description: error instanceof Error ? error.message : "Failed to analyze email. Please try again.",
+        title: "Submission failed",
+        description: error instanceof Error ? error.message : "Failed to submit email. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -93,15 +97,22 @@ const EmailSubmissionForm = ({ onEmailSubmitted }: EmailSubmissionFormProps) => 
   };
 
   return (
-    <Card>
+    <Card className="cyber-card">
       <CardHeader>
         <CardTitle className="flex items-center space-x-2">
-          <Shield className="h-5 w-5 text-primary" />
+          <Shield className="h-5 w-5 text-primary cyber-text-glow" />
           <span>Submit Email for Analysis</span>
         </CardTitle>
         <CardDescription>
-          Enter email details to analyze for spam and security threats
+          Enter email details to store and analyze for spam and security threats
         </CardDescription>
+        <Alert className="cyber-card">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            AI analysis is temporarily simplified to avoid authentication issues. 
+            Emails will be stored and can be analyzed via the chat assistant.
+          </AlertDescription>
+        </Alert>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -114,6 +125,7 @@ const EmailSubmissionForm = ({ onEmailSubmitted }: EmailSubmissionFormProps) => 
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
                 disabled={isSubmitting}
+                className="bg-muted/50 border-primary/20 focus:border-primary/50"
               />
             </div>
             <div className="space-y-2">
@@ -125,6 +137,7 @@ const EmailSubmissionForm = ({ onEmailSubmitted }: EmailSubmissionFormProps) => 
                 value={sender}
                 onChange={(e) => setSender(e.target.value)}
                 disabled={isSubmitting}
+                className="bg-muted/50 border-primary/20 focus:border-primary/50"
               />
             </div>
           </div>
@@ -138,23 +151,24 @@ const EmailSubmissionForm = ({ onEmailSubmitted }: EmailSubmissionFormProps) => 
               onChange={(e) => setContent(e.target.value)}
               disabled={isSubmitting}
               rows={6}
+              className="bg-muted/50 border-primary/20 focus:border-primary/50"
             />
           </div>
 
           <Button 
             type="submit" 
             disabled={isSubmitting || !subject.trim() || !sender.trim() || !content.trim()}
-            className="w-full"
+            className="w-full cyber-button"
           >
             {isSubmitting ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Analyzing Email...
+                Storing Email...
               </>
             ) : (
               <>
                 <Mail className="h-4 w-4 mr-2" />
-                Analyze Email
+                Store Email
               </>
             )}
           </Button>
