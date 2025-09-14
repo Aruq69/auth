@@ -248,6 +248,12 @@ const Index = () => {
               <p className="text-muted-foreground">
                 Advanced Email Security & Threat Analysis System
               </p>
+              {user && (
+                <div className="flex items-center space-x-2 mt-2">
+                  <User className="h-4 w-4 text-primary" />
+                  <span className="text-sm text-primary font-medium">{user.email}</span>
+                </div>
+              )}
             </div>
           </div>
           <div className="flex items-center space-x-4">
