@@ -114,16 +114,20 @@ const ChatAssistant = ({ selectedEmail, emails = [] }: ChatAssistantProps) => {
     }
   };
 
+  // Enhanced auto-scroll effect
   useEffect(() => {
-    // Always scroll to bottom when messages change
-    const timeoutId = setTimeout(scrollToBottom, 100);
-    return () => clearTimeout(timeoutId);
-  }, [messages, isTyping]);
-
-  useEffect(() => {
-    // Always scroll to bottom when messages change
-    const timeoutId = setTimeout(scrollToBottom, 100);
-    return () => clearTimeout(timeoutId);
+    const timer = setTimeout(() => {
+      if (scrollAreaRef.current) {
+        const viewport = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
+        if (viewport) {
+          viewport.scrollTo({
+            top: viewport.scrollHeight,
+            behavior: 'smooth'
+          });
+        }
+      }
+    }, 50);
+    return () => clearTimeout(timer);
   }, [messages, isTyping]);
 
   const sendMessage = async () => {
@@ -145,6 +149,8 @@ const ChatAssistant = ({ selectedEmail, emails = [] }: ChatAssistantProps) => {
       // Prepare conversation history (last 10 messages for context)
       const conversationHistory = messages.slice(-10);
 
+      console.log('Sending message to chat assistant...');
+
       const { data, error } = await supabase.functions.invoke('chat-assistant', {
         body: {
           message: input,
@@ -153,12 +159,24 @@ const ChatAssistant = ({ selectedEmail, emails = [] }: ChatAssistantProps) => {
         },
       });
 
+      console.log('Response from chat assistant:', { data, error });
+
       if (error) {
+        console.error('Supabase function error:', error);
         throw new Error(error.message || 'Failed to get response from assistant');
       }
 
+      if (!data) {
+        throw new Error('No data received from assistant');
+      }
+
+      if (data.error) {
+        console.error('Assistant function error:', data.error);
+        throw new Error(data.error);
+      }
+
       if (!data.response) {
-        throw new Error('No response received from assistant');
+        throw new Error('No response field in data');
       }
 
       // Simulate typing delay for better UX
@@ -172,6 +190,16 @@ const ChatAssistant = ({ selectedEmail, emails = [] }: ChatAssistantProps) => {
         };
 
         setMessages(prev => [...prev, botMessage]);
+        
+        // Force scroll to bottom after adding bot message
+        setTimeout(() => {
+          if (scrollAreaRef.current) {
+            const viewport = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
+            if (viewport) {
+              viewport.scrollTop = viewport.scrollHeight;
+            }
+          }
+        }, 100);
       }, 800);
 
     } catch (error) {
@@ -180,13 +208,13 @@ const ChatAssistant = ({ selectedEmail, emails = [] }: ChatAssistantProps) => {
       
       toast({
         title: "Chat Error",
-        description: "Failed to get response from the assistant. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to get response from the assistant. Please try again.",
         variant: "destructive",
       });
 
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: "I apologize, but I'm experiencing connectivity issues. Please try your question again in a moment.",
+        content: `I apologize, but I'm experiencing connectivity issues: ${error instanceof Error ? error.message : 'Unknown error'}. Please try your question again in a moment.`,
         isBot: true,
         timestamp: new Date()
       };
@@ -212,9 +240,10 @@ const ChatAssistant = ({ selectedEmail, emails = [] }: ChatAssistantProps) => {
   };
 
   return (
-    <Card className="cyber-card h-[700px] flex flex-col overflow-hidden">
-      <CardHeader className="pb-2">
-        <CardTitle className="flex items-center justify-between">
+    <div className="h-[700px] flex flex-col">
+      <Card className="cyber-card flex-1 flex flex-col overflow-hidden">
+        <CardHeader className="pb-2 flex-shrink-0">
+          <CardTitle className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <div className="relative">
               <Bot className="h-5 w-5 text-primary cyber-text-glow" />
@@ -381,6 +410,7 @@ const ChatAssistant = ({ selectedEmail, emails = [] }: ChatAssistantProps) => {
         </div>
       </CardContent>
     </Card>
+    </div>
   );
 };
 
