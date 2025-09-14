@@ -81,10 +81,18 @@ const Auth = () => {
       });
 
       if (error) {
-        throw error;
+        if (error.message.includes("provider is not enabled")) {
+          setError("Google sign-in is not configured yet. Please use email/password for now, or contact support to enable Google authentication.");
+        } else {
+          throw error;
+        }
       }
     } catch (err: any) {
-      setError(err.message || "Failed to sign in with Google. Please try again.");
+      if (err.message?.includes("provider is not enabled")) {
+        setError("Google sign-in is not configured yet. Please use email/password for now.");
+      } else {
+        setError(err.message || "Failed to sign in with Google. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
@@ -181,7 +189,7 @@ const Auth = () => {
             variant="outline"
             onClick={handleGoogleSignIn}
             disabled={loading}
-            className="w-full border-primary/30 hover:border-primary/50 hover:bg-primary/10 transition-all duration-300"
+            className="w-full border-primary/30 hover:border-primary/50 hover:bg-primary/10 transition-all duration-300 relative"
           >
             <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
               <path
@@ -202,7 +210,17 @@ const Auth = () => {
               />
             </svg>
             {loading ? "Connecting..." : "Continue with Google"}
+            <span className="absolute -top-1 -right-1 bg-yellow-500 text-black text-xs px-1 rounded text-[10px]">
+              SETUP REQUIRED
+            </span>
           </Button>
+          
+          <div className="mt-4 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+            <p className="text-xs text-yellow-600 dark:text-yellow-400">
+              <strong>Google Sign-in Setup Required:</strong> To enable Google authentication, 
+              configure the Google OAuth provider in your Supabase dashboard under Authentication → Providers.
+            </p>
+          </div>
           
           <div className="mt-6 text-center text-sm">
             {isSignUp ? (
