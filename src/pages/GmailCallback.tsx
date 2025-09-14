@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { useAuth } from "@/components/auth/AuthProvider";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Shield, CheckCircle, AlertTriangle } from "lucide-react";
@@ -10,12 +11,17 @@ const GmailCallback = () => {
   const [message, setMessage] = useState('Processing Gmail connection...');
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
 
   useEffect(() => {
     const handleCallback = async () => {
+      if (!user) {
+        navigate('/auth');
+        return;
+      }
+
       try {
         const code = searchParams.get('code');
-        const state = searchParams.get('state'); // This should be the userId
         const error = searchParams.get('error');
 
         if (error) {
@@ -32,7 +38,8 @@ const GmailCallback = () => {
         const { data, error: exchangeError } = await supabase.functions.invoke('gmail-auth', {
           body: { 
             action: 'exchange_token',
-            code
+            code,
+            user_id: user.id
           },
         });
 
@@ -76,7 +83,7 @@ const GmailCallback = () => {
     };
 
     handleCallback();
-  }, [searchParams, navigate, toast]);
+  }, [searchParams, navigate, toast, user]);
 
   return (
     <div className="min-h-screen bg-background matrix-bg flex items-center justify-center">

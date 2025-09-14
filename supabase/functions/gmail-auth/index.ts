@@ -107,13 +107,22 @@ serve(async (req) => {
       // Create Supabase client
       const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
 
-      // Store the Gmail token in the database with a default user_id since we removed auth
-      const defaultUserId = '00000000-0000-0000-0000-000000000000';
+      // Get user_id from request body
+      const { user_id } = await request.json();
+      
+      if (!user_id) {
+        return new Response(
+          JSON.stringify({ error: 'Missing user_id' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      // Store the Gmail token in the database
       const { error: upsertError } = await supabase
         .from('gmail_tokens')
         .upsert({
-          user_id: defaultUserId,
-          email_address: 'anonymous@example.com', // Since we don't have user email
+          user_id: user_id,
+          email_address: 'user@gmail.com', // Could get from Google API later
           access_token: tokenData.access_token,
           refresh_token: tokenData.refresh_token,
           expires_at: new Date(Date.now() + (tokenData.expires_in * 1000)).toISOString(),

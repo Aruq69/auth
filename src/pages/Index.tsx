@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/components/auth/AuthProvider";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Shield, Mail, AlertTriangle, CheckCircle, Clock, Search, User, Zap, Activity, Eye, Lock } from "lucide-react";
+import { Shield, Mail, AlertTriangle, CheckCircle, Clock, Search, User, Zap, Activity, Eye, Lock, LogOut } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -28,25 +30,32 @@ const Index = () => {
   const [gmailConnected, setGmailConnected] = useState(false);
   const [selectedEmail, setSelectedEmail] = useState<Email | null>(null);
   const { toast } = useToast();
+  const { user, signOut, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
-    checkGmailConnection();
-  }, []);
-
-  useEffect(() => {
-    // Defer API call to move it out of critical rendering path
-    const timer = setTimeout(() => {
-      fetchEmails();
-    }, 0);
-    return () => clearTimeout(timer);
-  }, []);
+    if (!authLoading && !user) {
+      navigate("/auth");
+      return;
+    }
+    
+    if (user) {
+      checkGmailConnection();
+      const timer = setTimeout(() => {
+        fetchEmails();
+      }, 0);
+      return () => clearTimeout(timer);
+    }
+  }, [user, authLoading, navigate]);
 
   const fetchEmails = async () => {
+    if (!user) return;
     
     try {
       const { data, error } = await supabase
         .from('emails')
         .select('*')
+        .eq('user_id', user.id)
         .order('received_date', { ascending: false })
         .limit(50);
       
@@ -73,11 +82,12 @@ const Index = () => {
   };
 
   const fetchGmailEmails = async () => {
+    if (!user) return;
     
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('fetch-gmail-emails', {
-        body: {},
+        body: { user_id: user.id },
       });
 
       if (error) {
@@ -111,12 +121,13 @@ const Index = () => {
   };
 
   const checkGmailConnection = async () => {
+    if (!user) return;
+    
     try {
-      const defaultUserId = '00000000-0000-0000-0000-000000000000';
       const { data, error } = await supabase
         .from('gmail_tokens')
         .select('id')
-        .eq('user_id', defaultUserId)
+        .eq('user_id', user.id)
         .maybeSingle();
       
       setGmailConnected(!!data && !error);
@@ -126,13 +137,14 @@ const Index = () => {
   };
 
   const handleUnsync = async () => {
+    if (!user) return;
+    
     try {
       // Remove Gmail tokens
-      const defaultUserId = '00000000-0000-0000-0000-000000000000';
       await supabase
         .from('gmail_tokens')
         .delete()
-        .eq('user_id', defaultUserId);
+        .eq('user_id', user.id);
       
       setGmailConnected(false);
       toast({
@@ -255,6 +267,10 @@ const Index = () => {
                 Unsync
               </Button>
             )}
+            <Button onClick={signOut} variant="outline" className="border-muted-foreground/30 hover:border-muted-foreground/50">
+              <LogOut className="h-4 w-4 mr-2" />
+              Sign Out
+            </Button>
           </div>
         </div>
 
