@@ -358,7 +358,27 @@ async function fetchRealEmails(email: string, password: string, imapConfig: any)
         'IRS Notice: Tax payment required',
         'Invoice overdue - Legal action pending',
         'Bank notice: Card will be deactivated',
-        'Lottery winnings awaiting collection'
+        'Lottery winnings awaiting collection',
+        'FRAUD ALERT: Confirm these charges immediately',
+        'Your crypto wallet has been compromised',
+        'Microsoft Windows: License expired - Renew now',
+        'Apple ID suspended - Verify within 24 hours',
+        'PayPal: Unusual activity - Confirm identity',
+        'Amazon: Gift card purchase - Verify transaction',
+        'FBI Investigation: Click to view charges',
+        'IRS Refund: $2,847 pending - Claim now',
+        'Bitcoin: Your wallet will expire today',
+        'Social Security Administration: Benefits suspended',
+        'SCAM ALERT: Your computer is infected',
+        'McAfee: 5 viruses found - Clean now',
+        'Norton: Security scan required immediately',
+        'Google: Suspicious sign-in blocked',
+        'Wells Fargo: Account frozen - Call now',
+        'Chase Bank: Verify recent transactions',
+        'Venmo: Payment dispute requires action',
+        'Cash App: Account limited - Verify identity',
+        'Zelle: Transfer failed - Update information',
+        'Western Union: Money transfer pending'
       ];
       
       const safeSenders = [
@@ -481,9 +501,9 @@ async function fetchRealEmails(email: string, password: string, imapConfig: any)
 
       // Define threat distributions (approximate percentages)
       const threatDistribution = [
-        { level: 'safe', count: 60, classification: 'legitimate' },
+        { level: 'safe', count: 45, classification: 'legitimate' },
         { level: 'medium', count: 25, classification: 'suspicious' },
-        { level: 'high', count: 15, classification: 'phishing' }
+        { level: 'high', count: 30, classification: 'phishing' }
       ];
 
       let emailIndex = 0;
