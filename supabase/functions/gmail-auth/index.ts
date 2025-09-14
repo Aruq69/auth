@@ -73,67 +73,67 @@ serve(async (req) => {
     if (action === 'exchange_token') {
       console.log('Starting token exchange with code:', !!code);
       if (!code) {
-      return new Response(
-        JSON.stringify({ error: 'Missing authorization code' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+        return new Response(
+          JSON.stringify({ error: 'Missing authorization code' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
 
-    // Exchange authorization code for access token
-    const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: new URLSearchParams({
-        client_id: googleClientId!,
-        client_secret: googleClientSecret!,
-        code,
-        grant_type: 'authorization_code',
-        redirect_uri: `https://preview--whereabouts-tracker-pro.lovable.app/gmail-callback`,
-      }),
-    });
-
-    if (!tokenResponse.ok) {
-      const errorText = await tokenResponse.text();
-      console.error('Token exchange error:', errorText);
-      throw new Error(`Failed to exchange code for token: ${tokenResponse.status}`);
-    }
-
-    const tokenData = await tokenResponse.json();
-    
-    console.log('Token exchange successful');
-
-    // Create Supabase client
-    const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
-
-    // Store the Gmail token in the database with a default user_id since we removed auth
-    const defaultUserId = '00000000-0000-0000-0000-000000000000';
-    const { error: upsertError } = await supabase
-      .from('gmail_tokens')
-      .upsert({
-        user_id: defaultUserId,
-        email_address: 'anonymous@example.com', // Since we don't have user email
-        access_token: tokenData.access_token,
-        refresh_token: tokenData.refresh_token,
-        expires_at: new Date(Date.now() + (tokenData.expires_in * 1000)).toISOString(),
-      }, {
-        onConflict: 'user_id'
+      // Exchange authorization code for access token
+      const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          client_id: googleClientId!,
+          client_secret: googleClientSecret!,
+          code,
+          grant_type: 'authorization_code',
+          redirect_uri: `https://preview--whereabouts-tracker-pro.lovable.app/gmail-callback`,
+        }),
       });
 
-    if (upsertError) {
-      console.error('Database upsert error:', upsertError);
-      throw new Error(`Failed to store token: ${upsertError.message}`);
-    }
+      if (!tokenResponse.ok) {
+        const errorText = await tokenResponse.text();
+        console.error('Token exchange error:', errorText);
+        throw new Error(`Failed to exchange code for token: ${tokenResponse.status}`);
+      }
 
-    console.log('Gmail token stored successfully');
+      const tokenData = await tokenResponse.json();
+      
+      console.log('Token exchange successful');
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        message: 'Gmail access token stored successfully'
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      // Create Supabase client
+      const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
+
+      // Store the Gmail token in the database with a default user_id since we removed auth
+      const defaultUserId = '00000000-0000-0000-0000-000000000000';
+      const { error: upsertError } = await supabase
+        .from('gmail_tokens')
+        .upsert({
+          user_id: defaultUserId,
+          email_address: 'anonymous@example.com', // Since we don't have user email
+          access_token: tokenData.access_token,
+          refresh_token: tokenData.refresh_token,
+          expires_at: new Date(Date.now() + (tokenData.expires_in * 1000)).toISOString(),
+        }, {
+          onConflict: 'user_id'
+        });
+
+      if (upsertError) {
+        console.error('Database upsert error:', upsertError);
+        throw new Error(`Failed to store token: ${upsertError.message}`);
+      }
+
+      console.log('Gmail token stored successfully');
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: 'Gmail access token stored successfully'
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
