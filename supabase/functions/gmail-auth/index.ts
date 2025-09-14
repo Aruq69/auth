@@ -18,7 +18,36 @@ serve(async (req) => {
   }
 
   try {
-    const { code, userId } = await req.json();
+    const { action, code, userId } = await req.json();
+
+    // Handle auth URL generation
+    if (action === 'get_auth_url') {
+      if (!googleClientId) {
+        return new Response(
+          JSON.stringify({ error: 'Google OAuth not configured. Please set GOOGLE_CLIENT_ID.' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      const scope = 'https://www.googleapis.com/auth/gmail.readonly';
+      const redirectUri = `${supabaseUrl}/auth/v1/callback`;
+      
+      const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
+      authUrl.searchParams.set('client_id', googleClientId);
+      authUrl.searchParams.set('redirect_uri', redirectUri);
+      authUrl.searchParams.set('response_type', 'code');
+      authUrl.searchParams.set('scope', scope);
+      authUrl.searchParams.set('access_type', 'offline');
+      authUrl.searchParams.set('prompt', 'consent');
+      authUrl.searchParams.set('state', userId);
+
+      return new Response(
+        JSON.stringify({ auth_url: authUrl.toString() }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Handle token exchange
 
     if (!code || !userId) {
       return new Response(

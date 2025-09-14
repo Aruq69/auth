@@ -28,22 +28,21 @@ const GmailConnect = ({ onConnected }: GmailConnectProps) => {
     setIsConnecting(true);
 
     try {
-      // Gmail OAuth2 scope for readonly access
-      const scope = 'https://www.googleapis.com/auth/gmail.readonly';
-      const redirectUri = `${window.location.origin}/auth`;
-      
-      // Google OAuth2 authorization URL
-      const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
-      authUrl.searchParams.set('client_id', 'YOUR_GOOGLE_CLIENT_ID'); // Will be set via environment
-      authUrl.searchParams.set('redirect_uri', redirectUri);
-      authUrl.searchParams.set('response_type', 'code');
-      authUrl.searchParams.set('scope', scope);
-      authUrl.searchParams.set('access_type', 'offline');
-      authUrl.searchParams.set('prompt', 'consent');
-      authUrl.searchParams.set('state', user.id); // Pass user ID in state
+      // Check if we have the Google Client ID configured
+      const { data: configCheck } = await supabase.functions.invoke('gmail-auth', {
+        body: { action: 'get_auth_url', userId: user.id },
+      });
 
-      // Redirect to Google OAuth
-      window.location.href = authUrl.toString();
+      if (configCheck?.auth_url) {
+        // Redirect to the properly configured Google OAuth URL
+        window.location.href = configCheck.auth_url;
+      } else {
+        toast({
+          title: "Configuration needed",
+          description: "Google OAuth is not properly configured. Please contact support.",
+          variant: "destructive",
+        });
+      }
 
     } catch (error) {
       console.error('Gmail connection error:', error);
@@ -71,10 +70,11 @@ const GmailConnect = ({ onConnected }: GmailConnectProps) => {
       <CardContent>
         <div className="space-y-4">
           <div className="p-4 bg-muted/50 rounded-lg border border-primary/20">
-            <h4 className="font-medium text-sm mb-2 text-primary">Security Notice:</h4>
+            <h4 className="font-medium text-sm mb-2 text-primary">Important Notice:</h4>
             <p className="text-sm text-muted-foreground">
-              We only request read-only access to your Gmail. Your emails are analyzed locally 
-              and only classification results are stored - not the actual email content.
+              Gmail integration requires Google OAuth configuration. If you see a 403 error, 
+              it means the Google Client ID needs to be properly set up in the system.
+              We only request read-only access to analyze your emails for security threats.
             </p>
           </div>
           
