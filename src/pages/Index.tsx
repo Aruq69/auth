@@ -30,6 +30,7 @@ const Index = () => {
   const [emails, setEmails] = useState<Email[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [threatFilter, setThreatFilter] = useState<string | null>(null); // Add threat level filter
   const [gmailConnected, setGmailConnected] = useState(false);
   const [selectedEmail, setSelectedEmail] = useState<Email | null>(null);
   const [showEmailDialog, setShowEmailDialog] = useState(false);
@@ -275,10 +276,20 @@ const Index = () => {
     }
   };
 
-  const filteredEmails = emails.filter(email =>
-    email.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    email.sender.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredEmails = emails.filter(email => {
+    // Apply search filter
+    const matchesSearch = email.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      email.sender.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    // Apply threat level filter
+    const matchesThreatFilter = !threatFilter || 
+      (threatFilter === 'all') ||
+      (threatFilter === 'high' && email.threat_level === 'high') ||
+      (threatFilter === 'medium' && email.threat_level === 'medium') ||
+      (threatFilter === 'low' && email.threat_level === 'low');
+    
+    return matchesSearch && matchesThreatFilter;
+  });
 
   const threatStats = emails.reduce((acc, email) => {
     // Map classification to threat levels for dashboard display
@@ -359,47 +370,67 @@ const Index = () => {
 
         {/* Threat Level Dashboard */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card className="border-border/20 bg-card/50 backdrop-blur-sm hover-card">
+          <Card 
+            className={`border-border/20 bg-card/50 backdrop-blur-sm hover-card cursor-pointer transition-all duration-300 hover:scale-105 ${threatFilter === 'all' ? 'ring-2 ring-primary/50 bg-primary/10' : ''}`}
+            onClick={() => setThreatFilter(threatFilter === 'all' ? null : 'all')}
+          >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
               <CardTitle className="text-xs font-medium text-muted-foreground">TOTAL EMAILS</CardTitle>
               <Mail className="h-3 w-3 text-primary" />
             </CardHeader>
             <CardContent className="pt-1">
               <div className="text-xl font-bold text-primary">{emails.length}</div>
-              <div className="text-xs text-muted-foreground">Active monitoring</div>
+              <div className="text-xs text-muted-foreground">
+                {threatFilter === 'all' ? 'All emails selected' : 'Active monitoring'}
+              </div>
             </CardContent>
           </Card>
           
-          <Card className="threat-high border-border/20 bg-card/50 backdrop-blur-sm hover-card">
+          <Card 
+            className={`threat-high border-border/20 bg-card/50 backdrop-blur-sm hover-card cursor-pointer transition-all duration-300 hover:scale-105 ${threatFilter === 'high' ? 'ring-2 ring-red-500/50 bg-red-500/10' : ''}`}
+            onClick={() => setThreatFilter(threatFilter === 'high' ? null : 'high')}
+          >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
               <CardTitle className="text-xs font-medium text-muted-foreground">HIGH THREATS</CardTitle>
               <AlertTriangle className="h-3 w-3 text-destructive" />
             </CardHeader>
             <CardContent className="pt-1">
               <div className="text-xl font-bold text-destructive">{threatStats.high || 0}</div>
-              <div className="text-xs text-muted-foreground">Critical alerts</div>
+              <div className="text-xs text-muted-foreground">
+                {threatFilter === 'high' ? 'High threats filtered' : 'Critical alerts'}
+              </div>
             </CardContent>
           </Card>
           
-          <Card className="threat-medium border-border/20 bg-card/50 backdrop-blur-sm hover-card">
+          <Card 
+            className={`threat-medium border-border/20 bg-card/50 backdrop-blur-sm hover-card cursor-pointer transition-all duration-300 hover:scale-105 ${threatFilter === 'medium' ? 'ring-2 ring-yellow-500/50 bg-yellow-500/10' : ''}`}
+            onClick={() => setThreatFilter(threatFilter === 'medium' ? null : 'medium')}
+          >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
               <CardTitle className="text-xs font-medium text-muted-foreground">MEDIUM THREATS</CardTitle>
               <Clock className="h-3 w-3 text-yellow-500" />
             </CardHeader>
             <CardContent className="pt-1">
               <div className="text-xl font-bold text-yellow-500">{threatStats.medium || 0}</div>
-              <div className="text-xs text-muted-foreground">Under review</div>
+              <div className="text-xs text-muted-foreground">
+                {threatFilter === 'medium' ? 'Medium threats filtered' : 'Under review'}
+              </div>
             </CardContent>
-            </Card>
+          </Card>
           
-          <Card className="threat-low border-border/20 bg-card/50 backdrop-blur-sm hover-card">
+          <Card 
+            className={`threat-low border-border/20 bg-card/50 backdrop-blur-sm hover-card cursor-pointer transition-all duration-300 hover:scale-105 ${threatFilter === 'low' ? 'ring-2 ring-green-500/50 bg-green-500/10' : ''}`}
+            onClick={() => setThreatFilter(threatFilter === 'low' ? null : 'low')}
+          >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
               <CardTitle className="text-xs font-medium text-muted-foreground">SAFE EMAILS</CardTitle>
               <CheckCircle className="h-3 w-3 text-accent" />
             </CardHeader>
             <CardContent className="pt-1">
               <div className="text-xl font-bold text-accent">{threatStats.low || 0}</div>
-              <div className="text-xs text-muted-foreground">Verified clean</div>
+              <div className="text-xs text-muted-foreground">
+                {threatFilter === 'low' ? 'Safe emails filtered' : 'Verified clean'}
+              </div>
             </CardContent>
           </Card>
         </div>
