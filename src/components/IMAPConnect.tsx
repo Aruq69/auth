@@ -95,7 +95,7 @@ export default function IMAPConnect({ onConnected }: IMAPConnectProps) {
       if (emailCount === 0) {
         toast({
           title: "Connected but no emails found",
-          description: `Connected to ${data?.provider || 'your account'} but found no recent emails. Try the "Add Test Emails" button to see the system working.`,
+          description: `Connected to ${data?.provider || 'your account'} but found no recent emails.`,
         });
       } else {
         toast({

@@ -125,49 +125,6 @@ const Index = () => {
     }
   };
 
-  // Add test data function for debugging
-  const addTestEmails = async () => {
-    if (!user) return;
-    
-    const testEmails = [
-      {
-        user_id: user.id,
-        message_id: 'test-1',
-        subject: 'Suspicious Login Attempt',
-        sender: 'security@phishing-site.com',
-        content: 'Click here to verify your account immediately!',
-        classification: 'spam',
-        threat_level: 'high',
-        confidence: 0.95,
-        keywords: ['urgent', 'verify', 'click here'],
-        received_date: new Date().toISOString(),
-      },
-      {
-        user_id: user.id,
-        message_id: 'test-2',
-        subject: 'Meeting Reminder',
-        sender: 'colleague@company.com',
-        content: 'Don\'t forget our meeting tomorrow at 2 PM.',
-        classification: 'legitimate',
-        threat_level: 'low',
-        confidence: 0.98,
-        keywords: ['meeting', 'reminder'],
-        received_date: new Date(Date.now() - 86400000).toISOString(),
-      }
-    ];
-
-    const { error } = await supabase
-      .from('emails')
-      .insert(testEmails);
-    
-    if (!error) {
-      toast({
-        title: "Test emails added",
-        description: "Added sample emails for testing",
-      });
-      fetchEmails();
-    }
-  };
 
   const checkEmailConnection = async () => {
     if (!user) return;
@@ -339,10 +296,6 @@ const Index = () => {
             <Button onClick={fetchEmails} disabled={loading} variant="outline" className="border-primary/30 hover:border-primary/50 hover-button">
               <Mail className="h-4 w-4 mr-2" />
               Refresh
-            </Button>
-            <Button onClick={addTestEmails} variant="outline" className="border-accent/30 hover:border-accent/50 hover-button">
-              <Plus className="h-4 w-4 mr-2" />
-              Add Test Emails
             </Button>
             {gmailConnected && (
               <Button onClick={handleUnsync} variant="outline" className="border-destructive/30 hover:border-destructive/50 hover:bg-destructive hover:text-destructive-foreground transition-all duration-300 hover-button">
