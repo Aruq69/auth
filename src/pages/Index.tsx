@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Shield, Mail, AlertTriangle, CheckCircle, Clock, Search, User, Zap, Activity, Eye, Lock, LogOut, Plus, Brain, Bot, Cpu, Target, Radar, ScanLine, Database } from "lucide-react";
+import { Shield, Mail, AlertTriangle, CheckCircle, Clock, Search, User, Zap, Activity, Eye, Lock, LogOut, Plus, Brain, Bot, Cpu, Target, Radar, ScanLine, Database, ShieldX } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -34,6 +34,7 @@ const Index = () => {
   const [gmailConnected, setGmailConnected] = useState(false);
   const [selectedEmail, setSelectedEmail] = useState<Email | null>(null);
   const [showEmailDialog, setShowEmailDialog] = useState(false);
+  const [showSignOutDialog, setShowSignOutDialog] = useState(false); // Add sign out confirmation dialog
   const { toast } = useToast();
   const { user, signOut, loading: authLoading } = useAuth();
   const navigate = useNavigate();
@@ -354,7 +355,7 @@ const Index = () => {
                 Clear Emails
               </Button>
             )}
-            <Button onClick={signOut} variant="outline" className="border-muted-foreground/30 hover:border-destructive hover:bg-destructive hover:text-destructive-foreground transition-all duration-300 hover-button">
+            <Button onClick={() => setShowSignOutDialog(true)} variant="outline" className="border-muted-foreground/30 hover:border-destructive hover:bg-destructive hover:text-destructive-foreground transition-all duration-300 hover-button">
               <LogOut className="h-4 w-4 mr-2" />
               Sign Out
             </Button>
@@ -863,6 +864,53 @@ const Index = () => {
                 </div>
               </div>
             )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Sign Out Confirmation Dialog */}
+        <Dialog open={showSignOutDialog} onOpenChange={setShowSignOutDialog}>
+          <DialogContent className="max-w-md mx-auto border-border/20 bg-card/95 backdrop-blur-lg">
+            <DialogHeader className="text-center space-y-4">
+              <div className="flex justify-center">
+                <div className="relative">
+                  <div className="p-6 rounded-full bg-gradient-to-br from-red-500/20 via-red-500/10 to-transparent border border-red-500/30 backdrop-blur-sm">
+                    <ShieldX className="h-16 w-16 text-red-500" />
+                  </div>
+                  <div className="absolute inset-0 p-6 rounded-full border border-red-500/40 animate-ping" />
+                  <div className="absolute inset-2 rounded-full bg-red-500/5 animate-pulse [animation-duration:2s]" />
+                </div>
+              </div>
+              
+              <DialogTitle className="text-2xl font-bold text-foreground">
+                End Security Session?
+              </DialogTitle>
+              <DialogDescription className="text-center text-muted-foreground">
+                You are about to sign out of Mail Guard. Your email analysis data will remain safe, but you'll need to sign in again to access the system.
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="flex flex-col sm:flex-row gap-3 mt-6">
+              <Button
+                onClick={() => setShowSignOutDialog(false)}
+                variant="outline"
+                className="flex-1 border-primary/30 hover:border-primary/50 hover:bg-primary/10 hover:text-primary transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-primary/20"
+              >
+                <Shield className="h-4 w-4 mr-2" />
+                Stay Protected
+              </Button>
+              
+              <Button
+                onClick={() => {
+                  setShowSignOutDialog(false);
+                  signOut();
+                }}
+                variant="outline"
+                className="flex-1 border-red-500/30 hover:border-red-500/50 hover:bg-red-500 hover:text-white transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-red-500/30"
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Sign Out
+              </Button>
+            </div>
           </DialogContent>
         </Dialog>
       </div>
