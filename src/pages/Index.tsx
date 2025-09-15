@@ -464,81 +464,67 @@ const Index = () => {
 
         {/* Email Connection */}
         {!gmailConnected && (
-          <Card className="border-border/20 bg-card/50 backdrop-blur-sm hover-card">
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Mail className="h-5 w-5 text-primary" />
-                <span>Connect Email Account</span>
-              </CardTitle>
-              <CardDescription>
-                Connect your email account to start analyzing emails for threats with our ML Engine
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* ML Engine Feature Highlight */}
-              <div className="relative p-6 rounded-lg bg-gradient-to-br from-teal-500/10 via-teal-500/5 to-transparent border border-teal-500/20 backdrop-blur-sm">
-                <div className="absolute top-3 right-3">
-                  <div className="flex items-center space-x-2">
-                    <div className="h-3 w-3 bg-teal-500 rounded-full animate-pulse" />
-                    <span className="text-xs font-medium text-teal-400">ACTIVE</span>
-                  </div>
-                </div>
-                <div className="flex items-start space-x-4">
-                  <div className="relative">
-                    <div className="p-3 rounded-full bg-teal-500/20 border border-teal-500/30">
-                      <Database className="h-6 w-6 text-teal-500" />
-                    </div>
-                    <div className="absolute inset-0 p-3 rounded-full border border-teal-500/50 animate-ping" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-foreground mb-2 flex items-center space-x-2">
-                      <span>ML Engine Integration</span>
-                      <Zap className="h-4 w-4 text-yellow-500 animate-pulse" />
-                    </h3>
-                    <p className="text-sm text-muted-foreground mb-3">
-                      Our adaptive machine learning engine will automatically analyze your emails, learning from patterns to improve threat detection accuracy over time.
-                    </p>
-                    <div className="flex items-center space-x-4 text-xs text-teal-400">
-                      <div className="flex items-center space-x-1">
-                        <Brain className="h-3 w-3" />
-                        <span>Neural Processing</span>
-                      </div>
-                      <div className="flex items-center space-x-1">
-                        <Activity className="h-3 w-3" />
-                        <span>Real-time Learning</span>
-                      </div>
-                      <div className="flex items-center space-x-1">
-                        <Shield className="h-3 w-3" />
-                        <span>Adaptive Security</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+          <IMAPConnect onConnected={checkEmailConnection} />
+        )}
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-3">
-                  <h3 className="text-lg font-semibold">Gmail Connection</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Connect via OAuth for secure access to your Gmail account
-                  </p>
-                  <Button onClick={connectGmail} className="w-full gradient-button">
-                    <Mail className="h-4 w-4 mr-2" />
-                    Connect Gmail
-                  </Button>
+        {/* Feature Cards Section */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          {/* Universal */}
+          <Card className="border-border/20 bg-gradient-to-br from-blue-500/10 via-blue-500/5 to-transparent backdrop-blur-sm hover:scale-105 transition-all duration-300">
+            <CardContent className="p-6 text-center">
+              <div className="relative mb-4">
+                <div className="p-4 rounded-full bg-blue-500/20 w-fit mx-auto">
+                  <Shield className="h-8 w-8 text-blue-500" />
                 </div>
-                
-                <div className="space-y-3">
-                  <h3 className="text-lg font-semibold">IMAP Connection</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Direct connection using IMAP for most email providers
-                  </p>
-                  <IMAPConnect onConnected={checkEmailConnection} />
-                </div>
+                <div className="absolute -top-1 -right-1 h-4 w-4 bg-blue-500 rounded-full animate-pulse" />
               </div>
+              <h3 className="text-lg font-semibold text-foreground mb-2">Universal</h3>
+              <p className="text-sm text-muted-foreground">Cross-platform email protection for all providers and devices</p>
             </CardContent>
           </Card>
-        )}
+
+          {/* AI */}
+          <Card className="border-border/20 bg-gradient-to-br from-green-500/10 via-green-500/5 to-transparent backdrop-blur-sm hover:scale-105 transition-all duration-300">
+            <CardContent className="p-6 text-center">
+              <div className="relative mb-4">
+                <div className="p-4 rounded-full bg-green-500/20 w-fit mx-auto">
+                  <Brain className="h-8 w-8 text-green-500" />
+                </div>
+                <div className="absolute -top-1 -right-1 h-4 w-4 bg-green-500 rounded-full animate-pulse" />
+              </div>
+              <h3 className="text-lg font-semibold text-foreground mb-2">AI</h3>
+              <p className="text-sm text-muted-foreground">Advanced artificial intelligence for smart threat detection</p>
+            </CardContent>
+          </Card>
+
+          {/* Secure */}
+          <Card className="border-border/20 bg-gradient-to-br from-purple-500/10 via-purple-500/5 to-transparent backdrop-blur-sm hover:scale-105 transition-all duration-300">
+            <CardContent className="p-6 text-center">
+              <div className="relative mb-4">
+                <div className="p-4 rounded-full bg-purple-500/20 w-fit mx-auto">
+                  <Lock className="h-8 w-8 text-purple-500" />
+                </div>
+                <div className="absolute -top-1 -right-1 h-4 w-4 bg-purple-500 rounded-full animate-pulse" />
+              </div>
+              <h3 className="text-lg font-semibold text-foreground mb-2">Secure</h3>
+              <p className="text-sm text-muted-foreground">Enterprise-grade security with end-to-end encryption</p>
+            </CardContent>
+          </Card>
+
+          {/* ML Engine */}
+          <Card className="border-border/20 bg-gradient-to-br from-teal-500/10 via-teal-500/5 to-transparent backdrop-blur-sm hover:scale-105 transition-all duration-300">
+            <CardContent className="p-6 text-center">
+              <div className="relative mb-4">
+                <div className="p-4 rounded-full bg-teal-500/20 w-fit mx-auto">
+                  <Database className="h-8 w-8 text-teal-500" />
+                </div>
+                <div className="absolute -top-1 -right-1 h-4 w-4 bg-teal-500 rounded-full animate-pulse" />
+              </div>
+              <h3 className="text-lg font-semibold text-foreground mb-2">ML Engine</h3>
+              <p className="text-sm text-muted-foreground">Adaptive learning system that improves detection accuracy</p>
+            </CardContent>
+          </Card>
+        </div>
 
         {/* Email Submission Form */}
         <EmailSubmissionForm onEmailSubmitted={fetchEmails} />
