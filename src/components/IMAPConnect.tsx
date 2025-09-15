@@ -132,7 +132,7 @@ export default function IMAPConnect({ onConnected }: IMAPConnectProps) {
         </div>
         <CardTitle className="text-xl">Connect Email Account</CardTitle>
         <CardDescription>
-          Connect any email provider using IMAP protocol
+          Connect any email provider using secure IMAP protocol
         </CardDescription>
       </CardHeader>
       
