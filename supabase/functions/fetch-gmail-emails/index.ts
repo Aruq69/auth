@@ -255,6 +255,8 @@ serve(async (req) => {
           subject,
           sender,
           content,
+          userId: user_id, // Add the required userId field
+          message_id: message.id, // Add the required message_id field
           replyTo,
           returnPath,
           headers: headers.map(h => `${h.name}: ${h.value}`).join('\n')

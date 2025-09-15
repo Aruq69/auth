@@ -249,10 +249,12 @@ serve(async (req) => {
 
     // Process emails with rate limiting consideration
     for (let i = 0; i < emails.length; i++) {
-      const { subject, sender, content, userId, message_id } = emails[i];
+      const { subject, sender, content, userId, message_id, ...additionalFields } = emails[i];
+      
+      console.log(`📧 Processing email ${i + 1}: subject="${subject?.substring(0, 50)}", sender="${sender}", userId="${userId}"`);
       
       if (!subject || !sender || !userId) {
-        console.log(`⚠️ Skipping email ${i + 1}: missing required fields`);
+        console.log(`⚠️ Skipping email ${i + 1}: missing required fields - subject: ${!!subject}, sender: ${!!sender}, userId: ${!!userId}`);
         continue;
       }
 
