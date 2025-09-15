@@ -274,24 +274,6 @@ const ChatAssistant = ({ selectedEmail, emails = [] }: ChatAssistantProps) => {
           </div>
         </CardTitle>
         
-        {/* Threat Statistics - Consistent with Dashboard */}
-        <div className="grid grid-cols-3 gap-2 mt-3">
-          <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3 text-center">
-            <div className="text-xs text-muted-foreground font-medium">HIGH THREATS</div>
-            <div className="text-2xl font-bold text-destructive">{animatedStats.high}</div>
-            <div className="text-xs text-muted-foreground mt-1">Critical alerts</div>
-          </div>
-          <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3 text-center">
-            <div className="text-xs text-muted-foreground font-medium">MEDIUM THREATS</div>
-            <div className="text-2xl font-bold text-yellow-500">{animatedStats.medium}</div>
-            <div className="text-xs text-muted-foreground mt-1">Under review</div>
-          </div>
-          <div className="bg-accent/10 border border-accent/20 rounded-lg p-3 text-center">
-            <div className="text-xs text-muted-foreground font-medium">SAFE EMAILS</div>
-            <div className="text-2xl font-bold text-accent">{animatedStats.low}</div>
-            <div className="text-xs text-muted-foreground mt-1">Verified clean</div>
-          </div>
-        </div>
 
         {/* Real-time Analysis Progress */}
         <div className="mt-3 space-y-2">
