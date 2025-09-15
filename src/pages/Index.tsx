@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import EmailSubmissionForm from "@/components/EmailSubmissionForm";
+import EmailSecurityAdvice from "@/components/EmailSecurityAdvice";
 import FloatingChatButton from "@/components/FloatingChatButton";
 import FeedbackSystem from "@/components/FeedbackSystem";
 import UserOnboarding from "@/components/UserOnboarding";
@@ -885,6 +886,9 @@ const Index = () => {
                     </CardContent>
                   </Card>
                 </div>
+
+                {/* AI Security Advice Section - Only for high/medium threats */}
+                <EmailSecurityAdvice email={selectedEmail} />
 
                 {/* Keywords */}
                 {selectedEmail.keywords && selectedEmail.keywords.length > 0 && (
