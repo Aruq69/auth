@@ -509,8 +509,140 @@ const Index = () => {
               </CardContent>
             </Card>
 
-            {/* Threat Analysis Dashboard */}
-            <div className="h-[700px] flex flex-col">
+            {/* Email List - Display above the Threat Analysis box */}
+            {loading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="text-center space-y-4">
+                  <div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+                  <div className="text-primary">SCANNING EMAIL THREATS...</div>
+                </div>
+              </div>
+            ) : filteredEmails.length === 0 ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="text-center space-y-4">
+                  <Shield className="h-12 w-12 text-muted-foreground mx-auto opacity-50" />
+                  <div className="text-muted-foreground">No email threats detected</div>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {filteredEmails.map((email, index) => {
+                  const threatClass = email.threat_level === 'high' ? 'threat-high' : 
+                                    email.threat_level === 'medium' ? 'threat-medium' : 'threat-low';
+                  
+                  return (
+                    <div 
+                      key={email.id} 
+                      className={`group relative ${threatClass} p-5 hover:scale-[1.02] transition-all duration-300 cursor-pointer border border-border/30 bg-gradient-to-r from-card/80 via-card/60 to-card/80 backdrop-blur-md rounded-xl hover-card animate-fade-in shadow-lg hover:shadow-xl ${
+                        selectedEmail?.id === email.id ? 'ring-2 ring-primary/50 shadow-primary/20' : ''
+                      }`}
+                      style={{ animationDelay: `${index * 0.1}s` }}
+                      onClick={() => {
+                        setSelectedEmail(email);
+                        setShowEmailDialog(true);
+                      }}
+                    >
+                      {/* Gradient border overlay */}
+                      <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-primary/10 via-transparent to-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                      
+                      <div className="flex items-center justify-between relative z-10">
+                        <div className="flex-1 space-y-3">
+                          {/* Header with icons and badges */}
+                          <div className="flex items-start space-x-3">
+                            <div className="flex-shrink-0 mt-1">
+                              {getThreatIcon(email.threat_level)}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-bold text-foreground text-lg leading-tight group-hover:text-primary transition-colors duration-300">
+                                {email.subject}
+                              </h3>
+                            </div>
+                            <div className="flex items-center space-x-2 flex-shrink-0">
+                              {email.threat_level && (
+                                <Badge 
+                                  variant={getThreatBadgeVariant(email.threat_level)}
+                                  className="text-xs px-3 py-1.5 font-semibold shadow-sm"
+                                >
+                                  {email.threat_level.toUpperCase()}
+                                </Badge>
+                              )}
+                              {email.classification && (
+                                <Badge 
+                                  variant="outline" 
+                                  className="border-primary/40 text-primary text-xs px-3 py-1.5 font-medium bg-primary/5 shadow-sm"
+                                >
+                                  {email.classification}
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                          
+                          {/* Email metadata */}
+                          <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+                            <div className="flex items-center space-x-1">
+                              <span className="text-primary font-semibold">From:</span>
+                              <span className="truncate max-w-[200px]">{email.sender}</span>
+                            </div>
+                            <div className="flex items-center space-x-1">
+                              <span className="text-primary font-semibold">Date:</span>
+                              <span>{new Date(email.received_date).toLocaleDateString()}</span>
+                            </div>
+                          </div>
+                          
+                          {/* Keywords tags */}
+                          {email.keywords && email.keywords.length > 0 && (
+                            <div className="flex flex-wrap gap-2">
+                              {email.keywords.slice(0, 3).map((keyword, keywordIndex) => (
+                                <span
+                                  key={keywordIndex}
+                                  className="inline-flex items-center bg-gradient-to-r from-primary/20 to-primary/10 text-primary px-3 py-1.5 text-xs rounded-full border border-primary/30 font-medium shadow-sm hover:shadow-md transition-shadow duration-200"
+                                >
+                                  {keyword}
+                                </span>
+                              ))}
+                              {email.keywords.length > 3 && (
+                                <span className="inline-flex items-center bg-gradient-to-r from-secondary/20 to-secondary/10 text-secondary px-3 py-1.5 text-xs rounded-full border border-secondary/30 font-medium shadow-sm">
+                                  +{email.keywords.length - 3} more
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                        
+                        {/* Confidence score */}
+                        {email.confidence && (
+                          <div className="text-right ml-6 flex-shrink-0">
+                            <div className="relative">
+                              <div className="text-2xl font-bold text-primary bg-gradient-to-b from-primary to-primary/70 bg-clip-text text-transparent">
+                                {Math.round(email.confidence * 100)}%
+                              </div>
+                              <div className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">
+                                CONFIDENCE
+                              </div>
+                              {/* Confidence indicator bar */}
+                              <div className="mt-2 w-16 h-1.5 bg-muted/30 rounded-full overflow-hidden">
+                                <div 
+                                  className="h-full bg-gradient-to-r from-primary to-primary/70 rounded-full transition-all duration-500"
+                                  style={{ width: `${Math.round(email.confidence * 100)}%` }}
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Hover indicator */}
+                      <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Threat Analysis Dashboard - Now appears below emails */}
+            <div className="h-[400px] flex flex-col">
               <Card className="border-border/20 bg-card/50 backdrop-blur-sm hover-card flex-1 flex flex-col overflow-hidden">
                 <CardHeader className="pb-2 flex-shrink-0">
                   <CardTitle className="flex items-center space-x-2">
@@ -518,142 +650,30 @@ const Index = () => {
                     <span>THREAT ANALYSIS RESULTS</span>
                   </CardTitle>
                   <CardDescription>
-                    Real-time security assessment and threat classification
+                    Real-time security assessment and threat classification summary
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="flex-1 flex flex-col p-4 h-0">
-                  {loading ? (
-                    <div className="flex items-center justify-center py-12">
-                      <div className="text-center space-y-4">
-                        <div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
-                        <div className="text-primary">SCANNING EMAIL THREATS...</div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-4 text-center">
+                      <div className="text-2xl font-bold text-destructive">
+                        {filteredEmails.filter(e => e.threat_level === 'high').length}
                       </div>
+                      <div className="text-xs text-muted-foreground">HIGH THREATS</div>
                     </div>
-                  ) : filteredEmails.length === 0 ? (
-                    <div className="flex items-center justify-center py-12">
-                      <div className="text-center space-y-4">
-                        <Shield className="h-12 w-12 text-muted-foreground mx-auto opacity-50" />
-                        <div className="text-muted-foreground">No email threats detected</div>
+                    <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4 text-center">
+                      <div className="text-2xl font-bold text-yellow-500">
+                        {filteredEmails.filter(e => e.threat_level === 'medium').length}
                       </div>
+                      <div className="text-xs text-muted-foreground">MEDIUM THREATS</div>
                     </div>
-                  ) : (
-                    <div className="flex-1 overflow-hidden">
-                      <div className="h-full overflow-y-auto space-y-3 pr-2 custom-scrollbar">
-                        {filteredEmails.map((email, index) => {
-                          const threatClass = email.threat_level === 'high' ? 'threat-high' : 
-                                            email.threat_level === 'medium' ? 'threat-medium' : 'threat-low';
-                          
-                          return (
-                            <div 
-                              key={email.id} 
-                              className={`group relative ${threatClass} p-5 hover:scale-[1.02] transition-all duration-300 cursor-pointer border border-border/30 bg-gradient-to-r from-card/80 via-card/60 to-card/80 backdrop-blur-md rounded-xl hover-card animate-fade-in shadow-lg hover:shadow-xl ${
-                                selectedEmail?.id === email.id ? 'ring-2 ring-primary/50 shadow-primary/20' : ''
-                              }`}
-                              style={{ animationDelay: `${index * 0.1}s` }}
-                              onClick={() => {
-                                setSelectedEmail(email);
-                                setShowEmailDialog(true);
-                              }}
-                            >
-                              {/* Gradient border overlay */}
-                              <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-primary/10 via-transparent to-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-                              
-                              <div className="flex items-center justify-between relative z-10">
-                                <div className="flex-1 space-y-3">
-                                  {/* Header with icons and badges */}
-                                  <div className="flex items-start space-x-3">
-                                    <div className="flex-shrink-0 mt-1">
-                                      {getThreatIcon(email.threat_level)}
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                      <h3 className="font-bold text-foreground text-lg leading-tight group-hover:text-primary transition-colors duration-300">
-                                        {email.subject}
-                                      </h3>
-                                    </div>
-                                    <div className="flex items-center space-x-2 flex-shrink-0">
-                                      {email.threat_level && (
-                                        <Badge 
-                                          variant={getThreatBadgeVariant(email.threat_level)}
-                                          className="text-xs px-3 py-1.5 font-semibold shadow-sm"
-                                        >
-                                          {email.threat_level.toUpperCase()}
-                                        </Badge>
-                                      )}
-                                      {email.classification && (
-                                        <Badge 
-                                          variant="outline" 
-                                          className="border-primary/40 text-primary text-xs px-3 py-1.5 font-medium bg-primary/5 shadow-sm"
-                                        >
-                                          {email.classification}
-                                        </Badge>
-                                      )}
-                                    </div>
-                                  </div>
-                                  
-                                  {/* Email metadata */}
-                                  <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-                                    <div className="flex items-center space-x-1">
-                                      <span className="text-primary font-semibold">From:</span>
-                                      <span className="truncate max-w-[200px]">{email.sender}</span>
-                                    </div>
-                                    <div className="flex items-center space-x-1">
-                                      <span className="text-primary font-semibold">Date:</span>
-                                      <span>{new Date(email.received_date).toLocaleDateString()}</span>
-                                    </div>
-                                  </div>
-                                  
-                                  {/* Keywords tags */}
-                                  {email.keywords && email.keywords.length > 0 && (
-                                    <div className="flex flex-wrap gap-2">
-                                      {email.keywords.slice(0, 3).map((keyword, keywordIndex) => (
-                                        <span
-                                          key={keywordIndex}
-                                          className="inline-flex items-center bg-gradient-to-r from-primary/20 to-primary/10 text-primary px-3 py-1.5 text-xs rounded-full border border-primary/30 font-medium shadow-sm hover:shadow-md transition-shadow duration-200"
-                                        >
-                                          {keyword}
-                                        </span>
-                                      ))}
-                                      {email.keywords.length > 3 && (
-                                        <span className="inline-flex items-center bg-gradient-to-r from-secondary/20 to-secondary/10 text-secondary px-3 py-1.5 text-xs rounded-full border border-secondary/30 font-medium shadow-sm">
-                                          +{email.keywords.length - 3} more
-                                        </span>
-                                      )}
-                                    </div>
-                                  )}
-                                </div>
-                                
-                                {/* Confidence score */}
-                                {email.confidence && (
-                                  <div className="text-right ml-6 flex-shrink-0">
-                                    <div className="relative">
-                                      <div className="text-2xl font-bold text-primary bg-gradient-to-b from-primary to-primary/70 bg-clip-text text-transparent">
-                                        {Math.round(email.confidence * 100)}%
-                                      </div>
-                                      <div className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">
-                                        CONFIDENCE
-                                      </div>
-                                      {/* Confidence indicator bar */}
-                                      <div className="mt-2 w-16 h-1.5 bg-muted/30 rounded-full overflow-hidden">
-                                        <div 
-                                          className="h-full bg-gradient-to-r from-primary to-primary/70 rounded-full transition-all duration-500"
-                                          style={{ width: `${Math.round(email.confidence * 100)}%` }}
-                                        />
-                                      </div>
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-                              
-                              {/* Hover indicator */}
-                              <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
-                              </div>
-                            </div>
-                          );
-                        })}
+                    <div className="bg-accent/10 border border-accent/30 rounded-lg p-4 text-center">
+                      <div className="text-2xl font-bold text-accent">
+                        {filteredEmails.filter(e => e.threat_level === 'low').length}
                       </div>
+                      <div className="text-xs text-muted-foreground">LOW THREATS</div>
                     </div>
-                  )}
+                  </div>
                 </CardContent>
               </Card>
             </div>
