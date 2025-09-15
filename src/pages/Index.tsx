@@ -298,29 +298,38 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       <div className="mx-auto max-w-7xl space-y-6 p-6">
-        {/* Cyber Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
+        {/* Centered Header with Shield */}
+        <div className="text-center space-y-6">
+          {/* Centered Shield Icon */}
+          <div className="flex justify-center">
             <div className="relative">
-              <img src={shieldIcon} alt="Mail Guard Shield" className="h-12 w-12" />
-              <div className="absolute inset-0 h-12 w-12 border border-primary/30 rounded-full animate-ping" />
-            </div>
-            <div>
-              <h1 className="text-5xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                MAIL GUARD
-              </h1>
-              <p className="text-lg text-muted-foreground">
-                Advanced Email Security & Threat Analysis System
-              </p>
-              {user && (
-                <div className="flex items-center space-x-2 mt-2">
-                  <User className="h-4 w-4 text-primary" />
-                  <span className="text-sm text-primary font-medium">{user.email}</span>
-                </div>
-              )}
+              <div className="p-6 rounded-full bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/20 backdrop-blur-sm">
+                <img src={shieldIcon} alt="Mail Guard Shield" className="h-16 w-16" />
+              </div>
+              <div className="absolute inset-0 p-6 rounded-full border border-primary/30 animate-ping" />
+              <div className="absolute inset-2 rounded-full bg-primary/5 animate-pulse [animation-duration:3s]" />
             </div>
           </div>
-          <div className="flex items-center space-x-4">
+          
+          {/* Centered Title and Description */}
+          <div className="space-y-3">
+            <h1 className="text-6xl font-bold bg-gradient-to-r from-primary via-primary-glow to-secondary bg-clip-text text-transparent">
+              MAIL GUARD
+            </h1>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              Advanced Email Security & Threat Analysis System
+            </p>
+            {user && (
+              <div className="flex items-center justify-center space-x-2 mt-4">
+                <User className="h-4 w-4 text-primary" />
+                <span className="text-sm text-primary font-medium">{user.email}</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Action Buttons Bar */}
+        <div className="flex items-center justify-center space-x-4 flex-wrap gap-2">
             {gmailConnected && (
               <Button onClick={fetchIMAPEmails} disabled={loading} variant="outline" className="border-primary/30 hover:border-primary/50 hover-button">
                 <Activity className="h-4 w-4 mr-2" />
@@ -345,7 +354,6 @@ const Index = () => {
               <LogOut className="h-4 w-4 mr-2" />
               Sign Out
             </Button>
-          </div>
         </div>
 
         {/* Threat Level Dashboard */}
