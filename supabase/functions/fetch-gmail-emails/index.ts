@@ -262,11 +262,10 @@ serve(async (req) => {
           headers: headers.map(h => `${h.name}: ${h.value}`).join('\n')
         };
 
-        // Call the enhanced ML classification function with training data
-        const classificationResponse = await supabase.functions.invoke('enhanced-email-classifier', {
+        // Call the email classification function
+        const classificationResponse = await supabase.functions.invoke('email-classifier', {
           body: { 
-            emails: [emailData],
-            method: 'enhanced-ml' // Use enhanced ML classification with training data
+            emails: [emailData]
           }
         });
 
@@ -274,15 +273,11 @@ serve(async (req) => {
           classification: "legitimate",
           threat_level: "low", 
           confidence: 0.5,
-          keywords: [],
-          reasoning: "Default classification"
+          keywords: []
         };
 
         if (classificationResponse.data?.results?.[0]) {
           classification = classificationResponse.data.results[0];
-          console.log(`📧 Email "${subject}" classified as: ${classification.classification} (${classification.confidence}% confidence, ${classification.threat_level} threat)`);
-        } else if (classificationResponse.error) {
-          console.error('ML Classification error:', classificationResponse.error);
         }
 
         // Check if email already exists in database

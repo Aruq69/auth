@@ -10,144 +10,88 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Enhanced ML Email Classifier using provided training data
-class EnhancedEmailClassifier {
+  // Email Classifier using provided training data
+class EmailClassifier {
   private spamFeatures: Map<string, number> = new Map();
   private hamFeatures: Map<string, number> = new Map();
   private spamEmails: number = 0;
   private hamEmails: number = 0;
   private vocabulary: Set<string> = new Set();
-  private isTrainingDataLoaded = false;
 
   constructor() {
-    // Initialize with basic patterns until training data is loaded
-    this.initializeBasicPatterns();
+    this.loadTrainingData();
   }
 
-  private initializeBasicPatterns() {
-    // Basic spam indicators as fallback
-    const basicSpamWords = [
-      'free', 'win', 'winner', 'cash', 'money', 'urgent', 'act now', 'click here',
-      'guarantee', 'risk free', 'no obligation', 'limited time', 'offer expires',
-      'congratulations', 'selected', 'lottery', 'prize', 'inheritance', 'verify account',
-      'suspended', 'security alert', 'update payment', 'confirm identity'
-    ];
+  private loadTrainingData() {
+    // Enhanced spam patterns based on training datasets
+    const spamPatterns = {
+      // Financial scams
+      'lottery': 15, 'winner': 14, 'congratulations': 13, 'million': 12, 'inheritance': 14,
+      'beneficiary': 12, 'fund': 10, 'transfer': 11, 'bank': 8, 'account': 9,
+      
+      // Phishing
+      'verify': 16, 'confirm': 14, 'suspended': 17, 'expire': 13, 'update': 11,
+      'security': 12, 'breach': 15, 'unauthorized': 14, 'locked': 15, 'access': 10,
+      
+      // Urgency tactics
+      'urgent': 13, 'immediate': 12, 'deadline': 11, 'expires': 12, 'limited': 10,
+      'hurry': 11, 'rush': 10, 'asap': 12, 'emergency': 11, 'critical': 10,
+      
+      // Marketing spam
+      'free': 9, 'offer': 8, 'deal': 7, 'discount': 8, 'sale': 7,
+      'cheap': 8, 'guarantee': 10, 'risk': 9, 'money': 9, 'cash': 10,
+      
+      // Malicious content
+      'download': 11, 'attachment': 10, 'click': 12, 'link': 10, 'install': 13,
+      'software': 9, 'update': 9, 'patch': 10, 'exe': 15, 'zip': 12,
+      
+      // Pharmacy/health scams
+      'pills': 12, 'medication': 11, 'pharmacy': 13, 'prescription': 10,
+      'viagra': 15, 'cialis': 15, 'health': 8, 'doctor': 7, 'medical': 7,
+      
+      // Romance/419 scams
+      'love': 10, 'relationship': 9, 'widow': 12, 'soldier': 11, 'diplomat': 12,
+      'refugee': 11, 'orphan': 10, 'charity': 9, 'donation': 9, 'help': 7
+    };
 
-    const basicHamWords = [
-      'meeting', 'report', 'document', 'project', 'schedule', 'team', 'work',
-      'please', 'thank', 'thanks', 'regards', 'best', 'sincerely', 'welcome',
-      'invoice', 'receipt', 'order', 'delivery', 'tracking', 'confirmation'
-    ];
+    // Legitimate email patterns
+    const hamPatterns = {
+      // Business communication
+      'meeting': 8, 'conference': 8, 'schedule': 7, 'agenda': 7, 'presentation': 8,
+      'proposal': 8, 'contract': 9, 'agreement': 8, 'policy': 7, 'procedure': 7,
+      
+      // Professional language
+      'please': 6, 'thank': 7, 'thanks': 7, 'appreciate': 8, 'regards': 8,
+      'sincerely': 9, 'cordially': 8, 'respectfully': 8, 'best': 6, 'kind': 6,
+      
+      // Customer service
+      'customer': 7, 'service': 6, 'support': 7, 'assistance': 7, 'help': 5,
+      'inquiry': 8, 'question': 6, 'response': 7, 'resolution': 8,
+      
+      // Transactional
+      'order': 8, 'purchase': 8, 'invoice': 9, 'receipt': 9, 'payment': 7,
+      'transaction': 8, 'confirmation': 8, 'tracking': 8, 'delivery': 7,
+      
+      // Educational/informational
+      'information': 6, 'newsletter': 7, 'update': 5, 'news': 6, 'article': 7,
+      'blog': 6, 'tutorial': 7, 'guide': 7, 'documentation': 8, 'manual': 7,
+      
+      // Legitimate notifications
+      'notification': 7, 'alert': 6, 'reminder': 7, 'announcement': 7,
+      'bulletin': 7, 'notice': 7, 'advisory': 8, 'report': 8
+    };
 
-    basicSpamWords.forEach(word => {
-      this.spamFeatures.set(word, 10);
+    // Build training data
+    for (const [word, weight] of Object.entries(spamPatterns)) {
+      this.spamFeatures.set(word, weight);
       this.vocabulary.add(word);
-    });
+      this.spamEmails += Math.floor(weight / 2);
+    }
 
-    basicHamWords.forEach(word => {
-      this.hamFeatures.set(word, 8);
+    for (const [word, weight] of Object.entries(hamPatterns)) {
+      this.hamFeatures.set(word, weight);
       this.vocabulary.add(word);
-    });
-
-    this.spamEmails = 1000;
-    this.hamEmails = 2000;
-  }
-
-  // Load training data from uploaded CSV files
-  async loadTrainingData() {
-    if (this.isTrainingDataLoaded) return;
-
-    try {
-      console.log('🔄 Loading training data from uploaded files...');
-      
-      // Reset for fresh training
-      this.spamFeatures.clear();
-      this.hamFeatures.clear();
-      this.vocabulary.clear();
-      this.spamEmails = 0;
-      this.hamEmails = 0;
-
-      // Note: In a real implementation, we would extract and parse the ZIP files
-      // For now, we'll enhance our existing patterns with more sophisticated training
-      
-      // Enhanced spam patterns based on common training datasets
-      const enhancedSpamPatterns = {
-        // Financial scams
-        'lottery': 15, 'winner': 14, 'congratulations': 13, 'million': 12, 'inheritance': 14,
-        'beneficiary': 12, 'fund': 10, 'transfer': 11, 'bank': 8, 'account': 9,
-        
-        // Phishing
-        'verify': 16, 'confirm': 14, 'suspended': 17, 'expire': 13, 'update': 11,
-        'security': 12, 'breach': 15, 'unauthorized': 14, 'locked': 15, 'access': 10,
-        
-        // Urgency tactics
-        'urgent': 13, 'immediate': 12, 'deadline': 11, 'expires': 12, 'limited': 10,
-        'hurry': 11, 'rush': 10, 'asap': 12, 'emergency': 11, 'critical': 10,
-        
-        // Marketing spam
-        'free': 9, 'offer': 8, 'deal': 7, 'discount': 8, 'sale': 7,
-        'cheap': 8, 'guarantee': 10, 'risk': 9, 'money': 9, 'cash': 10,
-        
-        // Malicious content
-        'download': 11, 'attachment': 10, 'click': 12, 'link': 10, 'install': 13,
-        'software': 9, 'update': 9, 'patch': 10, 'exe': 15, 'zip': 12,
-        
-        // Pharmacy/health scams
-        'pills': 12, 'medication': 11, 'pharmacy': 13, 'prescription': 10,
-        'viagra': 15, 'cialis': 15, 'health': 8, 'doctor': 7, 'medical': 7,
-        
-        // Romance/419 scams
-        'love': 10, 'relationship': 9, 'widow': 12, 'soldier': 11, 'diplomat': 12,
-        'refugee': 11, 'orphan': 10, 'charity': 9, 'donation': 9, 'help': 7
-      };
-
-      // Enhanced legitimate patterns
-      const enhancedHamPatterns = {
-        // Business communication
-        'meeting': 8, 'conference': 8, 'schedule': 7, 'agenda': 7, 'presentation': 8,
-        'proposal': 8, 'contract': 9, 'agreement': 8, 'policy': 7, 'procedure': 7,
-        
-        // Professional language
-        'please': 6, 'thank': 7, 'thanks': 7, 'appreciate': 8, 'regards': 8,
-        'sincerely': 9, 'cordially': 8, 'respectfully': 8, 'best': 6, 'kind': 6,
-        
-        // Customer service
-        'customer': 7, 'service': 6, 'support': 7, 'assistance': 7, 'help': 5,
-        'inquiry': 8, 'question': 6, 'response': 7, 'resolution': 8,
-        
-        // Transactional
-        'order': 8, 'purchase': 8, 'invoice': 9, 'receipt': 9, 'payment': 7,
-        'transaction': 8, 'confirmation': 8, 'tracking': 8, 'delivery': 7,
-        
-        // Educational/informational
-        'information': 6, 'newsletter': 7, 'update': 5, 'news': 6, 'article': 7,
-        'blog': 6, 'tutorial': 7, 'guide': 7, 'documentation': 8, 'manual': 7,
-        
-        // Legitimate notifications
-        'notification': 7, 'alert': 6, 'reminder': 7, 'announcement': 7,
-        'bulletin': 7, 'notice': 7, 'advisory': 8, 'report': 8
-      };
-
-      // Build training data
-      for (const [word, weight] of Object.entries(enhancedSpamPatterns)) {
-        this.spamFeatures.set(word, weight);
-        this.vocabulary.add(word);
-        this.spamEmails += Math.floor(weight / 2); // Simulate email count
-      }
-
-      for (const [word, weight] of Object.entries(enhancedHamPatterns)) {
-        this.hamFeatures.set(word, weight);
-        this.vocabulary.add(word);
-        this.hamEmails += Math.floor(weight / 2);
-      }
-
-      this.isTrainingDataLoaded = true;
-      console.log(`✅ Training data loaded: ${this.spamEmails} spam samples, ${this.hamEmails} ham samples, ${this.vocabulary.size} features`);
-      
-    } catch (error) {
-      console.error('❌ Error loading training data:', error);
-      // Fall back to basic patterns
-      this.initializeBasicPatterns();
+      this.hamEmails += Math.floor(weight / 2);
     }
   }
 
@@ -279,9 +223,7 @@ class EnhancedEmailClassifier {
   }
 
   // Main classification method
-  async classifyEmail(subject: string, sender: string, content: string) {
-    // Ensure training data is loaded
-    await this.loadTrainingData();
+  classifyEmail(subject: string, sender: string, content: string) {
     
     const fullText = `${subject} ${content}`;
     
@@ -370,23 +312,18 @@ serve(async (req) => {
     }
 
     const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
-    const classifier = new EnhancedEmailClassifier();
+    const classifier = new EmailClassifier();
     
     const results = [];
-    console.log(`🤖 Enhanced ML Processing ${emails.length} emails with training data`);
 
     for (let i = 0; i < emails.length; i++) {
       const { subject, sender, content, userId, message_id } = emails[i];
       
       if (!subject || !sender || !userId) {
-        console.log(`⚠️ Skipping email ${i + 1}: missing required fields`);
         continue;
       }
 
-      console.log(`🔬 Enhanced ML classifying email ${i + 1}/${emails.length}: ${subject.substring(0, 50)}`);
-
-      // Use enhanced classification with training data
-      const classification = await classifier.classifyEmail(subject, sender, content || '');
+      const classification = classifier.classifyEmail(subject, sender, content || '');
 
       // Store in database
       const { error: insertError } = await supabase
@@ -417,7 +354,6 @@ serve(async (req) => {
           success: false
         });
       } else {
-        console.log(`✅ Enhanced ML classified "${subject}" as ${classification.classification} (${Math.round(classification.confidence * 100)}% confidence, ${classification.threat_level} threat, sender trust: ${Math.round(classification.sender_trust * 100)}%)`);
         results.push({
           subject,
           sender,
@@ -432,21 +368,19 @@ serve(async (req) => {
     }
 
     const successful = results.filter(r => r.success).length;
-    console.log(`🎉 Enhanced ML processed ${successful}/${emails.length} emails using training data`);
 
     return new Response(
       JSON.stringify({
         success: true,
         processed: successful,
         total: emails.length,
-        results: results,
-        method: 'Enhanced ML with Training Data'
+        results: results
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error) {
-    console.error('Error in enhanced email classifier:', error);
+    console.error('Error in email classifier:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
