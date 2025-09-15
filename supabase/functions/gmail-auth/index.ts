@@ -41,10 +41,11 @@ serve(async (req) => {
     
     // Get the origin from the request headers to make it dynamic
     const requestOrigin = req.headers.get('origin') || req.headers.get('referer')?.replace(/\/[^\/]*$/, '');
+    // Force use of current URL
     const origin = requestOrigin || 'https://4a245192-55d5-454c-8b1c-2d652a6212f2.lovableproject.com';
     console.log('Request origin:', req.headers.get('origin'));
     console.log('Request referer:', req.headers.get('referer'));
-    console.log('Using origin:', origin);
+    console.log('Final origin used:', origin);
 
     // Handle auth URL generation
     if (action === 'get_auth_url') {
