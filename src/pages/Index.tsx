@@ -317,54 +317,70 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
-      <div className="mx-auto max-w-[95vw] space-y-6 p-4 sm:p-6">
-        {/* Centered Header with Shield */}
-        <div className="text-center space-y-6">
-          {/* Centered Shield Icon */}
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-4 sm:space-y-6 py-4 sm:py-6">
+        {/* Mobile-optimized Header with Shield */}
+        <div className="text-center space-y-4 sm:space-y-6">
+          {/* Responsive Shield Icon */}
           <div className="flex justify-center">
             <div className="relative">
-              <div className="p-8 rounded-full bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/20 backdrop-blur-sm">
-                <Shield className="h-24 w-24 text-primary" />
+              <div className="p-4 sm:p-8 rounded-full bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/20 backdrop-blur-sm">
+                <Shield className="h-12 w-12 sm:h-16 md:h-20 lg:h-24 text-primary" />
               </div>
-              <div className="absolute inset-0 p-8 rounded-full border border-primary/30 animate-ping" />
-              <div className="absolute inset-2 rounded-full bg-primary/5 animate-pulse [animation-duration:3s]" />
+              <div className="absolute inset-0 p-4 sm:p-8 rounded-full border border-primary/30 animate-ping" />
+              <div className="absolute inset-1 sm:inset-2 rounded-full bg-primary/5 animate-pulse [animation-duration:3s]" />
             </div>
           </div>
           
-          {/* Centered Title and Description */}
-          <div className="space-y-3">
-            <h1 className="text-6xl font-bold bg-gradient-to-r from-primary via-primary-glow to-secondary bg-clip-text text-transparent">
+          {/* Responsive Title and Description */}
+          <div className="space-y-2 sm:space-y-3">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-primary via-primary-glow to-secondary bg-clip-text text-transparent">
               MAIL GUARD
             </h1>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-sm sm:text-base lg:text-xl text-muted-foreground max-w-2xl mx-auto px-4">
               Advanced Email Security & Threat Analysis System
             </p>
             {user && (
-              <div className="flex items-center justify-center space-x-2 mt-4">
-                <User className="h-4 w-4 text-primary" />
-                <span className="text-sm text-primary font-medium">{user.email}</span>
+              <div className="flex items-center justify-center space-x-2 mt-3 sm:mt-4">
+                <User className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />
+                <span className="text-xs sm:text-sm text-primary font-medium truncate max-w-[250px]">{user.email}</span>
               </div>
             )}
           </div>
         </div>
 
-        {/* Action Buttons Bar */}
-        <div className="flex items-center justify-center space-x-4 flex-wrap gap-2">
+        {/* Mobile-optimized Action Buttons */}
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:space-x-2">
             {gmailConnected && (
-              <Button onClick={fetchGmailEmails} disabled={loading} variant="outline" className="border-primary/30 hover:border-primary/50 hover-button">
-                <Activity className="h-4 w-4 mr-2" />
+              <Button 
+                onClick={fetchGmailEmails} 
+                disabled={loading} 
+                variant="outline" 
+                className="w-full sm:w-auto border-primary/30 hover:border-primary/50 hover-button text-xs sm:text-sm"
+                size="sm"
+              >
+                <Activity className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                 Sync Gmail
               </Button>
             )}
-            <Button onClick={fetchEmails} disabled={loading} variant="outline" className="border-primary/30 hover:border-primary/50 hover-button">
-              <Mail className="h-4 w-4 mr-2" />
+            <Button 
+              onClick={fetchEmails} 
+              disabled={loading} 
+              variant="outline" 
+              className="w-full sm:w-auto border-primary/30 hover:border-primary/50 hover-button text-xs sm:text-sm"
+              size="sm"
+            >
+              <Mail className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
               Refresh
             </Button>
             {gmailConnected && (
               <AlertDialog open={showClearEmailsDialog} onOpenChange={setShowClearEmailsDialog}>
                 <AlertDialogTrigger asChild>
-                  <Button variant="outline" className="border-orange-500/30 hover:border-orange-500/50 hover:bg-orange-500 hover:text-white transition-all duration-300 hover-button">
-                    <Trash2 className="h-4 w-4 mr-2" />
+                  <Button 
+                    variant="outline" 
+                    className="w-full sm:w-auto border-orange-500/30 hover:border-orange-500/50 hover:bg-orange-500 hover:text-white transition-all duration-300 hover-button text-xs sm:text-sm"
+                    size="sm"
+                  >
+                    <Trash2 className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                     Clear Emails
                   </Button>
                 </AlertDialogTrigger>
@@ -397,26 +413,31 @@ const Index = () => {
                 </AlertDialogContent>
               </AlertDialog>
             )}
-            <Button onClick={() => setShowSignOutDialog(true)} variant="outline" className="border-muted-foreground/30 hover:border-destructive hover:bg-destructive hover:text-destructive-foreground transition-all duration-300 hover-button">
-              <LogOut className="h-4 w-4 mr-2" />
+            <Button 
+              onClick={() => setShowSignOutDialog(true)} 
+              variant="outline" 
+              className="w-full sm:w-auto border-muted-foreground/30 hover:border-destructive hover:bg-destructive hover:text-destructive-foreground transition-all duration-300 hover-button text-xs sm:text-sm"
+              size="sm"
+            >
+              <LogOut className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
               Sign Out
             </Button>
         </div>
 
 
-        {/* Threat Level Dashboard */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {/* Mobile-optimized Threat Level Dashboard */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
           <Card 
             className={`border-border/20 bg-card/50 backdrop-blur-sm hover-card cursor-pointer transition-all duration-300 hover:scale-105 ${threatFilter === 'all' ? 'ring-2 ring-primary/50 bg-primary/10' : ''}`}
             onClick={() => setThreatFilter(threatFilter === 'all' ? null : 'all')}
           >
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
-              <CardTitle className="text-xs font-medium text-muted-foreground">TOTAL EMAILS</CardTitle>
-              <Mail className="h-3 w-3 text-primary" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 px-3 sm:px-6 pt-3 sm:pt-6">
+              <CardTitle className="text-[10px] sm:text-xs font-medium text-muted-foreground">TOTAL EMAILS</CardTitle>
+              <Mail className="h-2 w-2 sm:h-3 sm:w-3 text-primary" />
             </CardHeader>
-            <CardContent className="pt-1">
-              <div className="text-xl font-bold text-primary">{emails.length}</div>
-              <div className="text-xs text-muted-foreground">
+            <CardContent className="pt-1 px-3 sm:px-6 pb-3 sm:pb-6">
+              <div className="text-lg sm:text-xl font-bold text-primary">{emails.length}</div>
+              <div className="text-[10px] sm:text-xs text-muted-foreground hidden sm:block">
                 {threatFilter === 'all' ? 'All emails selected' : `Showing ${emails.length} most recent`}
               </div>
             </CardContent>
@@ -426,13 +447,13 @@ const Index = () => {
             className={`threat-high border-border/20 bg-card/50 backdrop-blur-sm hover-card cursor-pointer transition-all duration-300 hover:scale-105 ${threatFilter === 'high' ? 'ring-2 ring-red-500/50 bg-red-500/10' : ''}`}
             onClick={() => setThreatFilter(threatFilter === 'high' ? null : 'high')}
           >
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
-              <CardTitle className="text-xs font-medium text-muted-foreground">HIGH THREATS</CardTitle>
-              <AlertTriangle className="h-3 w-3 text-destructive" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 px-3 sm:px-6 pt-3 sm:pt-6">
+              <CardTitle className="text-[10px] sm:text-xs font-medium text-muted-foreground">HIGH THREATS</CardTitle>
+              <AlertTriangle className="h-2 w-2 sm:h-3 sm:w-3 text-destructive" />
             </CardHeader>
-            <CardContent className="pt-1">
-              <div className="text-xl font-bold text-destructive">{threatStats.high || 0}</div>
-              <div className="text-xs text-muted-foreground">
+            <CardContent className="pt-1 px-3 sm:px-6 pb-3 sm:pb-6">
+              <div className="text-lg sm:text-xl font-bold text-destructive">{threatStats.high || 0}</div>
+              <div className="text-[10px] sm:text-xs text-muted-foreground hidden sm:block">
                 {threatFilter === 'high' ? 'High threats filtered' : 'Critical alerts'}
               </div>
             </CardContent>
@@ -442,13 +463,13 @@ const Index = () => {
             className={`threat-medium border-border/20 bg-card/50 backdrop-blur-sm hover-card cursor-pointer transition-all duration-300 hover:scale-105 ${threatFilter === 'medium' ? 'ring-2 ring-yellow-500/50 bg-yellow-500/10' : ''}`}
             onClick={() => setThreatFilter(threatFilter === 'medium' ? null : 'medium')}
           >
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
-              <CardTitle className="text-xs font-medium text-muted-foreground">MEDIUM THREATS</CardTitle>
-              <Clock className="h-3 w-3 text-yellow-500" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 px-3 sm:px-6 pt-3 sm:pt-6">
+              <CardTitle className="text-[10px] sm:text-xs font-medium text-muted-foreground">MEDIUM THREATS</CardTitle>
+              <Clock className="h-2 w-2 sm:h-3 sm:w-3 text-yellow-500" />
             </CardHeader>
-            <CardContent className="pt-1">
-              <div className="text-xl font-bold text-yellow-500">{threatStats.medium || 0}</div>
-              <div className="text-xs text-muted-foreground">
+            <CardContent className="pt-1 px-3 sm:px-6 pb-3 sm:pb-6">
+              <div className="text-lg sm:text-xl font-bold text-yellow-500">{threatStats.medium || 0}</div>
+              <div className="text-[10px] sm:text-xs text-muted-foreground hidden sm:block">
                 {threatFilter === 'medium' ? 'Medium threats filtered' : 'Under review'}
               </div>
             </CardContent>
@@ -458,13 +479,13 @@ const Index = () => {
             className={`threat-low border-border/20 bg-card/50 backdrop-blur-sm hover-card cursor-pointer transition-all duration-300 hover:scale-105 ${threatFilter === 'low' ? 'ring-2 ring-green-500/50 bg-green-500/10' : ''}`}
             onClick={() => setThreatFilter(threatFilter === 'low' ? null : 'low')}
           >
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
-              <CardTitle className="text-xs font-medium text-muted-foreground">SAFE EMAILS</CardTitle>
-              <CheckCircle className="h-3 w-3 text-accent" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 px-3 sm:px-6 pt-3 sm:pt-6">
+              <CardTitle className="text-[10px] sm:text-xs font-medium text-muted-foreground">SAFE EMAILS</CardTitle>
+              <CheckCircle className="h-2 w-2 sm:h-3 sm:w-3 text-accent" />
             </CardHeader>
-            <CardContent className="pt-1">
-              <div className="text-xl font-bold text-accent">{threatStats.low || 0}</div>
-              <div className="text-xs text-muted-foreground">
+            <CardContent className="pt-1 px-3 sm:px-6 pb-3 sm:pb-6">
+              <div className="text-lg sm:text-xl font-bold text-accent">{threatStats.low || 0}</div>
+              <div className="text-[10px] sm:text-xs text-muted-foreground hidden sm:block">
                 {threatFilter === 'low' ? 'Safe emails filtered' : 'Verified clean'}
               </div>
             </CardContent>

@@ -27,14 +27,14 @@ const FloatingChatButton: React.FC<FloatingChatButtonProps> = ({ selectedEmail, 
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className="fixed bottom-6 right-6 z-50">
+    <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50">
       {/* Container for button with proper overflow handling */}
-      <div className="relative p-4">
+      <div className="relative p-2 sm:p-4">
         <Sheet open={isOpen} onOpenChange={setIsOpen}>
           <SheetTrigger asChild>
             <Button
               size="lg"
-              className="group relative h-16 w-16 rounded-full border-2 border-primary/20 bg-gradient-to-br from-primary via-primary to-primary-glow shadow-lg hover:shadow-2xl hover:shadow-primary/25 transition-all duration-500 hover:scale-110 overflow-visible"
+              className="group relative h-12 w-12 sm:h-16 sm:w-16 rounded-full border-2 border-primary/20 bg-gradient-to-br from-primary via-primary to-primary-glow shadow-lg hover:shadow-2xl hover:shadow-primary/25 transition-all duration-500 hover:scale-110 overflow-visible"
             >
               {/* Animated background gradient - contained within button */}
               <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary-glow/50 to-primary opacity-0 group-hover:opacity-100 transition-all duration-500 group-hover:rotate-45" />
@@ -46,22 +46,22 @@ const FloatingChatButton: React.FC<FloatingChatButtonProps> = ({ selectedEmail, 
               {/* Main icon container */}
               <div className="relative z-10 flex items-center justify-center transition-transform duration-300 group-hover:scale-110">
                 {isOpen ? (
-                  <X className="h-7 w-7 text-primary-foreground transition-all duration-300" />
+                  <X className="h-5 w-5 sm:h-7 sm:w-7 text-primary-foreground transition-all duration-300" />
                 ) : (
-                  <MessageCircle className="h-7 w-7 text-primary-foreground transition-all duration-300" />
+                  <MessageCircle className="h-5 w-5 sm:h-7 sm:w-7 text-primary-foreground transition-all duration-300" />
                 )}
               </div>
               
               {/* Status indicator - positioned relative to container */}
               {!isOpen && (
-                <div className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center z-20">
+                <div className="absolute -top-0.5 -right-0.5 sm:-top-1 sm:-right-1 flex h-4 w-4 sm:h-5 sm:w-5 items-center justify-center z-20">
                   <div className="absolute h-full w-full rounded-full bg-green-500 animate-ping [animation-duration:1.5s] scale-100" />
-                  <div className="relative h-3 w-3 rounded-full bg-green-400 border-2 border-background shadow-sm" />
+                  <div className="relative h-2 w-2 sm:h-3 sm:w-3 rounded-full bg-green-400 border-2 border-background shadow-sm" />
                 </div>
               )}
               
               {/* Hover tooltip - positioned outside button container */}
-              <div className="absolute -top-16 left-1/2 -translate-x-1/2 rounded-lg bg-popover px-3 py-1.5 text-xs font-medium text-popover-foreground shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none whitespace-nowrap border border-border/20 z-30">
+              <div className="absolute -top-12 sm:-top-16 left-1/2 -translate-x-1/2 rounded-lg bg-popover px-2 py-1 sm:px-3 sm:py-1.5 text-[10px] sm:text-xs font-medium text-popover-foreground shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none whitespace-nowrap border border-border/20 z-30">
                 {isOpen ? 'Close Chat' : 'AI Assistant'}
                 <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-popover" />
               </div>
@@ -70,7 +70,7 @@ const FloatingChatButton: React.FC<FloatingChatButtonProps> = ({ selectedEmail, 
           
           <SheetContent 
             side="right" 
-            className="w-[400px] sm:w-[500px] p-0 border-border/20 bg-card/95 backdrop-blur-sm"
+            className="w-full sm:w-[400px] md:w-[500px] p-0 border-border/20 bg-card/95 backdrop-blur-sm"
           >
             <div className="h-full">
               <ChatAssistant selectedEmail={selectedEmail} emails={emails} />
