@@ -12,8 +12,6 @@ import { useToast } from "@/hooks/use-toast";
 import EmailSubmissionForm from "@/components/EmailSubmissionForm";
 import FloatingChatButton from "@/components/FloatingChatButton";
 
-
-
 interface Email {
   id: string;
   subject: string;
