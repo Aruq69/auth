@@ -262,6 +262,19 @@ const Index = () => {
     }
   };
 
+  const getThreatHoverEffect = (threatLevel: string | null) => {
+    switch (threatLevel?.toLowerCase()) {
+      case 'high': 
+        return 'hover:shadow-[0_0_20px_rgba(239,68,68,0.5)] hover:border-red-500/50';
+      case 'medium': 
+        return 'hover:shadow-[0_0_20px_rgba(234,179,8,0.5)] hover:border-yellow-500/50';
+      case 'low': 
+        return 'hover:shadow-[0_0_20px_rgba(34,197,94,0.5)] hover:border-green-500/50';
+      default: 
+        return 'hover:shadow-[0_0_20px_rgba(107,114,128,0.5)] hover:border-gray-500/50';
+    }
+  };
+
   const filteredEmails = emails.filter(email =>
     email.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
     email.sender.toLowerCase().includes(searchTerm.toLowerCase())
@@ -546,7 +559,7 @@ const Index = () => {
                           return (
                             <div 
                               key={email.id} 
-                              className={`group relative ${threatClass} p-3 transition-all duration-300 cursor-pointer border border-border/30 bg-gradient-to-r from-card/80 via-card/60 to-card/80 backdrop-blur-md rounded-lg hover-card animate-fade-in shadow-sm hover:shadow-[0_0_20px_rgba(34,197,94,0.5)] hover:border-green-500/50 ${
+                              className={`group relative ${threatClass} p-3 transition-all duration-300 cursor-pointer border border-border/30 bg-gradient-to-r from-card/80 via-card/60 to-card/80 backdrop-blur-md rounded-lg hover-card animate-fade-in shadow-sm ${getThreatHoverEffect(email.threat_level)} ${
                                 selectedEmail?.id === email.id ? 'ring-2 ring-primary/50 shadow-primary/20' : ''
                               }`}
                               style={{ animationDelay: `${index * 0.1}s` }}
