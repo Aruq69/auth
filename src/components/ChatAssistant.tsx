@@ -206,20 +206,41 @@ const ChatAssistant = ({ selectedEmail, emails = [] }: ChatAssistantProps) => {
       console.error('Chat error:', error);
       setIsTyping(false);
       
+      // Check for specific error types to provide better user feedback
+      let errorMessage = "Failed to get response from the assistant. Please try again.";
+      let errorTitle = "Chat Error";
+      
+      if (error instanceof Error) {
+        const errorString = error.message.toLowerCase();
+        
+        if (errorString.includes('exceeded your current quota') || errorString.includes('429')) {
+          errorTitle = "Service Temporarily Unavailable";
+          errorMessage = "The AI service is currently experiencing high demand and has exceeded its quota. This typically resolves within 24 hours. Please try again later or contact support if this persists.";
+        } else if (errorString.includes('insufficient_quota')) {
+          errorTitle = "Service Quota Exceeded";
+          errorMessage = "The AI service quota has been exceeded. Please try again later or contact support for assistance.";
+        } else if (errorString.includes('network') || errorString.includes('connection')) {
+          errorTitle = "Connection Error";
+          errorMessage = "Unable to connect to the AI service. Please check your internet connection and try again.";
+        } else {
+          errorMessage = `Service error: ${error.message}`;
+        }
+      }
+
       toast({
-        title: "Chat Error",
-        description: error instanceof Error ? error.message : "Failed to get response from the assistant. Please try again.",
+        title: errorTitle,
+        description: errorMessage,
         variant: "destructive",
       });
 
-      const errorMessage: Message = {
+      const botErrorMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: `I apologize, but I'm experiencing connectivity issues: ${error instanceof Error ? error.message : 'Unknown error'}. Please try your question again in a moment.`,
+        content: `I apologize, but I'm currently experiencing service limitations. ${errorMessage.includes('quota') ? 'This is a temporary service limitation that should resolve soon.' : 'Please try your question again in a moment.'}`,
         isBot: true,
         timestamp: new Date()
       };
 
-      setMessages(prev => [...prev, errorMessage]);
+      setMessages(prev => [...prev, botErrorMessage]);
     } finally {
       setIsLoading(false);
     }
