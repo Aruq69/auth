@@ -235,10 +235,30 @@ const Index = () => {
 
   const getThreatIcon = (threatLevel: string | null) => {
     switch (threatLevel?.toLowerCase()) {
-      case 'high': return <AlertTriangle className="h-4 w-4" />;
-      case 'medium': return <Clock className="h-4 w-4" />;
-      case 'low': return <CheckCircle className="h-4 w-4" />;
-      default: return <Shield className="h-4 w-4" />;
+      case 'high': 
+        return (
+          <div className="flex items-center justify-center w-6 h-6 rounded-full bg-destructive/20 border border-destructive/30">
+            <AlertTriangle className="h-3 w-3 text-destructive" />
+          </div>
+        );
+      case 'medium': 
+        return (
+          <div className="flex items-center justify-center w-6 h-6 rounded-full bg-yellow-500/20 border border-yellow-500/30">
+            <Clock className="h-3 w-3 text-yellow-500" />
+          </div>
+        );
+      case 'low': 
+        return (
+          <div className="flex items-center justify-center w-6 h-6 rounded-full bg-accent/20 border border-accent/30">
+            <CheckCircle className="h-3 w-3 text-accent" />
+          </div>
+        );
+      default: 
+        return (
+          <div className="flex items-center justify-center w-6 h-6 rounded-full bg-muted/20 border border-muted/30">
+            <Shield className="h-3 w-3 text-muted-foreground" />
+          </div>
+        );
     }
   };
 
