@@ -134,7 +134,7 @@ const FeedbackSystem = () => {
             className="group relative h-12 w-12 sm:h-16 sm:w-16 aspect-square rounded-full bg-gradient-to-br from-secondary via-secondary/90 to-secondary-foreground shadow-lg hover:shadow-2xl hover:shadow-secondary/25 transition-all duration-500 hover:scale-110 flex items-center justify-center"
           >
             <div className="absolute inset-0 rounded-full bg-secondary/20 animate-ping [animation-duration:3s]" />
-            <MessageSquare className="h-5 w-5 sm:h-6 sm:w-6 text-secondary-foreground transition-all duration-300 group-hover:scale-110" />
+            <ThumbsUp className="h-5 w-5 sm:h-6 sm:w-6 text-secondary-foreground transition-all duration-300 group-hover:scale-110" />
             
             {/* Feedback indicator */}
             <div className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center">

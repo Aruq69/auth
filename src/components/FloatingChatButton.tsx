@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { MessageCircle, X } from 'lucide-react';
+import { MessageCircle, X, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import ChatAssistant from '@/components/ChatAssistant';
@@ -48,7 +48,7 @@ const FloatingChatButton: React.FC<FloatingChatButtonProps> = ({ selectedEmail, 
                 {isOpen ? (
                   <X className="h-5 w-5 sm:h-7 sm:w-7 text-primary-foreground transition-all duration-300" />
                 ) : (
-                  <MessageCircle className="h-5 w-5 sm:h-7 sm:w-7 text-primary-foreground transition-all duration-300" />
+                  <ShieldCheck className="h-5 w-5 sm:h-7 sm:w-7 text-primary-foreground transition-all duration-300" />
                 )}
               </div>
               
