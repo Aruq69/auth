@@ -133,7 +133,7 @@ export default function IMAPConnect({ onConnected }: IMAPConnectProps) {
       </CardHeader>
       
       <CardContent className="space-y-4">
-        <div className="grid grid-cols-3 gap-3 text-center mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-center mb-6">
           <div className="border border-border/20 bg-gradient-to-br from-green-500/10 via-green-500/5 to-transparent backdrop-blur-sm rounded-lg p-4 text-center hover:scale-105 transition-all duration-300">
             <div className="relative mb-3">
               <div className="p-3 rounded-full bg-green-500/20 w-fit mx-auto">
@@ -163,6 +163,16 @@ export default function IMAPConnect({ onConnected }: IMAPConnectProps) {
             </div>
             <h3 className="text-sm font-semibold text-foreground mb-1">Secure</h3>
             <p className="text-xs text-muted-foreground">Read-only access</p>
+          </div>
+          <div className="border border-border/20 bg-gradient-to-br from-teal-500/10 via-teal-500/5 to-transparent backdrop-blur-sm rounded-lg p-4 text-center hover:scale-105 transition-all duration-300">
+            <div className="relative mb-3">
+              <div className="p-3 rounded-full bg-teal-500/20 w-fit mx-auto">
+                <Database className="h-6 w-6 text-teal-500" />
+              </div>
+              <div className="absolute -top-1 -right-1 h-3 w-3 bg-teal-500 rounded-full animate-pulse" />
+            </div>
+            <h3 className="text-sm font-semibold text-foreground mb-1">ML Engine</h3>
+            <p className="text-xs text-muted-foreground">Adaptive learning</p>
           </div>
         </div>
 
