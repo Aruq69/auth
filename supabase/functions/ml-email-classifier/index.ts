@@ -48,28 +48,62 @@ class MLEmailClassifier {
 
   // Initialize with predefined training data (simplified Naive Bayes)
   private initializeWithTrainingData() {
-    // Spam indicators with weights (based on your Python model approach)
+    // Enhanced spam indicators with weights (more comprehensive)
     const spamIndicators = {
-      'congratulations': 10, 'won': 8, 'winner': 8, 'prize': 7, 'free': 6,
-      'urgent': 9, 'act': 5, 'now': 4, 'limited': 6, 'offer': 5,
-      'click': 7, 'link': 6, 'claim': 8, 'verify': 9, 'account': 6,
-      'suspended': 10, 'security': 7, 'breach': 9, 'update': 5,
-      'payment': 6, 'credit': 5, 'card': 5, 'bank': 6, 'amazon': 4,
-      'gift': 7, 'card': 5, 'money': 6, 'cash': 7, 'reward': 6,
-      'bitcoin': 8, 'crypto': 8, 'investment': 7, 'guarantee': 8,
-      'risk': 5, 'opportunity': 6, 'earn': 5, 'income': 5,
+      // Phishing indicators
+      'verify': 10, 'suspended': 10, 'breach': 10, 'urgent': 9, 'immediate': 8,
+      'confirm': 8, 'update': 7, 'login': 7, 'credentials': 9, 'expire': 8,
+      'locked': 9, 'freeze': 8, 'unauthorized': 9, 'suspicious': 8,
+      
+      // Scam indicators  
+      'congratulations': 10, 'won': 9, 'winner': 9, 'prize': 8, 'lottery': 10,
+      'sweepstake': 9, 'million': 8, 'inherit': 9, 'beneficiary': 8,
+      
+      // Financial scams
+      'investment': 7, 'bitcoin': 8, 'crypto': 8, 'forex': 8, 'trading': 6,
+      'guarantee': 8, 'profit': 7, 'returns': 7, 'opportunity': 6,
+      
+      // General spam
+      'free': 6, 'click': 7, 'link': 6, 'claim': 8, 'offer': 5,
+      'limited': 6, 'now': 4, 'act': 5, 'hurry': 7, 'today': 4,
+      
+      // Malicious indicators
+      'download': 6, 'attachment': 5, 'install': 7, 'software': 5,
+      'exe': 9, 'zip': 7, 'setup': 6,
+      
+      // Health/pharmacy spam
       'pharmacy': 8, 'medication': 7, 'pills': 8, 'viagra': 10,
-      'lottery': 9, 'sweepstake': 8, 'promotion': 5, 'deal': 4
+      'discount': 5, 'cheap': 6, 'prescription': 7,
+      
+      // Common spam words
+      'money': 6, 'cash': 7, 'reward': 6, 'gift': 7, 'card': 5,
+      'amazon': 4, 'paypal': 5, 'bank': 6, 'credit': 5, 'payment': 6
     };
 
-    // Ham (legitimate) indicators
+    // Enhanced legitimate email indicators
     const hamIndicators = {
-      'meeting': 3, 'report': 4, 'document': 3, 'project': 4,
-      'schedule': 3, 'team': 3, 'work': 2, 'office': 3,
-      'please': 2, 'thank': 3, 'regards': 4, 'best': 2,
-      'attachment': 3, 'invoice': 4, 'receipt': 4, 'order': 3,
-      'delivery': 3, 'shipping': 3, 'customer': 3, 'support': 3,
-      'newsletter': 3, 'unsubscribe': 4, 'privacy': 3, 'policy': 3
+      // Professional communication
+      'meeting': 4, 'report': 5, 'document': 4, 'project': 5, 'agenda': 4,
+      'schedule': 4, 'team': 4, 'work': 3, 'office': 4, 'conference': 4,
+      
+      // Polite language
+      'please': 3, 'thank': 4, 'thanks': 4, 'regards': 5, 'best': 3,
+      'sincerely': 4, 'appreciated': 4, 'welcome': 3,
+      
+      // Business transactions
+      'invoice': 5, 'receipt': 5, 'order': 4, 'purchase': 4, 'transaction': 4,
+      'delivery': 4, 'shipping': 4, 'tracking': 4, 'confirmation': 4,
+      
+      // Customer service
+      'customer': 4, 'support': 4, 'service': 3, 'help': 3, 'assistance': 4,
+      
+      // Newsletter/subscription
+      'newsletter': 4, 'unsubscribe': 5, 'privacy': 4, 'policy': 4,
+      'subscription': 4, 'manage': 3, 'preferences': 4,
+      
+      // Educational/informational
+      'information': 3, 'update': 3, 'news': 3, 'article': 4, 'blog': 3,
+      'tutorial': 4, 'guide': 4, 'learn': 3
     };
 
     // Build word frequency maps
@@ -143,18 +177,47 @@ class MLEmailClassifier {
     
     const mlResult = this.calculateSpamProbability(fullText);
     
-    // Domain reputation adjustment
+    // Enhanced domain reputation adjustment
     const trustedDomains = [
-      'gmail.com', 'outlook.com', 'yahoo.com', 'gov.bh', 'edu.bh',
-      'ilabank.com', 'beyonmoney.com', 'bebee.com'
+      // Major platforms
+      'gmail.com', 'outlook.com', 'yahoo.com', 'hotmail.com', 'icloud.com',
+      
+      // Business services
+      'linkedin.com', 'microsoft.com', 'google.com', 'apple.com', 'amazon.com',
+      'paypal.com', 'stripe.com', 'shopify.com', 'salesforce.com',
+      
+      // Educational
+      'edu', '.edu', 'university.', 'college.',
+      
+      // Financial institutions
+      'bank', 'credit-union', 'mastercard.com', 'visa.com',
+      
+      // Known legitimate services
+      'github.com', 'stackoverflow.com', 'canva.com', 'dropbox.com',
+      'slack.com', 'zoom.us', 'atlassian.', 'hubspot.com'
     ];
     
     let adjustedProbability = mlResult.probability;
     let domainAdjustment = 0;
+    let domainTrust = 'unknown';
     
-    if (trustedDomains.includes(senderDomain)) {
-      domainAdjustment = -0.2; // Reduce spam probability for trusted domains
+    // Enhanced domain trust analysis
+    const isHighlyTrusted = trustedDomains.some(domain => 
+      senderDomain.includes(domain) || domain.includes(senderDomain)
+    );
+    
+    if (isHighlyTrusted) {
+      domainTrust = 'high';
+      domainAdjustment = -0.25; // Significant reduction for highly trusted domains
+      adjustedProbability = Math.max(0.05, mlResult.probability + domainAdjustment);
+    } else if (senderDomain.includes('.gov') || senderDomain.includes('.org')) {
+      domainTrust = 'medium';
+      domainAdjustment = -0.15;
       adjustedProbability = Math.max(0.1, mlResult.probability + domainAdjustment);
+    } else if (senderDomain.includes('noreply') || senderDomain.includes('no-reply')) {
+      domainTrust = 'automated';
+      domainAdjustment = -0.1; // Slight trust for automated systems
+      adjustedProbability = Math.max(0.2, mlResult.probability + domainAdjustment);
     }
     
     // Determine classification and threat level
@@ -177,28 +240,43 @@ class MLEmailClassifier {
       confidence = Math.max(0.75, confidence);
     }
     
-    // Add specific threat type detection
-    const phishingWords = ['verify', 'suspended', 'security', 'breach', 'urgent', 'account'];
-    const scamWords = ['won', 'winner', 'prize', 'lottery', 'congratulations'];
+    // Add specific threat type detection (for keywords, but keep classification as spam)
+    const phishingWords = ['verify', 'suspended', 'security', 'breach', 'urgent', 'account', 'confirm', 'click', 'login'];
+    const scamWords = ['won', 'winner', 'prize', 'lottery', 'congratulations', 'million', 'inherit'];
+    const malwareWords = ['download', 'attachment', 'exe', 'install', 'software'];
+    
+    let threatKeywords = [...mlResult.keywords];
     
     if (classification === 'spam') {
       const hasPhishing = phishingWords.some(word => fullText.toLowerCase().includes(word));
       const hasScam = scamWords.some(word => fullText.toLowerCase().includes(word));
+      const hasMalware = malwareWords.some(word => fullText.toLowerCase().includes(word));
       
+      // Add threat-specific keywords but keep classification as 'spam'
       if (hasPhishing) {
-        classification = 'phishing';
-      } else if (hasScam) {
-        classification = 'scam';
+        threatKeywords.push('phishing-indicators');
+        threatLevel = 'high'; // Escalate threat level for phishing
+        confidence = Math.min(0.97, confidence + 0.1);
+      }
+      if (hasScam) {
+        threatKeywords.push('scam-indicators');
+        threatLevel = 'high';
+        confidence = Math.min(0.95, confidence + 0.08);
+      }
+      if (hasMalware) {
+        threatKeywords.push('malware-indicators');
+        threatLevel = 'high';
+        confidence = Math.min(0.98, confidence + 0.12);
       }
     }
     
     return {
-      classification,
+      classification, // Will be 'spam' or 'legitimate' only
       threat_level: threatLevel,
       confidence: Math.round(confidence * 100) / 100,
-      keywords: mlResult.keywords,
+      keywords: [...new Set(threatKeywords)], // Remove duplicates
       ml_probability: Math.round(adjustedProbability * 100) / 100,
-      reasoning: `ML-based classification: spam probability ${Math.round(adjustedProbability * 100)}%, domain adjustment: ${Math.round(domainAdjustment * 100)}%`
+      reasoning: `Enhanced ML classification: spam probability ${Math.round(adjustedProbability * 100)}%, threat indicators detected, domain adjustment: ${Math.round(domainAdjustment * 100)}%`
     };
   }
 }
@@ -259,6 +337,7 @@ serve(async (req) => {
 
       if (insertError) {
         console.error('Database error:', insertError);
+        console.log(`❌ Failed to insert: ${subject} - Classification: ${classification.classification}, Threat: ${classification.threat_level}`);
         results.push({
           subject,
           sender,
@@ -266,7 +345,7 @@ serve(async (req) => {
           success: false
         });
       } else {
-        console.log(`✅ ML classified as ${classification.classification} (${Math.round(classification.confidence * 100)}% confidence)`);
+        console.log(`✅ ML classified "${subject}" as ${classification.classification} (${Math.round(classification.confidence * 100)}% confidence, ${classification.threat_level} threat)`);
         results.push({
           subject,
           sender,

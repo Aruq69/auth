@@ -280,6 +280,9 @@ serve(async (req) => {
 
         if (classificationResponse.data?.results?.[0]) {
           classification = classificationResponse.data.results[0];
+          console.log(`📧 Email "${subject}" classified as: ${classification.classification} (${classification.confidence}% confidence, ${classification.threat_level} threat)`);
+        } else if (classificationResponse.error) {
+          console.error('ML Classification error:', classificationResponse.error);
         }
 
         // Check if email already exists in database
