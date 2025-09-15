@@ -325,11 +325,11 @@ const Index = () => {
           {/* Responsive Shield Icon */}
           <div className="flex justify-center">
             <div className="relative">
-              <div className="p-4 sm:p-8 rounded-full bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/20 backdrop-blur-sm">
+              <div className="w-20 h-20 sm:w-32 sm:h-32 md:w-36 md:h-36 lg:w-40 lg:h-40 aspect-square rounded-full bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/20 backdrop-blur-sm flex items-center justify-center">
                 <Shield className="h-12 w-12 sm:h-16 md:h-20 lg:h-24 text-primary" />
               </div>
-              <div className="absolute inset-0 p-4 sm:p-8 rounded-full border border-primary/30 animate-ping" />
-              <div className="absolute inset-1 sm:inset-2 rounded-full bg-primary/5 animate-pulse [animation-duration:3s]" />
+              <div className="absolute inset-0 w-20 h-20 sm:w-32 sm:h-32 md:w-36 md:h-36 lg:w-40 lg:h-40 rounded-full border border-primary/30 animate-ping" />
+              <div className="absolute inset-1 sm:inset-2 w-18 h-18 sm:w-28 sm:h-28 md:w-32 md:h-32 lg:w-36 lg:h-36 rounded-full bg-primary/5 animate-pulse [animation-duration:3s]" />
             </div>
           </div>
           
