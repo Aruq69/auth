@@ -468,32 +468,32 @@ const Index = () => {
         )}
 
         {/* Feature Cards Section */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           {/* Universal */}
-          <Card className="border-border/20 bg-gradient-to-br from-blue-500/10 via-blue-500/5 to-transparent backdrop-blur-sm hover:scale-105 transition-all duration-300">
-            <CardContent className="p-6 text-center">
-              <div className="relative mb-4">
-                <div className="p-4 rounded-full bg-blue-500/20 w-fit mx-auto">
-                  <Shield className="h-8 w-8 text-blue-500" />
-                </div>
-                <div className="absolute -top-1 -right-1 h-4 w-4 bg-blue-500 rounded-full animate-pulse" />
-              </div>
-              <h3 className="text-lg font-semibold text-foreground mb-2">Universal</h3>
-              <p className="text-sm text-muted-foreground">Cross-platform email protection for all providers and devices</p>
-            </CardContent>
-          </Card>
-
-          {/* AI */}
           <Card className="border-border/20 bg-gradient-to-br from-green-500/10 via-green-500/5 to-transparent backdrop-blur-sm hover:scale-105 transition-all duration-300">
             <CardContent className="p-6 text-center">
               <div className="relative mb-4">
                 <div className="p-4 rounded-full bg-green-500/20 w-fit mx-auto">
-                  <Brain className="h-8 w-8 text-green-500" />
+                  <Shield className="h-8 w-8 text-green-500" />
                 </div>
                 <div className="absolute -top-1 -right-1 h-4 w-4 bg-green-500 rounded-full animate-pulse" />
               </div>
-              <h3 className="text-lg font-semibold text-foreground mb-2">AI</h3>
-              <p className="text-sm text-muted-foreground">Advanced artificial intelligence for smart threat detection</p>
+              <h3 className="text-lg font-semibold text-foreground mb-2">Universal</h3>
+              <p className="text-sm text-muted-foreground">Works with any provider</p>
+            </CardContent>
+          </Card>
+
+          {/* AI Analysis */}
+          <Card className="border-border/20 bg-gradient-to-br from-blue-500/10 via-blue-500/5 to-transparent backdrop-blur-sm hover:scale-105 transition-all duration-300">
+            <CardContent className="p-6 text-center">
+              <div className="relative mb-4">
+                <div className="p-4 rounded-full bg-blue-500/20 w-fit mx-auto">
+                  <Eye className="h-8 w-8 text-blue-500" />
+                </div>
+                <div className="absolute -top-1 -right-1 h-4 w-4 bg-blue-500 rounded-full animate-pulse" />
+              </div>
+              <h3 className="text-lg font-semibold text-foreground mb-2">AI Analysis</h3>
+              <p className="text-sm text-muted-foreground">Real-time detection</p>
             </CardContent>
           </Card>
 
@@ -502,26 +502,12 @@ const Index = () => {
             <CardContent className="p-6 text-center">
               <div className="relative mb-4">
                 <div className="p-4 rounded-full bg-purple-500/20 w-fit mx-auto">
-                  <Lock className="h-8 w-8 text-purple-500" />
+                  <Database className="h-8 w-8 text-purple-500" />
                 </div>
                 <div className="absolute -top-1 -right-1 h-4 w-4 bg-purple-500 rounded-full animate-pulse" />
               </div>
               <h3 className="text-lg font-semibold text-foreground mb-2">Secure</h3>
-              <p className="text-sm text-muted-foreground">Enterprise-grade security with end-to-end encryption</p>
-            </CardContent>
-          </Card>
-
-          {/* ML Engine */}
-          <Card className="border-border/20 bg-gradient-to-br from-teal-500/10 via-teal-500/5 to-transparent backdrop-blur-sm hover:scale-105 transition-all duration-300">
-            <CardContent className="p-6 text-center">
-              <div className="relative mb-4">
-                <div className="p-4 rounded-full bg-teal-500/20 w-fit mx-auto">
-                  <Database className="h-8 w-8 text-teal-500" />
-                </div>
-                <div className="absolute -top-1 -right-1 h-4 w-4 bg-teal-500 rounded-full animate-pulse" />
-              </div>
-              <h3 className="text-lg font-semibold text-foreground mb-2">ML Engine</h3>
-              <p className="text-sm text-muted-foreground">Adaptive learning system that improves detection accuracy</p>
+              <p className="text-sm text-muted-foreground">Read-only access</p>
             </CardContent>
           </Card>
         </div>
