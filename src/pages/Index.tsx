@@ -407,6 +407,7 @@ const Index = () => {
           </Card>
         </div>
 
+
         {/* Email Submission Form */}
         <EmailSubmissionForm onEmailSubmitted={fetchEmails} />
 
