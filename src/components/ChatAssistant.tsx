@@ -44,7 +44,7 @@ const ChatAssistant = ({ selectedEmail, emails = [] }: ChatAssistantProps) => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      content: "Hello! I'm MAIL GUARD AI, your advanced cybersecurity assistant. I specialize in email threat analysis and can help explain classifications, analyze spam indicators, and answer any questions about email security. How can I help you today?",
+      content: "Hi there! I'm MAIL GUARD AI, your cybersecurity assistant. I'm here to help you understand email security and analyze any threats. Feel free to ask me questions like:\n\n• \"Is this email secure?\"\n• \"What makes this suspicious?\"\n• \"Should I trust this sender?\"\n• \"Why was this flagged?\"\n\nJust ask me anything about email security!",
       isBot: true,
       timestamp: new Date()
     }
@@ -319,25 +319,56 @@ const ChatAssistant = ({ selectedEmail, emails = [] }: ChatAssistantProps) => {
         </CardDescription>
         
         {selectedEmail && (
-          <div className="flex flex-wrap gap-2 mt-2">
-            <Button 
-              onClick={askAboutEmail}
-              size="sm"
-              variant="outline"
-              className="border-primary/30 hover:border-primary/50 text-xs flex-1"
-            >
-              <MessageSquare className="h-3 w-3 mr-1" />
-              Analyze Selected Email
-            </Button>
-            <Button 
-              onClick={() => setInput("What are the latest email security threats I should be aware of?")}
-              size="sm"
-              variant="outline"
-              className="border-secondary/30 hover:border-secondary/50 text-xs"
-            >
-              <TrendingUp className="h-3 w-3 mr-1" />
-              Security Brief
-            </Button>
+          <div className="space-y-2">
+            <div className="flex flex-wrap gap-2">
+              <Button 
+                onClick={() => setInput("Is this email secure?")}
+                size="sm"
+                variant="outline"
+                className="border-primary/30 hover:border-primary/50 text-xs"
+              >
+                <Shield className="h-3 w-3 mr-1" />
+                Is it secure?
+              </Button>
+              <Button 
+                onClick={() => setInput("What makes this suspicious?")}
+                size="sm"
+                variant="outline"
+                className="border-orange-500/30 hover:border-orange-500/50 text-xs"
+              >
+                <AlertTriangle className="h-3 w-3 mr-1" />
+                What's suspicious?
+              </Button>
+              <Button 
+                onClick={() => setInput("Should I trust this sender?")}
+                size="sm"
+                variant="outline"
+                className="border-secondary/30 hover:border-secondary/50 text-xs"
+              >
+                <Eye className="h-3 w-3 mr-1" />
+                Trust this sender?
+              </Button>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button 
+                onClick={askAboutEmail}
+                size="sm"
+                variant="outline"
+                className="border-primary/30 hover:border-primary/50 text-xs flex-1"
+              >
+                <MessageSquare className="h-3 w-3 mr-1" />
+                Full Analysis
+              </Button>
+              <Button 
+                onClick={() => setInput("What are the latest email security threats?")}
+                size="sm"
+                variant="outline"
+                className="border-secondary/30 hover:border-secondary/50 text-xs"
+              >
+                <TrendingUp className="h-3 w-3 mr-1" />
+                Security Tips
+              </Button>
+            </div>
           </div>
         )}
       </CardHeader>
@@ -396,7 +427,7 @@ const ChatAssistant = ({ selectedEmail, emails = [] }: ChatAssistantProps) => {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyPress={handleKeyPress}
-            placeholder="Ask MAIL GUARD AI about email security..."
+            placeholder="Ask me anything about email security..."
             disabled={isLoading}
             className="flex-1 bg-muted/50 border-primary/20 focus:border-primary/50 cyber-input"
           />
