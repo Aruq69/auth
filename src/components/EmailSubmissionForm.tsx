@@ -69,7 +69,7 @@ const EmailSubmissionForm = ({ onEmailSubmitted }: EmailSubmissionFormProps) => 
         throw new Error(error.message || 'Failed to store email');
       }
 
-      console.log('Email stored successfully:', data);
+      
 
       // Clear form
       setSubject("");

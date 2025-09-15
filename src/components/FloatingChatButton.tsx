@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Bot, MessageCircle, X } from 'lucide-react';
+import { useState } from 'react';
+import { MessageCircle, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import ChatAssistant from '@/components/ChatAssistant';

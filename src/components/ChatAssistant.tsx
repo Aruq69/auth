@@ -149,7 +149,7 @@ const ChatAssistant = ({ selectedEmail, emails = [] }: ChatAssistantProps) => {
       // Prepare conversation history (last 10 messages for context)
       const conversationHistory = messages.slice(-10);
 
-      console.log('Sending message to chat assistant...');
+      
 
       const { data, error } = await supabase.functions.invoke('chat-assistant', {
         body: {
@@ -159,7 +159,7 @@ const ChatAssistant = ({ selectedEmail, emails = [] }: ChatAssistantProps) => {
         },
       });
 
-      console.log('Response from chat assistant:', { data, error });
+      
 
       if (error) {
         console.error('Supabase function error:', error);

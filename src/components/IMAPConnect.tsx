@@ -57,8 +57,6 @@ export default function IMAPConnect({ onConnected }: IMAPConnectProps) {
     });
 
     try {
-      console.log("🚀 Starting IMAP email connection for user:", user.id);
-      console.log("📧 Provider:", provider);
       
       const { data, error } = await supabase.functions.invoke("fetch-imap-emails", {
         body: { 
@@ -69,7 +67,7 @@ export default function IMAPConnect({ onConnected }: IMAPConnectProps) {
         },
       });
 
-      console.log("📊 IMAP response:", { data, error });
+      
 
       if (error) {
         console.error("❌ IMAP function error:", error);
@@ -91,8 +89,6 @@ export default function IMAPConnect({ onConnected }: IMAPConnectProps) {
         return;
       }
 
-      console.log("🎉 IMAP connection successful!");
-      console.log("📊 Full response data:", JSON.stringify(data, null, 2));
       
       const emailCount = data?.total || 0;
       

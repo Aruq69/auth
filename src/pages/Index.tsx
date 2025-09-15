@@ -89,7 +89,7 @@ const Index = () => {
 
   const fetchIMAPEmails = async () => {
     if (!user) {
-      console.log('❌ No user found for IMAP fetch');
+      
       toast({
         title: "Authentication required",
         description: "Please sign in to fetch emails.",
@@ -99,7 +99,7 @@ const Index = () => {
     }
     
     setLoading(true);
-    console.log('🚀 STARTING IMAP EMAIL FETCH for user:', user.id);
+    
     
     try {
       // This will trigger the IMAP connection form to show
@@ -215,14 +215,12 @@ const Index = () => {
 
   const connectGmail = async () => {
     try {
-      console.log('Gmail connect button clicked!');
-      console.log('Starting Gmail connection...');
       
       const { data, error } = await supabase.functions.invoke('gmail-auth', {
         body: { action: 'get_auth_url' },
       });
 
-      console.log('Gmail auth response:', { data, error });
+      
 
       if (error) {
         console.error('Gmail auth error:', error);
@@ -235,10 +233,10 @@ const Index = () => {
       }
 
       if (data?.auth_url) {
-        console.log('Redirecting to:', data.auth_url);
+        
         window.location.href = data.auth_url;
       } else {
-        console.error('No auth URL in response:', data);
+        
         toast({
           title: "Connection failed",
           description: "No authorization URL received. Please try again.",
