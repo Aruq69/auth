@@ -100,7 +100,7 @@ When explaining email classifications, always break down:
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'llama-3.1-70b-versatile',
+        model: 'llama-3.1-8b-instant',
         messages: messages,
         max_tokens: 1200,
         temperature: 0.1,
