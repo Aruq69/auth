@@ -5,7 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Shield, Mail, AlertTriangle, CheckCircle, Clock, Search, User, Zap, Activity, Eye, Lock, LogOut, Plus, Brain, Bot, Cpu, Target, Radar, ScanLine, Database, ShieldX } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Shield, Mail, AlertTriangle, CheckCircle, Clock, Search, User, Zap, Activity, Eye, Lock, LogOut, Plus, Brain, Bot, Cpu, Target, Radar, ScanLine, Database, ShieldX, Trash2, AlertCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -35,6 +36,7 @@ const Index = () => {
   const [selectedEmail, setSelectedEmail] = useState<Email | null>(null);
   const [showEmailDialog, setShowEmailDialog] = useState(false);
   const [showSignOutDialog, setShowSignOutDialog] = useState(false); // Add sign out confirmation dialog
+  const [showClearEmailsDialog, setShowClearEmailsDialog] = useState(false); // Add clear emails confirmation dialog
   const { toast } = useToast();
   const { user, signOut, loading: authLoading } = useAuth();
   const navigate = useNavigate();
@@ -350,10 +352,41 @@ const Index = () => {
               Refresh
             </Button>
             {gmailConnected && (
-              <Button onClick={handleUnsync} variant="outline" className="border-orange-500/30 hover:border-orange-500/50 hover:bg-orange-500 hover:text-white transition-all duration-300 hover-button">
-                <Mail className="h-4 w-4 mr-2" />
-                Clear Emails
-              </Button>
+              <AlertDialog open={showClearEmailsDialog} onOpenChange={setShowClearEmailsDialog}>
+                <AlertDialogTrigger asChild>
+                  <Button variant="outline" className="border-orange-500/30 hover:border-orange-500/50 hover:bg-orange-500 hover:text-white transition-all duration-300 hover-button">
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Clear Emails
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent className="bg-card border border-border/50 backdrop-blur-md shadow-2xl animate-scale-in">
+                  <AlertDialogHeader className="space-y-4">
+                    <div className="mx-auto w-12 h-12 rounded-full bg-orange-500/20 flex items-center justify-center">
+                      <AlertCircle className="h-6 w-6 text-orange-500 animate-pulse" />
+                    </div>
+                    <AlertDialogTitle className="text-center text-xl font-semibold">
+                      Clear All Emails?
+                    </AlertDialogTitle>
+                    <AlertDialogDescription className="text-center text-muted-foreground">
+                      This action will permanently delete all email data from our system. Your Gmail connection will remain active, but all analyzed emails will be removed.
+                      <br />
+                      <span className="font-medium text-orange-500">This action cannot be undone.</span>
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+                    <AlertDialogCancel className="border-border/50 hover:bg-muted">
+                      Cancel
+                    </AlertDialogCancel>
+                    <AlertDialogAction 
+                      onClick={handleUnsync}
+                      className="bg-orange-500 hover:bg-orange-600 text-white border-0"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Clear All Emails
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             )}
             <Button onClick={() => setShowSignOutDialog(true)} variant="outline" className="border-muted-foreground/30 hover:border-destructive hover:bg-destructive hover:text-destructive-foreground transition-all duration-300 hover-button">
               <LogOut className="h-4 w-4 mr-2" />
