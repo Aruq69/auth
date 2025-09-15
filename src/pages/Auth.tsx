@@ -23,6 +23,13 @@ const Auth = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  // Redirect authenticated users to home page
+  useEffect(() => {
+    if (user) {
+      navigate("/");
+    }
+  }, [user, navigate]);
+
   // Password complexity validation
   const validatePassword = (pwd: string) => {
     const requirements = {
