@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Shield, Mail, AlertTriangle, CheckCircle, Clock, Search, User, Zap, Activity, Eye, Lock, LogOut, Plus } from "lucide-react";
+import { Shield, Mail, AlertTriangle, CheckCircle, Clock, Search, User, Zap, Activity, Eye, Lock, LogOut, Plus, Brain, Bot, Cpu, Target, Radar, ScanLine } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -632,8 +632,100 @@ const Index = () => {
                     </div>
                   </CardContent>
                 </Card>
+          
+          {/* AI Analysis Features Section */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            {/* AI Analysis */}
+            <Card className="border-border/20 bg-gradient-to-br from-blue-500/10 via-blue-500/5 to-transparent backdrop-blur-sm hover:scale-105 transition-all duration-300">
+              <CardContent className="p-6 text-center">
+                <div className="relative mb-4">
+                  <div className="p-4 rounded-full bg-blue-500/20 w-fit mx-auto">
+                    <Eye className="h-8 w-8 text-blue-500" />
+                  </div>
+                  <div className="absolute -top-1 -right-1 h-4 w-4 bg-blue-500 rounded-full animate-pulse" />
+                </div>
+                <h3 className="text-lg font-semibold text-foreground mb-2">AI Analysis</h3>
+                <p className="text-sm text-muted-foreground">Real-time detection and analysis of email threats using advanced AI algorithms</p>
+              </CardContent>
+            </Card>
 
-                {/* Action Buttons */}
+            {/* ML Detection */}
+            <Card className="border-border/20 bg-gradient-to-br from-green-500/10 via-green-500/5 to-transparent backdrop-blur-sm hover:scale-105 transition-all duration-300">
+              <CardContent className="p-6 text-center">
+                <div className="relative mb-4">
+                  <div className="p-4 rounded-full bg-green-500/20 w-fit mx-auto">
+                    <Brain className="h-8 w-8 text-green-500" />
+                  </div>
+                  <div className="absolute -top-1 -right-1 h-4 w-4 bg-green-500 rounded-full animate-pulse" />
+                </div>
+                <h3 className="text-lg font-semibold text-foreground mb-2">ML Detection</h3>
+                <p className="text-sm text-muted-foreground">Machine learning models trained on millions of emails for pattern recognition</p>
+              </CardContent>
+            </Card>
+
+            {/* Neural Network */}
+            <Card className="border-border/20 bg-gradient-to-br from-purple-500/10 via-purple-500/5 to-transparent backdrop-blur-sm hover:scale-105 transition-all duration-300">
+              <CardContent className="p-6 text-center">
+                <div className="relative mb-4">
+                  <div className="p-4 rounded-full bg-purple-500/20 w-fit mx-auto">
+                    <Bot className="h-8 w-8 text-purple-500" />
+                  </div>
+                  <div className="absolute -top-1 -right-1 h-4 w-4 bg-purple-500 rounded-full animate-pulse" />
+                </div>
+                <h3 className="text-lg font-semibold text-foreground mb-2">Neural Network</h3>
+                <p className="text-sm text-muted-foreground">Deep learning networks for sophisticated threat pattern analysis</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Advanced Detection Features */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            {/* Behavioral Analysis */}
+            <Card className="border-border/20 bg-gradient-to-br from-orange-500/10 via-orange-500/5 to-transparent backdrop-blur-sm hover:scale-105 transition-all duration-300">
+              <CardContent className="p-4 text-center">
+                <div className="mb-3">
+                  <Radar className="h-6 w-6 text-orange-500 mx-auto" />
+                </div>
+                <h4 className="text-sm font-semibold text-foreground mb-1">Behavioral Analysis</h4>
+                <p className="text-xs text-muted-foreground">Anomaly detection in email patterns</p>
+              </CardContent>
+            </Card>
+
+            {/* Content Scanning */}
+            <Card className="border-border/20 bg-gradient-to-br from-red-500/10 via-red-500/5 to-transparent backdrop-blur-sm hover:scale-105 transition-all duration-300">
+              <CardContent className="p-4 text-center">
+                <div className="mb-3">
+                  <ScanLine className="h-6 w-6 text-red-500 mx-auto" />
+                </div>
+                <h4 className="text-sm font-semibold text-foreground mb-1">Content Scanning</h4>
+                <p className="text-xs text-muted-foreground">Deep content analysis and filtering</p>
+              </CardContent>
+            </Card>
+
+            {/* Threat Intelligence */}
+            <Card className="border-border/20 bg-gradient-to-br from-cyan-500/10 via-cyan-500/5 to-transparent backdrop-blur-sm hover:scale-105 transition-all duration-300">
+              <CardContent className="p-4 text-center">
+                <div className="mb-3">
+                  <Target className="h-6 w-6 text-cyan-500 mx-auto" />
+                </div>
+                <h4 className="text-sm font-semibold text-foreground mb-1">Threat Intelligence</h4>
+                <p className="text-xs text-muted-foreground">Global threat database integration</p>
+              </CardContent>
+            </Card>
+
+            {/* Real-time Processing */}
+            <Card className="border-border/20 bg-gradient-to-br from-yellow-500/10 via-yellow-500/5 to-transparent backdrop-blur-sm hover:scale-105 transition-all duration-300">
+              <CardContent className="p-4 text-center">
+                <div className="mb-3">
+                  <Cpu className="h-6 w-6 text-yellow-500 mx-auto" />
+                </div>
+                <h4 className="text-sm font-semibold text-foreground mb-1">Real-time Processing</h4>
+                <p className="text-xs text-muted-foreground">Instant analysis and classification</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Action Buttons */}
                 <div className="flex justify-between items-center pt-4 border-t border-primary/20">
                   <Button
                     variant="outline"
