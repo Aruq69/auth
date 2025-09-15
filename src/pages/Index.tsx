@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Shield, Mail, AlertTriangle, CheckCircle, Clock, Search, User, Zap, Activity, Eye, Lock, LogOut, Plus, Flame } from "lucide-react";
+import { Shield, Mail, AlertTriangle, CheckCircle, Clock, Search, User, Zap, Activity, Eye, Lock, LogOut, Plus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -303,23 +303,9 @@ const Index = () => {
           {/* Centered Shield Icon */}
           <div className="flex justify-center">
             <div className="relative">
-              {/* Flame Effects Behind Shield */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <Flame className="h-32 w-32 text-orange-500/30 animate-pulse [animation-duration:2s]" />
-              </div>
-              <div className="absolute inset-0 flex items-center justify-center rotate-12">
-                <Flame className="h-28 w-28 text-red-500/20 animate-pulse [animation-duration:2.5s] [animation-delay:0.5s]" />
-              </div>
-              <div className="absolute inset-0 flex items-center justify-center -rotate-12">
-                <Flame className="h-30 w-30 text-yellow-500/25 animate-pulse [animation-duration:1.8s] [animation-delay:1s]" />
-              </div>
-              
-              {/* Main Shield Container */}
-              <div className="relative z-10 p-8 rounded-full bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/20 backdrop-blur-sm">
+              <div className="p-8 rounded-full bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/20 backdrop-blur-sm">
                 <Shield className="h-24 w-24 text-primary" />
               </div>
-              
-              {/* Animated Rings */}
               <div className="absolute inset-0 p-8 rounded-full border border-primary/30 animate-ping" />
               <div className="absolute inset-2 rounded-full bg-primary/5 animate-pulse [animation-duration:3s]" />
             </div>
