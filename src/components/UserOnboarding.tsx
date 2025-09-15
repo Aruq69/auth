@@ -146,17 +146,6 @@ const UserOnboarding = () => {
       {/* Onboarding Dialog */}
       <Dialog open={isOpen} onOpenChange={() => {}}>
         <DialogContent className="max-w-lg">
-          <div className="absolute top-4 right-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleSkip}
-              className="h-8 w-8 p-0"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-
           <DialogHeader className="space-y-4">
             <div className="flex items-center justify-center">
               <div className="relative">
