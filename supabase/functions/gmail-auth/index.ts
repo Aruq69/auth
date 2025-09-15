@@ -39,13 +39,20 @@ serve(async (req) => {
     const { action, code } = jsonBody;
     console.log('Parsed action:', action, 'code present:', !!code);
     
-    // Use the actual request origin for dynamic domain support
-    const requestOrigin = req.headers.get('origin') || req.headers.get('referer')?.replace(/\/$/, '') || 'https://4a245192-55d5-454c-8b1c-2d652a6212f2.lovableproject.com';
-    const origin = requestOrigin.includes('vercel.app') || requestOrigin.includes('lovableproject.com') ? requestOrigin : 'https://4a245192-55d5-454c-8b1c-2d652a6212f2.lovableproject.com';
+    // Extract origin from referer if no origin header
+    const refererOrigin = req.headers.get('referer') ? new URL(req.headers.get('referer')!).origin : null;
+    const requestOrigin = req.headers.get('origin') || refererOrigin;
     console.log('=== GMAIL AUTH DEBUG ===');
-    console.log('Request origin:', req.headers.get('origin'));
-    console.log('Request referer:', req.headers.get('referer'));
-    console.log('Dynamic origin used:', origin);
+    console.log('Request origin header:', req.headers.get('origin'));
+    console.log('Request referer header:', req.headers.get('referer'));
+    console.log('Extracted origin:', requestOrigin);
+    
+    // Prefer request origin, then referer origin, then fallback to Lovable
+    let origin = 'https://4a245192-55d5-454c-8b1c-2d652a6212f2.lovableproject.com'; // fallback
+    if (requestOrigin && (requestOrigin.includes('vercel.app') || requestOrigin.includes('lovableproject.com'))) {
+      origin = requestOrigin;
+    }
+    console.log('Final origin used:', origin);
     console.log('=== END DEBUG ===');
 
     // Handle auth URL generation
