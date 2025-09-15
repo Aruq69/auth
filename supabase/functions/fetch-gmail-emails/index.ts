@@ -134,22 +134,30 @@ serve(async (req) => {
         .eq('user_id', user_id);
     }
 
-    // Fetch emails from Gmail API with better query options
+    // Fetch emails from Gmail API with comprehensive search
     console.log('Fetching emails from Gmail API...');
     
-    // Get the latest emails with various filters
+    // Get the latest emails from various categories and folders
     const queries = [
-      'in:inbox -in:spam -in:trash newer_than:7d', // Recent inbox emails (last 7 days)
-      'in:promotions newer_than:3d', // Promotional emails (last 3 days) 
-      'has:attachment newer_than:7d' // Emails with attachments (last 7 days)
+      'newer_than:30d', // All emails from last 30 days (main query)
+      'in:sent newer_than:14d', // Sent emails
+      'in:promotions newer_than:14d', // Promotional emails
+      'in:social newer_than:14d', // Social emails
+      'in:updates newer_than:14d', // Update emails
+      'has:attachment newer_than:14d', // Emails with attachments
+      'is:important newer_than:30d', // Important emails
+      'from:noreply newer_than:14d', // No-reply emails (often promotional/spam)
+      'from:info newer_than:14d', // Info emails
+      'from:support newer_than:14d' // Support emails
     ];
     
     let allMessages = [];
     
-    // Fetch from multiple categories
+    // Fetch from multiple categories with higher limits
     for (const query of queries) {
+      const maxResults = query === 'newer_than:30d' ? 50 : 20; // Get more from main query
       const gmailResponse = await fetch(
-        `https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=10&q=${encodeURIComponent(query)}`,
+        `https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=${maxResults}&q=${encodeURIComponent(query)}`,
         {
           headers: {
             'Authorization': `Bearer ${accessToken}`,
@@ -165,15 +173,18 @@ serve(async (req) => {
       }
     }
     
-    // Remove duplicates based on message ID
-    const uniqueMessages = allMessages.filter((message, index, arr) => 
-      arr.findIndex(m => m.id === message.id) === index
-    );
+    // Remove duplicates based on message ID and sort by ID (newer first)
+    const uniqueMessages = allMessages
+      .filter((message, index, arr) => 
+        arr.findIndex(m => m.id === message.id) === index
+      )
+      .sort((a, b) => b.id.localeCompare(a.id)) // Sort by ID for consistency
+      .slice(0, 100); // Limit to 100 emails
     
     console.log(`Found ${uniqueMessages.length} unique messages`);
 
-    // Fetch details for each message and classify them
-    const emailPromises = uniqueMessages.slice(0, 15).map(async (message: any) => {
+    // Fetch details for each message and classify them (process all up to 100)
+    const emailPromises = uniqueMessages.map(async (message: any) => {
       try {
         // Get message details with full format for complete content
         const messageResponse = await fetch(
