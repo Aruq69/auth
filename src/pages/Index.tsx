@@ -464,7 +464,80 @@ const Index = () => {
 
         {/* Email Connection */}
         {!gmailConnected && (
-          <IMAPConnect onConnected={checkEmailConnection} />
+          <Card className="border-border/20 bg-card/50 backdrop-blur-sm hover-card">
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Mail className="h-5 w-5 text-primary" />
+                <span>Connect Email Account</span>
+              </CardTitle>
+              <CardDescription>
+                Connect your email account to start analyzing emails for threats with our ML Engine
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* ML Engine Feature Highlight */}
+              <div className="relative p-6 rounded-lg bg-gradient-to-br from-teal-500/10 via-teal-500/5 to-transparent border border-teal-500/20 backdrop-blur-sm">
+                <div className="absolute top-3 right-3">
+                  <div className="flex items-center space-x-2">
+                    <div className="h-3 w-3 bg-teal-500 rounded-full animate-pulse" />
+                    <span className="text-xs font-medium text-teal-400">ACTIVE</span>
+                  </div>
+                </div>
+                <div className="flex items-start space-x-4">
+                  <div className="relative">
+                    <div className="p-3 rounded-full bg-teal-500/20 border border-teal-500/30">
+                      <Database className="h-6 w-6 text-teal-500" />
+                    </div>
+                    <div className="absolute inset-0 p-3 rounded-full border border-teal-500/50 animate-ping" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-foreground mb-2 flex items-center space-x-2">
+                      <span>ML Engine Integration</span>
+                      <Zap className="h-4 w-4 text-yellow-500 animate-pulse" />
+                    </h3>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Our adaptive machine learning engine will automatically analyze your emails, learning from patterns to improve threat detection accuracy over time.
+                    </p>
+                    <div className="flex items-center space-x-4 text-xs text-teal-400">
+                      <div className="flex items-center space-x-1">
+                        <Brain className="h-3 w-3" />
+                        <span>Neural Processing</span>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <Activity className="h-3 w-3" />
+                        <span>Real-time Learning</span>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <Shield className="h-3 w-3" />
+                        <span>Adaptive Security</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-3">
+                  <h3 className="text-lg font-semibold">Gmail Connection</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Connect via OAuth for secure access to your Gmail account
+                  </p>
+                  <Button onClick={connectGmail} className="w-full gradient-button">
+                    <Mail className="h-4 w-4 mr-2" />
+                    Connect Gmail
+                  </Button>
+                </div>
+                
+                <div className="space-y-3">
+                  <h3 className="text-lg font-semibold">IMAP Connection</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Direct connection using IMAP for most email providers
+                  </p>
+                  <IMAPConnect onConnected={checkEmailConnection} />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         )}
 
         {/* Email Submission Form */}
