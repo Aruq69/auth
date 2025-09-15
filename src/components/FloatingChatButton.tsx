@@ -34,7 +34,7 @@ const FloatingChatButton: React.FC<FloatingChatButtonProps> = ({ selectedEmail, 
           <SheetTrigger asChild>
             <Button
               size="lg"
-              className="group relative h-12 w-12 sm:h-16 sm:w-16 rounded-full border-2 border-primary/20 bg-gradient-to-br from-primary via-primary to-primary-glow shadow-lg hover:shadow-2xl hover:shadow-primary/25 transition-all duration-500 hover:scale-110 overflow-visible"
+              className="group relative h-12 w-12 sm:h-16 sm:w-16 aspect-square rounded-full border-2 border-primary/20 bg-gradient-to-br from-primary via-primary to-primary-glow shadow-lg hover:shadow-2xl hover:shadow-primary/25 transition-all duration-500 hover:scale-110 overflow-visible flex items-center justify-center"
             >
               {/* Animated background gradient - contained within button */}
               <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary-glow/50 to-primary opacity-0 group-hover:opacity-100 transition-all duration-500 group-hover:rotate-45" />
