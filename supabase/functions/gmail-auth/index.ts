@@ -39,12 +39,13 @@ serve(async (req) => {
     const { action, code } = jsonBody;
     console.log('Parsed action:', action, 'code present:', !!code);
     
-    // Force use of the correct current project URL - no fallback to old URLs
-    const origin = 'https://4a245192-55d5-454c-8b1c-2d652a6212f2.lovableproject.com';
+    // Use the actual request origin for dynamic domain support
+    const requestOrigin = req.headers.get('origin') || req.headers.get('referer')?.replace(/\/$/, '') || 'https://4a245192-55d5-454c-8b1c-2d652a6212f2.lovableproject.com';
+    const origin = requestOrigin.includes('vercel.app') || requestOrigin.includes('lovableproject.com') ? requestOrigin : 'https://4a245192-55d5-454c-8b1c-2d652a6212f2.lovableproject.com';
     console.log('=== GMAIL AUTH DEBUG ===');
     console.log('Request origin:', req.headers.get('origin'));
     console.log('Request referer:', req.headers.get('referer'));
-    console.log('FORCED origin used:', origin);
+    console.log('Dynamic origin used:', origin);
     console.log('=== END DEBUG ===');
 
     // Handle auth URL generation
