@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { useEffect } from "react";
-import { Shield, Flame } from "lucide-react";
+import { Shield } from "lucide-react";
 
 const NotFound = () => {
   const location = useLocation();
@@ -12,24 +12,14 @@ const NotFound = () => {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background">
       <div className="text-center space-y-6">
-        {/* Flaming Shield Icon */}
+        {/* Shield Icon */}
         <div className="flex justify-center">
           <div className="relative">
-            {/* Flame Effects Behind Shield */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <Flame className="h-20 w-20 text-orange-500/30 animate-pulse [animation-duration:2s]" />
-            </div>
-            <div className="absolute inset-0 flex items-center justify-center rotate-12">
-              <Flame className="h-18 w-18 text-red-500/20 animate-pulse [animation-duration:2.5s] [animation-delay:0.5s]" />
-            </div>
-            <div className="absolute inset-0 flex items-center justify-center -rotate-12">
-              <Flame className="h-16 w-16 text-yellow-500/25 animate-pulse [animation-duration:1.8s] [animation-delay:1s]" />
-            </div>
-            
-            {/* Main Shield */}
-            <div className="relative z-10">
+            <div className="p-6 rounded-full bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/20 backdrop-blur-sm">
               <Shield className="h-16 w-16 text-primary" />
             </div>
+            <div className="absolute inset-0 p-6 rounded-full border border-primary/30 animate-ping" />
+            <div className="absolute inset-2 rounded-full bg-primary/5 animate-pulse [animation-duration:3s]" />
           </div>
         </div>
         
