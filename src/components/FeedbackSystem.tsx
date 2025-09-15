@@ -81,27 +81,53 @@ const FeedbackSystem = () => {
         timestamp: new Date().toISOString()
       };
 
-      // Store feedback using edge function (since types aren't updated yet)
-      const { data, error } = await supabase.functions.invoke('store-feedback', {
-        body: {
-          user_id: user?.id || null,
-          feedback_type: feedbackData.type,
-          category: feedbackData.category,
-          rating: feedbackData.rating,
-          feedback_text: feedbackData.feedback,
-          email: feedbackData.email,
-          page_url: feedbackData.page,
-          user_agent: feedbackData.userAgent
-        }
-      });
+      // Store feedback in database and send email notification
+      const [storeResult, emailResult] = await Promise.allSettled([
+        // Store in database
+        supabase.functions.invoke('store-feedback', {
+          body: {
+            user_id: user?.id || null,
+            feedback_type: feedbackData.type,
+            category: feedbackData.category,
+            rating: feedbackData.rating,
+            feedback_text: feedbackData.feedback,
+            email: feedbackData.email,
+            page_url: feedbackData.page,
+            user_agent: feedbackData.userAgent
+          }
+        }),
+        // Send email notification
+        supabase.functions.invoke('send-feedback-email', {
+          body: {
+            feedback_type: feedbackData.type,
+            category: feedbackData.category,
+            rating: feedbackData.rating,
+            feedback_text: feedbackData.feedback,
+            email: feedbackData.email,
+            page_url: feedbackData.page,
+            user_agent: feedbackData.userAgent
+          }
+        })
+      ]);
 
-      if (error) {
-        throw error;
+      // Check if database storage failed
+      if (storeResult.status === 'rejected') {
+        console.error('Database storage failed:', storeResult.reason);
+      }
+
+      // Check if email sending failed
+      if (emailResult.status === 'rejected') {
+        console.error('Email sending failed:', emailResult.reason);
+      }
+
+      // If both failed, throw error
+      if (storeResult.status === 'rejected' && emailResult.status === 'rejected') {
+        throw new Error('Failed to process feedback');
       }
 
       toast({
         title: "Feedback submitted!",
-        description: "Thank you for helping us improve Mail Guard. Your feedback is valuable to us.",
+        description: "Thank you for helping us improve Mail Guard. Your feedback has been sent to our team and saved for analysis.",
       });
 
       // Reset form
