@@ -659,51 +659,53 @@ const Index = () => {
                               {/* Gradient border overlay */}
                               <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-primary/10 via-transparent to-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
                               
-                              <div className="flex items-center justify-between relative z-10">
-                                <div className="flex-1 space-y-2">
-                                  {/* Header with icons and badges */}
+                              <div className="flex items-start justify-between relative z-10 gap-3">
+                                <div className="flex-1 min-w-0 space-y-3">
+                                  {/* Header with icon and title */}
                                   <div className="flex items-start space-x-3">
                                     <div className="flex-shrink-0 mt-1">
                                       {getThreatIcon(email.threat_level)}
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                      <h3 className="font-bold text-foreground text-base leading-tight group-hover:text-primary transition-colors duration-300">
+                                      <h3 className="font-bold text-foreground text-sm sm:text-base leading-tight group-hover:text-primary transition-colors duration-300 line-clamp-2">
                                         {email.subject}
                                       </h3>
                                     </div>
-                                    <div className="flex items-center space-x-2 flex-shrink-0">
-                                      {email.threat_level && (
-                                        <Badge 
-                                          variant={getThreatBadgeVariant(email.threat_level)}
-                                          className="text-xs px-2 py-1 font-semibold shadow-sm"
-                                        >
-                                          {email.threat_level.toUpperCase()}
-                                        </Badge>
-                                      )}
-                                      {email.threat_type && email.threat_type !== 'spam' && (
-                                        <Badge 
-                                          variant="destructive" 
-                                          className="text-xs px-2 py-1 font-medium bg-red-500/10 border-red-500/30 text-red-600 shadow-sm"
-                                        >
-                                          {email.threat_type.replace(/_/g, ' ').toUpperCase()}
-                                        </Badge>
-                                      )}
-                                      {email.classification && (
-                                        <Badge 
-                                          variant="outline" 
-                                          className="border-primary/40 text-primary text-xs px-2 py-1 font-medium bg-primary/5 shadow-sm"
-                                        >
-                                          {email.classification}
-                                        </Badge>
-                                      )}
-                                    </div>
                                   </div>
                                   
-                                  {/* Email metadata */}
-                                  <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+                                  {/* Badges section - mobile responsive */}
+                                  <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                                    {email.threat_level && (
+                                      <Badge 
+                                        variant={getThreatBadgeVariant(email.threat_level)}
+                                        className="text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 font-semibold shadow-sm shrink-0"
+                                      >
+                                        {email.threat_level.toUpperCase()}
+                                      </Badge>
+                                    )}
+                                    {email.threat_type && email.threat_type !== 'spam' && (
+                                      <Badge 
+                                        variant="destructive" 
+                                        className="text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 font-medium bg-red-500/10 border-red-500/30 text-red-600 shadow-sm shrink-0"
+                                      >
+                                        {email.threat_type.replace(/_/g, ' ').toUpperCase()}
+                                      </Badge>
+                                    )}
+                                    {email.classification && (
+                                      <Badge 
+                                        variant="outline" 
+                                        className="border-primary/40 text-primary text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 font-medium bg-primary/5 shadow-sm shrink-0"
+                                      >
+                                        {email.classification}
+                                      </Badge>
+                                    )}
+                                  </div>
+                                  
+                                  {/* Email metadata - mobile responsive */}
+                                  <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-xs sm:text-sm text-muted-foreground">
                                     <div className="flex items-center space-x-1">
                                       <span className="text-primary font-semibold">From:</span>
-                                      <span className="truncate max-w-[200px]">{email.sender}</span>
+                                      <span className="truncate max-w-[150px] sm:max-w-[200px]">{email.sender}</span>
                                     </div>
                                     <div className="flex items-center space-x-1">
                                       <span className="text-primary font-semibold">Date:</span>
@@ -711,38 +713,38 @@ const Index = () => {
                                     </div>
                                   </div>
                                   
-                                  {/* Keywords tags */}
+                                  {/* Keywords tags - mobile responsive */}
                                   {email.keywords && email.keywords.length > 0 && (
-                                    <div className="flex flex-wrap gap-2">
-                                      {email.keywords.slice(0, 3).map((keyword, keywordIndex) => (
+                                    <div className="flex flex-wrap gap-1 sm:gap-2">
+                                      {email.keywords.slice(0, 2).map((keyword, keywordIndex) => (
                                         <span
                                           key={keywordIndex}
-                                          className="inline-flex items-center bg-gradient-to-r from-primary/20 to-primary/10 text-primary px-3 py-1.5 text-xs rounded-full border border-primary/30 font-medium shadow-sm hover:shadow-md transition-shadow duration-200"
+                                          className="inline-flex items-center bg-gradient-to-r from-primary/20 to-primary/10 text-primary px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs rounded-full border border-primary/30 font-medium shadow-sm hover:shadow-md transition-shadow duration-200"
                                         >
                                           {keyword}
                                         </span>
                                       ))}
-                                      {email.keywords.length > 3 && (
-                                        <span className="inline-flex items-center bg-gradient-to-r from-secondary/20 to-secondary/10 text-secondary px-3 py-1.5 text-xs rounded-full border border-secondary/30 font-medium shadow-sm">
-                                          +{email.keywords.length - 3} more
+                                      {email.keywords.length > 2 && (
+                                        <span className="inline-flex items-center bg-gradient-to-r from-secondary/20 to-secondary/10 text-secondary px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs rounded-full border border-secondary/30 font-medium shadow-sm">
+                                          +{email.keywords.length - 2} more
                                         </span>
                                       )}
                                     </div>
                                   )}
                                 </div>
                                 
-                                {/* Confidence score */}
+                                {/* Confidence score - mobile responsive */}
                                 {email.confidence && (
-                                  <div className="text-right ml-6 flex-shrink-0">
+                                  <div className="text-right flex-shrink-0 self-start">
                                     <div className="relative">
-                                      <div className="text-2xl font-bold text-primary bg-gradient-to-b from-primary to-primary/70 bg-clip-text text-transparent">
+                                      <div className="text-lg sm:text-2xl font-bold text-primary bg-gradient-to-b from-primary to-primary/70 bg-clip-text text-transparent">
                                         {Math.round(email.confidence * 100)}%
                                       </div>
-                                      <div className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">
+                                      <div className="text-[10px] sm:text-xs text-muted-foreground font-semibold uppercase tracking-wider">
                                         CONFIDENCE
                                       </div>
                                       {/* Confidence indicator bar */}
-                                      <div className="mt-2 w-16 h-1.5 bg-muted/30 rounded-full overflow-hidden">
+                                      <div className="mt-1 sm:mt-2 w-12 sm:w-16 h-1 sm:h-1.5 bg-muted/30 rounded-full overflow-hidden">
                                         <div 
                                           className="h-full bg-gradient-to-r from-primary to-primary/70 rounded-full transition-all duration-500"
                                           style={{ width: `${Math.round(email.confidence * 100)}%` }}
