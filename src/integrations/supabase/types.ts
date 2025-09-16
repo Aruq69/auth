@@ -107,45 +107,6 @@ export type Database = {
         }
         Relationships: []
       }
-      nylas_tokens: {
-        Row: {
-          access_token: string
-          created_at: string
-          email_address: string
-          expires_at: string | null
-          grant_id: string
-          id: string
-          provider: string
-          refresh_token: string | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          access_token: string
-          created_at?: string
-          email_address: string
-          expires_at?: string | null
-          grant_id: string
-          id?: string
-          provider: string
-          refresh_token?: string | null
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          access_token?: string
-          created_at?: string
-          email_address?: string
-          expires_at?: string | null
-          grant_id?: string
-          id?: string
-          provider?: string
-          refresh_token?: string | null
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       profiles: {
         Row: {
           created_at: string
