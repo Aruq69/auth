@@ -13,8 +13,20 @@ serve(async (req) => {
   }
 
   try {
-    const body = await req.json();
-    console.log('Request body received:', JSON.stringify(body));
+    console.log('Processing request...');
+    
+    // Handle case where body might be empty
+    let body;
+    try {
+      body = await req.json();
+      console.log('Request body received:', JSON.stringify(body));
+    } catch (jsonError) {
+      console.error('Failed to parse JSON:', jsonError);
+      return new Response(
+        JSON.stringify({ error: 'Invalid JSON in request body' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
     
     const { user_id, email_data, analysis_type = 'patterns' } = body;
     console.log('Analysis type:', analysis_type);

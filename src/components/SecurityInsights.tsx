@@ -35,6 +35,8 @@ export const SecurityInsights = ({ selectedEmail, emailStats }: SecurityInsights
         analysis_type: type
       };
 
+      console.log('Preparing request data:', requestData);
+
       if (type === 'individual' && selectedEmail) {
         requestData.email_data = {
           subject: selectedEmail.subject,
@@ -45,6 +47,7 @@ export const SecurityInsights = ({ selectedEmail, emailStats }: SecurityInsights
           keywords: selectedEmail.keywords,
           confidence: selectedEmail.confidence
         };
+        console.log('Added individual email data:', requestData.email_data);
       }
 
       if (type === 'comprehensive' && selectedEmail) {
@@ -55,24 +58,46 @@ export const SecurityInsights = ({ selectedEmail, emailStats }: SecurityInsights
           threatType: selectedEmail.threat_type,
           classification: selectedEmail.classification
         };
+        console.log('Added comprehensive email data:', requestData.email_data);
       }
+
+      console.log('Invoking email-security-advisor with:', JSON.stringify(requestData));
 
       const { data, error } = await supabase.functions.invoke('email-security-advisor', {
         body: requestData
       });
 
-      if (error) throw error;
+      console.log('Function response - data:', data);
+      console.log('Function response - error:', error);
+
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw error;
+      }
+
+      if (!data || !data.advice) {
+        console.error('No advice received in response:', data);
+        throw new Error('No advice received from security advisor');
+      }
 
       setInsights(prev => ({
         ...prev,
         [type]: data.advice
       }));
 
+      console.log('Successfully set insights for type:', type);
+
     } catch (error) {
       console.error('Error generating insights:', error);
+      console.error('Error details:', {
+        message: error.message,
+        status: error.status,
+        statusText: error.statusText,
+        details: error.details
+      });
       toast({
         title: "Error",
-        description: "Failed to generate security insights. Please try again.",
+        description: `Failed to generate security insights: ${error.message || 'Unknown error'}`,
         variant: "destructive",
       });
     } finally {
