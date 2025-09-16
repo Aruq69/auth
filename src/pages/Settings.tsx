@@ -137,7 +137,7 @@ const SettingsPage = () => {
   };
 
   const handleLanguageChange = async (newLanguage: string) => {
-    if (!user) return;
+    if (!user || newLanguage === currentLang) return;
     
     // Update language context immediately for UI changes
     setContextLanguage(newLanguage);

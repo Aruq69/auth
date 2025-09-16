@@ -158,25 +158,12 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const savedLanguage = localStorage.getItem('preferred-language');
     if (savedLanguage && (savedLanguage === 'en' || savedLanguage === 'ar')) {
       setLanguageState(savedLanguage);
-      // Apply to document immediately
-      document.documentElement.lang = savedLanguage;
-      document.documentElement.dir = savedLanguage === 'ar' ? 'rtl' : 'ltr';
-      
-      // Add CSS class for RTL styling
-      if (savedLanguage === 'ar') {
-        document.documentElement.classList.add('rtl');
-        document.body.classList.add('rtl');
-      } else {
-        document.documentElement.classList.remove('rtl');
-        document.body.classList.remove('rtl');
-      }
+      applyLanguageToDOM(savedLanguage);
     }
   }, []);
 
-  const setLanguage = (lang: string) => {
-    setLanguageState(lang);
-    localStorage.setItem('preferred-language', lang);
-    // Apply to document for proper RTL/LTR support
+  const applyLanguageToDOM = (lang: string) => {
+    // Apply to document immediately
     document.documentElement.lang = lang;
     document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
     
@@ -190,10 +177,15 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
+  const setLanguage = (lang: string) => {
+    setLanguageState(lang);
+    localStorage.setItem('preferred-language', lang);
+    applyLanguageToDOM(lang);
+  };
+
   const t = (key: string): string => {
     const currentTranslations = translations[language as keyof typeof translations] || translations.en;
     const translation = currentTranslations[key as keyof typeof currentTranslations];
-    console.log(`Translation for ${key} in ${language}:`, translation); // Debug log
     return translation || key;
   };
 
