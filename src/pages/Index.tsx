@@ -59,6 +59,7 @@ const Index = () => {
     if (user) {
       checkEmailConnection();
       fetchUserProfile();
+      fetchUserPreferences(); // Added this missing call!
       const timer = setTimeout(() => {
         fetchEmails();
       }, 0);
