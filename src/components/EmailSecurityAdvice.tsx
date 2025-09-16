@@ -41,12 +41,16 @@ const EmailSecurityAdvice = ({ email }: EmailSecurityAdviceProps) => {
     try {
       const { data, error: functionError } = await supabase.functions.invoke('email-security-advisor', {
         body: {
-          subject: email.subject,
-          sender: email.sender,
-          threatLevel: email.threat_level,
-          threatType: email.threat_type,
-          classification: email.classification,
-          keywords: email.keywords
+          user_id: 'anonymous', // Provide a default user_id for individual email analysis
+          analysis_type: 'individual',
+          email_data: {
+            subject: email.subject,
+            sender: email.sender,
+            threatLevel: email.threat_level,
+            threatType: email.threat_type,
+            classification: email.classification,
+            keywords: email.keywords
+          }
         }
       });
 
