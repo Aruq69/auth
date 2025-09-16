@@ -308,7 +308,8 @@ serve(async (req) => {
           classification = classificationResponse.data.results[0];
         }
 
-        // Check if email already exists in database (only if we're storing data)
+        // Always store the email analysis temporarily for session (regardless of privacy setting)
+        // But only persist to database if privacy setting allows
         if (!neverStoreData) {
           const { data: existingEmail } = await supabase
             .from('emails')
@@ -318,7 +319,7 @@ serve(async (req) => {
             .single();
 
           if (!existingEmail) {
-            // Store the email analysis in the database only if privacy allows
+            // Store the email analysis in the database for permanent storage
             const { error: insertError } = await supabase
               .from('emails')
               .insert({
@@ -342,18 +343,24 @@ serve(async (req) => {
             }
           }
         } else {
-          console.log('Email not stored due to privacy settings - processing only');
+          console.log('Email processed but not permanently stored due to privacy settings');
         }
 
+        // Return email data for session display (regardless of storage preference)
         return {
           id: message.id,
+          gmail_id: message.id,
           subject,
           sender,
+          content: content.substring(0, 1000),
+          raw_content: fullContent.substring(0, 5000),
           classification: classification.classification,
           threat_level: classification.threat_level,
+          threat_type: classification.threat_type,
           confidence: classification.confidence,
           keywords: classification.keywords,
-          received_date: new Date(date).toISOString()
+          received_date: new Date(date).toISOString(),
+          message_id: message.id
         };
 
       } catch (error) {

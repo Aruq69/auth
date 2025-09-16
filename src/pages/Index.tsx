@@ -33,6 +33,7 @@ interface Email {
 
 const Index = () => {
   const [emails, setEmails] = useState<Email[]>([]);
+  const [sessionEmails, setSessionEmails] = useState<Email[]>([]); // Temporary emails for privacy mode
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [threatFilter, setThreatFilter] = useState<string | null>(null); // Add threat level filter
@@ -174,6 +175,11 @@ const Index = () => {
         // Get current email count to see how many were actually new
         addRecentActivity(`Processed ${data.total} emails`, 
           userPreferences?.never_store_data ? "Analyzed without storing (Privacy Mode)" : "Analyzed and stored");
+        
+        // If privacy mode is enabled, store emails in session state
+        if (userPreferences?.never_store_data && data.emails) {
+          setSessionEmails(data.emails);
+        }
         
         toast({
           title: "Gmail sync completed",
@@ -334,7 +340,10 @@ const Index = () => {
     }
   };
 
-  const filteredEmails = emails.filter(email => {
+  // Use session emails when privacy mode is enabled, otherwise use stored emails
+  const emailsToDisplay = userPreferences?.never_store_data ? sessionEmails : emails;
+  
+  const filteredEmails = emailsToDisplay.filter(email => {
     // Apply search filter
     const matchesSearch = email.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
       email.sender.toLowerCase().includes(searchTerm.toLowerCase());
@@ -349,7 +358,7 @@ const Index = () => {
     return matchesSearch && matchesThreatFilter;
   });
 
-  const threatStats = emails.reduce((acc, email) => {
+  const threatStats = emailsToDisplay.reduce((acc, email) => {
     // Map classification to threat levels for dashboard display
     let displayCategory;
     if (email.classification === 'spam' && email.threat_level === 'high') {
@@ -505,11 +514,11 @@ const Index = () => {
               <Mail className="h-2 w-2 sm:h-3 sm:w-3 text-primary" />
             </CardHeader>
             <CardContent className="pt-1 px-3 sm:px-6 pb-3 sm:pb-6">
-              <div className="text-lg sm:text-xl font-bold text-primary">{emails.length}</div>
+              <div className="text-lg sm:text-xl font-bold text-primary">{emailsToDisplay.length}</div>
               <div className="text-[10px] sm:text-xs text-muted-foreground hidden sm:block">
                 {userPreferences?.never_store_data ? 
-                  'Privacy mode: not stored' : 
-                  (threatFilter === 'all' ? 'All emails selected' : `Showing ${emails.length} most recent`)
+                  'Session only (privacy mode)' : 
+                  (threatFilter === 'all' ? 'All emails selected' : `Showing ${emailsToDisplay.length} most recent`)
                 }
               </div>
             </CardContent>
@@ -702,7 +711,7 @@ const Index = () => {
                         <div className="text-primary">SCANNING EMAIL THREATS...</div>
                       </div>
                     </div>
-                  ) : emails.length === 0 && userPreferences?.never_store_data ? (
+                  ) : emailsToDisplay.length === 0 && userPreferences?.never_store_data ? (
                     <div className="space-y-6">
                       <div className="text-center space-y-4">
                         <Lock className="h-12 w-12 text-primary mx-auto" />
@@ -1109,6 +1118,8 @@ const Index = () => {
               <Button
                 onClick={() => {
                   setShowSignOutDialog(false);
+                  // Clear session emails when signing out (privacy-first)
+                  setSessionEmails([]);
                   signOut();
                 }}
                 variant="outline"
