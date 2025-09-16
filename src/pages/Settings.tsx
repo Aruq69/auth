@@ -56,6 +56,10 @@ const SettingsPage = () => {
         setNeverStoreData(preferences.never_store_data);
         setEmailNotifications(preferences.email_notifications);
         setSecurityAlerts(preferences.security_alerts);
+        // Sync theme from database
+        if (preferences.theme && preferences.theme !== theme) {
+          setTheme(preferences.theme);
+        }
       } else if (error?.code === 'PGRST116') {
         // No preferences found, create privacy-first defaults
         const { error: insertError } = await supabase
@@ -66,7 +70,7 @@ const SettingsPage = () => {
             email_notifications: true,
             security_alerts: true,
             language: 'en',
-            theme: 'system'
+            theme: theme || 'system'
           });
         
         if (!insertError) {
@@ -191,7 +195,7 @@ const SettingsPage = () => {
             email_notifications: true,
             security_alerts: true,
             language: 'en',
-            theme: 'system'
+            theme: theme || 'system'
           });
         updateError = error;
       }
@@ -234,6 +238,72 @@ const SettingsPage = () => {
         variant: "destructive",
       });
       setNeverStoreData(!enabled);
+    }
+  };
+
+  const handleThemeChange = async (newTheme: string) => {
+    if (!user) {
+      setTheme(newTheme);
+      return;
+    }
+    
+    setTheme(newTheme);
+    
+    try {
+      // First check if preferences exist
+      const { data: existingPrefs, error: checkError } = await supabase
+        .from('user_preferences')
+        .select('id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      let updateError;
+      
+      if (existingPrefs) {
+        // Update existing preferences
+        const { error } = await supabase
+          .from('user_preferences')
+          .update({
+            theme: newTheme,
+            updated_at: new Date().toISOString()
+          })
+          .eq('user_id', user.id);
+        updateError = error;
+      } else {
+        // Create new preferences
+        const { error } = await supabase
+          .from('user_preferences')
+          .insert({
+            user_id: user.id,
+            never_store_data: true,
+            email_notifications: true,
+            security_alerts: true,
+            language: 'en',
+            theme: newTheme
+          });
+        updateError = error;
+      }
+
+      if (updateError) {
+        console.error('Error updating theme preference:', updateError);
+        toast({
+          title: "Error",
+          description: "Failed to update theme setting. Please try again.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Theme Updated",
+          description: `Theme changed to ${newTheme === 'system' ? 'system default' : newTheme + ' mode'}`,
+        });
+      }
+    } catch (error) {
+      console.error('Error updating theme:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update theme setting. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -574,7 +644,7 @@ const SettingsPage = () => {
                     <Palette className="h-4 w-4 text-muted-foreground" />
                     <span>Appearance Theme</span>
                   </Label>
-                  <Select value={theme} onValueChange={setTheme}>
+                  <Select value={theme} onValueChange={handleThemeChange}>
                     <SelectTrigger className="w-full bg-background/50 border-border/30 hover:border-primary/50 hover:shadow-md hover:shadow-primary/10 transition-all duration-300 hover:scale-[1.02]">
                       <SelectValue placeholder="Select theme" />
                     </SelectTrigger>
