@@ -42,6 +42,7 @@ const Index = () => {
   const [showSignOutDialog, setShowSignOutDialog] = useState(false); // Add sign out confirmation dialog
   const [showClearEmailsDialog, setShowClearEmailsDialog] = useState(false); // Add clear emails confirmation dialog
   const [userProfile, setUserProfile] = useState<{username: string} | null>(null);
+  const [userPreferences, setUserPreferences] = useState<{never_store_data: boolean} | null>(null);
   const { toast } = useToast();
   const { user, signOut, loading: authLoading } = useAuth();
   const navigate = useNavigate();
@@ -77,6 +78,24 @@ const Index = () => {
       }
     } catch (error) {
       console.error('Error fetching user profile:', error);
+    }
+  };
+
+  const fetchUserPreferences = async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('user_preferences')
+        .select('never_store_data')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      
+      if (!error && data) {
+        setUserPreferences(data);
+      }
+    } catch (error) {
+      console.error('Error fetching user preferences:', error);
     }
   };
 
@@ -466,7 +485,10 @@ const Index = () => {
             <CardContent className="pt-1 px-3 sm:px-6 pb-3 sm:pb-6">
               <div className="text-lg sm:text-xl font-bold text-primary">{emails.length}</div>
               <div className="text-[10px] sm:text-xs text-muted-foreground hidden sm:block">
-                {threatFilter === 'all' ? 'All emails selected' : `Showing ${emails.length} most recent`}
+                {userPreferences?.never_store_data ? 
+                  'Privacy mode: not stored' : 
+                  (threatFilter === 'all' ? 'All emails selected' : `Showing ${emails.length} most recent`)
+                }
               </div>
             </CardContent>
           </Card>
@@ -656,6 +678,26 @@ const Index = () => {
                       <div className="text-center space-y-4">
                         <div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
                         <div className="text-primary">SCANNING EMAIL THREATS...</div>
+                      </div>
+                    </div>
+                  ) : emails.length === 0 && userPreferences?.never_store_data ? (
+                    <div className="flex items-center justify-center py-12">
+                      <div className="text-center space-y-4 max-w-md">
+                        <Lock className="h-12 w-12 text-primary mx-auto" />
+                        <div className="text-foreground font-medium">Privacy-First Mode Active</div>
+                        <div className="text-muted-foreground text-sm">
+                          Your emails are being analyzed in real-time but not stored for maximum privacy. 
+                          To see historical data, you can disable Privacy-First Mode in Settings.
+                        </div>
+                        <Button 
+                          onClick={() => navigate('/settings')} 
+                          variant="outline" 
+                          size="sm"
+                          className="mt-4"
+                        >
+                          <Settings className="h-4 w-4 mr-2" />
+                          Go to Settings
+                        </Button>
                       </div>
                     </div>
                   ) : filteredEmails.length === 0 ? (
