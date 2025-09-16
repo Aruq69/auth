@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -137,7 +138,7 @@ export const SecurityInsights = ({ selectedEmail, emailStats }: SecurityInsights
   const safetyRate = stats ? Math.round((stats.safe_emails / stats.total_emails) * 100) : 0;
 
   return (
-    <Card className="h-full">
+    <Card className="h-full flex flex-col">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
@@ -154,8 +155,8 @@ export const SecurityInsights = ({ selectedEmail, emailStats }: SecurityInsights
           Dynamic security analysis based on your email patterns
         </CardDescription>
       </CardHeader>
-      <CardContent>
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+      <CardContent className="flex-1 overflow-hidden">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full flex flex-col">
           <TabsList className="grid grid-cols-3 w-full">
             <TabsTrigger value="patterns" className="flex items-center space-x-1">
               <TrendingUp className="h-4 w-4" />
@@ -175,7 +176,9 @@ export const SecurityInsights = ({ selectedEmail, emailStats }: SecurityInsights
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="patterns" className="space-y-4">
+          <TabsContent value="patterns" className="flex-1 overflow-hidden">
+            <ScrollArea className="h-full">
+              <div className="space-y-4 pr-4">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold">Security Pattern Analysis</h3>
               <Button
@@ -203,21 +206,25 @@ export const SecurityInsights = ({ selectedEmail, emailStats }: SecurityInsights
               </div>
             )}
 
-            <div className="space-y-2">
-              {loading && activeTab === 'patterns' ? (
-                <div className="text-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-                  <p className="mt-2 text-muted-foreground">Analyzing your email patterns...</p>
+                <div className="space-y-2">
+                  {loading && activeTab === 'patterns' ? (
+                    <div className="text-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                      <p className="mt-2 text-muted-foreground">Analyzing your email patterns...</p>
+                    </div>
+                  ) : insights.patterns ? (
+                    formatAdvice(insights.patterns)
+                  ) : (
+                    <p className="text-muted-foreground">No pattern analysis available. More emails needed for insights.</p>
+                  )}
                 </div>
-              ) : insights.patterns ? (
-                formatAdvice(insights.patterns)
-              ) : (
-                <p className="text-muted-foreground">No pattern analysis available. More emails needed for insights.</p>
-              )}
-            </div>
+              </div>
+            </ScrollArea>
           </TabsContent>
 
-          <TabsContent value="individual" className="space-y-4">
+          <TabsContent value="individual" className="flex-1 overflow-hidden">
+            <ScrollArea className="h-full">
+              <div className="space-y-4 pr-4">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold">Current Email Analysis</h3>
               {selectedEmail && (
@@ -252,25 +259,31 @@ export const SecurityInsights = ({ selectedEmail, emailStats }: SecurityInsights
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  {loading && activeTab === 'individual' ? (
-                    <div className="text-center py-8">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-                      <p className="mt-2 text-muted-foreground">Analyzing this email...</p>
-                    </div>
-                  ) : insights.individual ? (
-                    formatAdvice(insights.individual)
-                  ) : (
-                    <p className="text-muted-foreground">Click "Analyze" to get specific advice for this email.</p>
-                  )}
+                  <div className="space-y-2">
+                    {loading && activeTab === 'individual' ? (
+                      <div className="text-center py-8">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                        <p className="mt-2 text-muted-foreground">Analyzing this email...</p>
+                      </div>
+                    ) : insights.individual ? (
+                      formatAdvice(insights.individual)
+                    ) : (
+                      <p className="text-muted-foreground">Click "Analyze" to get specific advice for this email.</p>
+                    )}
+                  </div>
                 </div>
+              ) : (
+                <div className="py-8">
+                  <p className="text-muted-foreground">Select an email to get personalized security advice.</p>
+                </div>
+              )}
               </div>
-            ) : (
-              <p className="text-muted-foreground">Select an email to get personalized security advice.</p>
-            )}
+            </ScrollArea>
           </TabsContent>
 
-          <TabsContent value="comprehensive" className="space-y-4">
+          <TabsContent value="comprehensive" className="flex-1 overflow-hidden">
+            <ScrollArea className="h-full">
+              <div className="space-y-4 pr-4">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold">Comprehensive Security Analysis</h3>
               <Button
@@ -285,18 +298,20 @@ export const SecurityInsights = ({ selectedEmail, emailStats }: SecurityInsights
               </Button>
             </div>
 
-            <div className="space-y-2">
-              {loading && activeTab === 'comprehensive' ? (
-                <div className="text-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-                  <p className="mt-2 text-muted-foreground">Generating comprehensive analysis...</p>
+                <div className="space-y-2">
+                  {loading && activeTab === 'comprehensive' ? (
+                    <div className="text-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                      <p className="mt-2 text-muted-foreground">Generating comprehensive analysis...</p>
+                    </div>
+                  ) : insights.comprehensive ? (
+                    formatAdvice(insights.comprehensive)
+                  ) : (
+                    <p className="text-muted-foreground">Click "Generate" to get a comprehensive security analysis of your email environment.</p>
+                  )}
                 </div>
-              ) : insights.comprehensive ? (
-                formatAdvice(insights.comprehensive)
-              ) : (
-                <p className="text-muted-foreground">Click "Generate" to get a comprehensive security analysis of your email environment.</p>
-              )}
-            </div>
+              </div>
+            </ScrollArea>
           </TabsContent>
         </Tabs>
       </CardContent>
