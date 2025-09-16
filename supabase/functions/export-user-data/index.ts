@@ -239,10 +239,19 @@ function generateHTMLReport(emails: any[], userInfo: any, preferences: any) {
 
             <div class="section">
                 <h2>📊 Email Security Overview</h2>
+                ${preferences?.never_store_data ? `
+                <div style="background: #e3f2fd; border-left: 4px solid #2196f3; padding: 15px; margin-bottom: 20px; border-radius: 4px;">
+                    <h3 style="margin: 0 0 10px; color: #1976d2;">🔒 Privacy-First Mode Active</h3>
+                    <p style="margin: 0; color: #1565c0;">
+                        Your emails are analyzed in real-time but not permanently stored for maximum privacy. 
+                        This report shows your current privacy settings and system status.
+                    </p>
+                </div>
+                ` : ''}
                 <div class="stats-grid">
                     <div class="stat-card">
                         <span class="stat-number">${totalEmails}</span>
-                        <div class="stat-label">Total Emails Analyzed</div>
+                        <div class="stat-label">${preferences?.never_store_data ? 'Session Analysis Only' : 'Total Emails Analyzed'}</div>
                     </div>
                     <div class="stat-card">
                         <span class="stat-number">${safeEmails}</span>
@@ -387,15 +396,18 @@ Deno.serve(async (req) => {
       console.error('Error fetching emails:', emailsError);
     }
 
-    // Fetch user preferences
-    const { data: preferences, error: preferencesError } = await supabaseClient
+    // Fetch user preferences with fallback for missing data
+    let preferences = { never_store_data: true, email_notifications: true, security_alerts: true, language: 'en', theme: 'system' };
+    const { data: preferencesData, error: preferencesError } = await supabaseClient
       .from('user_preferences')
       .select('*')
       .eq('user_id', user.id)
-      .single();
-
-    if (preferencesError) {
-      console.error('Error fetching preferences:', preferencesError);
+      .maybeSingle(); // Use maybeSingle to handle missing data
+    
+    if (!preferencesError && preferencesData) {
+      preferences = preferencesData;
+    } else {
+      console.log('No user preferences found, using defaults');
     }
 
     // Generate HTML report
