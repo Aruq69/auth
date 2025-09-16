@@ -138,7 +138,7 @@ export const SecurityInsights = ({ selectedEmail, emailStats }: SecurityInsights
   const safetyRate = stats ? Math.round((stats.safe_emails / stats.total_emails) * 100) : 0;
 
   return (
-    <Card className="h-[450px] flex flex-col">
+    <Card className="h-full flex flex-col">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
@@ -176,8 +176,8 @@ export const SecurityInsights = ({ selectedEmail, emailStats }: SecurityInsights
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="patterns" className="flex-1 overflow-hidden">
-            <ScrollArea className="h-[280px]">
+          <TabsContent value="patterns" className="space-y-4">
+            <ScrollArea className="h-[350px]">
               <div className="space-y-4 pr-4">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold">Security Pattern Analysis</h3>
@@ -222,8 +222,8 @@ export const SecurityInsights = ({ selectedEmail, emailStats }: SecurityInsights
             </ScrollArea>
           </TabsContent>
 
-          <TabsContent value="individual" className="flex-1 overflow-hidden">
-            <ScrollArea className="h-[280px]">
+          <TabsContent value="individual" className="space-y-4">
+            <ScrollArea className="h-[350px]">
               <div className="space-y-4 pr-4">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold">Current Email Analysis</h3>
@@ -281,8 +281,8 @@ export const SecurityInsights = ({ selectedEmail, emailStats }: SecurityInsights
             </ScrollArea>
           </TabsContent>
 
-          <TabsContent value="comprehensive" className="flex-1 overflow-hidden">
-            <ScrollArea className="h-[280px]">
+          <TabsContent value="comprehensive" className="space-y-4">
+            <ScrollArea className="h-[350px]">
               <div className="space-y-4 pr-4">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold">Comprehensive Security Analysis</h3>
