@@ -173,12 +173,61 @@ export type Database = {
         }
         Relationships: []
       }
+      user_preferences: {
+        Row: {
+          created_at: string
+          email_notifications: boolean
+          id: string
+          language: string
+          never_store_data: boolean
+          security_alerts: boolean
+          theme: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email_notifications?: boolean
+          id?: string
+          language?: string
+          never_store_data?: boolean
+          security_alerts?: boolean
+          theme?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email_notifications?: boolean
+          id?: string
+          language?: string
+          never_store_data?: boolean
+          security_alerts?: boolean
+          theme?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_or_create_user_preferences: {
+        Args: { p_user_id: string }
+        Returns: {
+          created_at: string
+          email_notifications: boolean
+          id: string
+          language: string
+          never_store_data: boolean
+          security_alerts: boolean
+          theme: string
+          updated_at: string
+          user_id: string
+        }
+      }
     }
     Enums: {
       [_ in never]: never

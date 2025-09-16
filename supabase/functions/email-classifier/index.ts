@@ -325,12 +325,18 @@ serve(async (req) => {
 
       const classification = classifier.classifyEmail(subject, sender, content || '');
 
-      // Check user's privacy preference
+      // Check user's privacy preference from the database
       let shouldStore = true;
       try {
-        // For now, we'll implement a simple check - in a real app you'd fetch from user preferences
-        // This is a placeholder that will be enhanced with proper user preference storage
-        shouldStore = true; // Default to storing unless explicitly disabled
+        const { data: preferences, error: prefError } = await supabase
+          .from('user_preferences')
+          .select('never_store_data')
+          .eq('user_id', userId)
+          .single();
+
+        if (!prefError && preferences) {
+          shouldStore = !preferences.never_store_data;
+        }
       } catch (error) {
         console.log('Could not check privacy preference, defaulting to store');
         shouldStore = true;

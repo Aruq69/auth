@@ -65,12 +65,19 @@ serve(async (req) => {
       );
     }
 
-    // Check user's privacy preference for data storage
+    // Check user's privacy preference for data storage from the database
     let neverStoreData = false;
     try {
-      // This will be enhanced later to check from a user preferences table
-      // For now, we'll implement basic privacy checking
-      neverStoreData = false; // Default to allow storage
+      const { data: preferences, error: prefError } = await supabase
+        .from('user_preferences')
+        .select('never_store_data')
+        .eq('user_id', user_id)
+        .single();
+
+      if (!prefError && preferences) {
+        neverStoreData = preferences.never_store_data;
+        console.log(`Privacy setting for user ${user_id}: never_store_data = ${neverStoreData}`);
+      }
     } catch (error) {
       console.log('Could not check privacy preference, defaulting to allow storage');
       neverStoreData = false;

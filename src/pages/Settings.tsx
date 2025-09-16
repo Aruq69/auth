@@ -37,8 +37,47 @@ const SettingsPage = () => {
     
     if (user) {
       checkMfaStatus();
+      loadUserPreferences();
     }
   }, [user, authLoading, navigate]);
+
+  const loadUserPreferences = async () => {
+    if (!user) return;
+    
+    try {
+      // Get or create user preferences
+      const { data: preferences, error } = await supabase
+        .from('user_preferences')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      if (!error && preferences) {
+        setNeverStoreData(preferences.never_store_data);
+        setEmailNotifications(preferences.email_notifications);
+        setSecurityAlerts(preferences.security_alerts);
+        setLanguage(preferences.language);
+      } else if (error?.code === 'PGRST116') {
+        // No preferences found, create default ones
+        const { error: insertError } = await supabase
+          .from('user_preferences')
+          .insert({
+            user_id: user.id,
+            never_store_data: false,
+            email_notifications: true,
+            security_alerts: true,
+            language: 'en',
+            theme: 'system'
+          });
+        
+        if (insertError) {
+          console.error('Error creating user preferences:', insertError);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading user preferences:', error);
+    }
+  };
 
   const checkMfaStatus = async () => {
     setLoading(true);
@@ -91,13 +130,32 @@ const SettingsPage = () => {
     navigate("/auth");
   };
 
-  const handleLanguageChange = (newLanguage: string) => {
+  const handleLanguageChange = async (newLanguage: string) => {
+    if (!user) return;
+    
     setLanguage(newLanguage);
-    localStorage.setItem('preferred-language', newLanguage);
-    toast({
-      title: "Language Updated",
-      description: `Language changed to ${newLanguage === 'ar' ? 'Arabic' : 'English'}`,
-    });
+    
+    try {
+      const { error } = await supabase
+        .from('user_preferences')
+        .upsert({
+          user_id: user.id,
+          language: newLanguage,
+          updated_at: new Date().toISOString()
+        });
+
+      if (error) {
+        console.error('Error updating language preference:', error);
+      }
+
+      localStorage.setItem('preferred-language', newLanguage);
+      toast({
+        title: "Language Updated",
+        description: `Language changed to ${newLanguage === 'ar' ? 'Arabic' : 'English'}`,
+      });
+    } catch (error) {
+      console.error('Error updating language:', error);
+    }
   };
 
   const handleDataExport = async () => {
@@ -120,15 +178,59 @@ const SettingsPage = () => {
     }
   };
 
-  const handleNeverStoreDataChange = (enabled: boolean) => {
+  const handleNeverStoreDataChange = async (enabled: boolean) => {
+    if (!user) return;
+    
     setNeverStoreData(enabled);
-    localStorage.setItem('never-store-data', enabled.toString());
-    toast({
-      title: enabled ? "Data Storage Disabled" : "Data Storage Enabled",
-      description: enabled 
-        ? "New emails will not be stored permanently" 
-        : "Emails will be stored according to retention policy",
-    });
+    
+    try {
+      const { error } = await supabase
+        .from('user_preferences')
+        .upsert({
+          user_id: user.id,
+          never_store_data: enabled,
+          updated_at: new Date().toISOString()
+        });
+
+      if (error) {
+        console.error('Error updating privacy preference:', error);
+        toast({
+          title: "Error",
+          description: "Failed to update privacy setting. Please try again.",
+          variant: "destructive",
+        });
+        // Revert the state if database update failed
+        setNeverStoreData(!enabled);
+        return;
+      }
+
+      // If enabling never store data, optionally delete existing data
+      if (enabled) {
+        const { error: deleteError } = await supabase
+          .from('emails')
+          .delete()
+          .eq('user_id', user.id);
+
+        if (deleteError) {
+          console.error('Error deleting existing emails:', deleteError);
+        }
+      }
+
+      toast({
+        title: enabled ? "Data Storage Disabled" : "Data Storage Enabled",
+        description: enabled 
+          ? "New emails will not be stored permanently and existing data has been removed" 
+          : "Emails will be stored according to retention policy",
+      });
+    } catch (error) {
+      console.error('Error updating preferences:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update privacy setting. Please try again.",
+        variant: "destructive",
+      });
+      setNeverStoreData(!enabled);
+    }
   };
 
   if (showMfaSetup) {
