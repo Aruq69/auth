@@ -256,30 +256,38 @@ async function callOpenAI(prompt: string): Promise<string> {
   
   try {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    headers: {
-      'Authorization': `Bearer ${openAIApiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'gpt-4o-mini',
-      messages: [
-        { 
-          role: 'system', 
-          content: 'You are a cybersecurity expert providing clear, actionable email security advice. Use bullet points and be direct.' 
-        },
-        { role: 'user', content: prompt }
-      ],
-      max_tokens: 400,
-      temperature: 0.3,
-    }),
-  });
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openAIApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          { 
+            role: 'system', 
+            content: 'You are a cybersecurity expert providing clear, actionable email security advice. Use bullet points and be direct.' 
+          },
+          { role: 'user', content: prompt }
+        ],
+        max_tokens: 400,
+        temperature: 0.3,
+      }),
+    });
 
-  if (!response.ok) {
-    const errorData = await response.json();
-    console.error('OpenAI API error:', errorData);
-    throw new Error('Failed to generate security advice');
+    console.log('OpenAI response status:', response.status);
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('OpenAI API error:', errorData);
+      throw new Error(`OpenAI API error: ${errorData.error?.message || 'Unknown error'}`);
+    }
+
+    const data = await response.json();
+    console.log('OpenAI response received');
+    return data.choices[0].message.content;
+  } catch (error) {
+    console.error('Error calling OpenAI:', error);
+    throw error;
   }
-
-  const data = await response.json();
-  return data.choices[0].message.content;
 }
