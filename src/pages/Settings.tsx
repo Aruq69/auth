@@ -186,16 +186,42 @@ const SettingsPage = () => {
     setNeverStoreData(enabled);
     
     try {
-      const { error } = await supabase
+      // First check if preferences exist
+      const { data: existingPrefs, error: checkError } = await supabase
         .from('user_preferences')
-        .upsert({
-          user_id: user.id,
-          never_store_data: enabled,
-          updated_at: new Date().toISOString()
-        });
+        .select('id')
+        .eq('user_id', user.id)
+        .maybeSingle();
 
-      if (error) {
-        console.error('Error updating privacy preference:', error);
+      let updateError;
+      
+      if (existingPrefs) {
+        // Update existing preferences
+        const { error } = await supabase
+          .from('user_preferences')
+          .update({
+            never_store_data: enabled,
+            updated_at: new Date().toISOString()
+          })
+          .eq('user_id', user.id);
+        updateError = error;
+      } else {
+        // Create new preferences
+        const { error } = await supabase
+          .from('user_preferences')
+          .insert({
+            user_id: user.id,
+            never_store_data: enabled,
+            email_notifications: true,
+            security_alerts: true,
+            language: 'en',
+            theme: 'system'
+          });
+        updateError = error;
+      }
+
+      if (updateError) {
+        console.error('Error updating privacy preference:', updateError);
         toast({
           title: "Error",
           description: "Failed to update privacy setting. Please try again.",
@@ -206,7 +232,7 @@ const SettingsPage = () => {
         return;
       }
 
-      // If enabling never store data, optionally delete existing data
+      // If enabling never store data, delete existing data
       if (enabled) {
         const { error: deleteError } = await supabase
           .from('emails')
@@ -219,9 +245,9 @@ const SettingsPage = () => {
       }
 
       toast({
-        title: enabled ? "Data Storage Disabled" : "Data Storage Enabled",
+        title: enabled ? "Privacy-First Mode Enabled" : "Data Storage Enabled",
         description: enabled 
-          ? "Emails will not be stored permanently (privacy-first mode)" 
+          ? "Emails will not be stored permanently (maximum privacy)" 
           : "You have consented to email storage for enhanced features",
       });
     } catch (error) {
