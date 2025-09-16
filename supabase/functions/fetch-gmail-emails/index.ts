@@ -308,6 +308,17 @@ serve(async (req) => {
           classification = classificationResponse.data.results[0];
         }
 
+        // Store analytics statistics (always store, privacy-friendly)
+        const { error: statsError } = await supabase.rpc('increment_email_statistics', {
+          p_user_id: user_id,
+          p_threat_level: classification.threat_level || 'safe',
+          p_threat_type: classification.threat_type || null
+        });
+        
+        if (statsError) {
+          console.error('Error storing email statistics:', statsError);
+        }
+
         // Always store the email analysis temporarily for session (regardless of privacy setting)
         // But only persist to database if privacy setting allows
         if (!neverStoreData) {

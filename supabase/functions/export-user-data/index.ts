@@ -2,11 +2,34 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.4'
 import { corsHeaders } from '../_shared/cors.ts'
 
 // Create a simple PDF-like HTML document that can be converted to PDF
-function generateHTMLReport(emails: any[], userInfo: any, preferences: any) {
+function generateHTMLReport(emails: any[], userInfo: any, preferences: any, emailStats: any[] = []) {
   const currentDate = new Date().toLocaleDateString();
-  const totalEmails = emails.length;
-  const threatEmails = emails.filter(email => email.threat_level === 'high' || email.threat_level === 'medium').length;
-  const safeEmails = totalEmails - threatEmails;
+  
+  // Calculate aggregated statistics from email_statistics table
+  const totalStats = emailStats.reduce((acc, stat) => ({
+    total_emails: acc.total_emails + (stat.total_emails || 0),
+    safe_emails: acc.safe_emails + (stat.safe_emails || 0),
+    low_threat_emails: acc.low_threat_emails + (stat.low_threat_emails || 0),
+    medium_threat_emails: acc.medium_threat_emails + (stat.medium_threat_emails || 0),
+    high_threat_emails: acc.high_threat_emails + (stat.high_threat_emails || 0),
+    spam_emails: acc.spam_emails + (stat.spam_emails || 0),
+    phishing_emails: acc.phishing_emails + (stat.phishing_emails || 0),
+    malware_emails: acc.malware_emails + (stat.malware_emails || 0),
+    suspicious_emails: acc.suspicious_emails + (stat.suspicious_emails || 0)
+  }), {
+    total_emails: 0,
+    safe_emails: 0,
+    low_threat_emails: 0,
+    medium_threat_emails: 0,
+    high_threat_emails: 0,
+    spam_emails: 0,
+    phishing_emails: 0,
+    malware_emails: 0,
+    suspicious_emails: 0
+  });
+
+  const threatEmails = totalStats.low_threat_emails + totalStats.medium_threat_emails + totalStats.high_threat_emails;
+  const safetyRate = totalStats.total_emails > 0 ? Math.round((totalStats.safe_emails / totalStats.total_emails) * 100) : 0;
 
   // Calculate threat type distribution
   const threatTypes = emails.reduce((acc, email) => {
@@ -250,11 +273,11 @@ function generateHTMLReport(emails: any[], userInfo: any, preferences: any) {
                 ` : ''}
                 <div class="stats-grid">
                     <div class="stat-card">
-                        <span class="stat-number">${totalEmails}</span>
-                        <div class="stat-label">${preferences?.never_store_data ? 'Session Analysis Only' : 'Total Emails Analyzed'}</div>
+                        <span class="stat-number">${totalStats.total_emails}</span>
+                        <div class="stat-label">Total Emails Analyzed</div>
                     </div>
                     <div class="stat-card">
-                        <span class="stat-number">${safeEmails}</span>
+                        <span class="stat-number">${totalStats.safe_emails}</span>
                         <div class="stat-label">Safe Emails</div>
                     </div>
                     <div class="stat-card">
@@ -262,32 +285,40 @@ function generateHTMLReport(emails: any[], userInfo: any, preferences: any) {
                         <div class="stat-label">Threat Emails</div>
                     </div>
                     <div class="stat-card">
-                        <span class="stat-number">${totalEmails > 0 ? Math.round((safeEmails / totalEmails) * 100) : 0}%</span>
+                        <span class="stat-number">${safetyRate}%</span>
                         <div class="stat-label">Safety Rate</div>
                     </div>
                 </div>
             </div>
 
-            ${Object.keys(threatTypes).length > 0 ? `
             <div class="section">
                 <h2>🎯 Threat Analysis</h2>
                 <p>Distribution of detected threats by type:</p>
                 <div class="threat-distribution">
-                    ${Object.entries(threatTypes).map(([type, count]) => `
-                        <div class="threat-type">
-                            <div class="threat-type-count">${count}</div>
-                            <div class="threat-type-label">${type}</div>
-                        </div>
-                    `).join('')}
+                    <div class="threat-type">
+                        <div class="threat-type-count">${totalStats.spam_emails}</div>
+                        <div class="threat-type-label">Spam</div>
+                    </div>
+                    <div class="threat-type">
+                        <div class="threat-type-count">${totalStats.phishing_emails}</div>
+                        <div class="threat-type-label">Phishing</div>
+                    </div>
+                    <div class="threat-type">
+                        <div class="threat-type-count">${totalStats.malware_emails}</div>
+                        <div class="threat-type-label">Malware</div>
+                    </div>
+                    <div class="threat-type">
+                        <div class="threat-type-count">${totalStats.suspicious_emails}</div>
+                        <div class="threat-type-label">Suspicious</div>
+                    </div>
                 </div>
             </div>
-            ` : ''}
 
-            ${recentEmails.length > 0 ? `
+            ${emails.length > 0 ? `
             <div class="section">
                 <h2>📧 Recent Email Analysis (Last 10)</h2>
                 <div class="email-list">
-                    ${recentEmails.map(email => `
+                    ${emails.slice(0, 10).map(email => `
                         <div class="email-item">
                             <div class="email-info">
                                 <h4>${email.subject || 'No Subject'}</h4>
@@ -306,11 +337,11 @@ function generateHTMLReport(emails: any[], userInfo: any, preferences: any) {
             ` : `
             <div class="section">
                 <h2>📧 Email Analysis</h2>
-                <p>No emails found. This could be because:</p>
+                <p>No detailed emails stored. This is because:</p>
                 <ul>
-                    <li>Privacy-first mode is enabled (emails are not stored)</li>
-                    <li>No emails have been analyzed yet</li>
-                    <li>Gmail integration is not set up</li>
+                    <li>✅ Privacy-first mode is enabled (emails are not stored)</li>
+                    <li>📊 Only aggregated statistics are collected for your security analysis</li>
+                    <li>🔒 Your email content remains private while still providing threat insights</li>
                 </ul>
             </div>
             `}
@@ -385,12 +416,23 @@ Deno.serve(async (req) => {
 
     console.log('Generating data export for user:', user.id);
 
-    // Fetch user's emails
+    // Fetch user's email statistics for analytics
+    const { data: emailStats, error: statsError } = await supabaseClient
+      .from('email_statistics')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('date', { ascending: false });
+
+    // Fetch detailed emails only if privacy mode is off
     const { data: emails, error: emailsError } = await supabaseClient
       .from('emails')
       .select('*')
       .eq('user_id', user.id)
       .order('received_date', { ascending: false });
+
+    if (statsError) {
+      console.error('Error fetching email statistics:', statsError);
+    }
 
     if (emailsError) {
       console.error('Error fetching emails:', emailsError);
@@ -410,8 +452,8 @@ Deno.serve(async (req) => {
       console.log('No user preferences found, using defaults');
     }
 
-    // Generate HTML report
-    const htmlContent = generateHTMLReport(emails || [], user, preferences);
+    // Generate HTML report with statistics
+    const htmlContent = generateHTMLReport(emails || [], user, preferences, emailStats || []);
 
     console.log('Generated HTML report, size:', htmlContent.length);
 
