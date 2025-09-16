@@ -16,6 +16,7 @@ const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [username, setUsername] = useState("");
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -72,7 +73,10 @@ const Auth = () => {
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/`
+            emailRedirectTo: `${window.location.origin}/`,
+            data: {
+              username: username.trim() || email.split('@')[0]
+            }
           }
         });
 
@@ -242,6 +246,18 @@ const Auth = () => {
                 </div>
               ) : (
                 <>
+                  {isSignUp && (
+                    <div className="space-y-2">
+                      <Input
+                        type="text"
+                        placeholder="Username (optional)"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        className="bg-background/50 border-border/20"
+                      />
+                    </div>
+                  )}
+                  
                   <div className="space-y-2">
                     <Input
                       type="email"
@@ -379,6 +395,7 @@ const Auth = () => {
                     setError("");
                     setPassword("");
                     setConfirmPassword("");
+                    setUsername("");
                   }}
                   className="text-primary hover:text-primary/80 text-sm"
                 >

@@ -41,6 +41,7 @@ const Index = () => {
   const [showEmailDialog, setShowEmailDialog] = useState(false);
   const [showSignOutDialog, setShowSignOutDialog] = useState(false); // Add sign out confirmation dialog
   const [showClearEmailsDialog, setShowClearEmailsDialog] = useState(false); // Add clear emails confirmation dialog
+  const [userProfile, setUserProfile] = useState<{username: string} | null>(null);
   const { toast } = useToast();
   const { user, signOut, loading: authLoading } = useAuth();
   const navigate = useNavigate();
@@ -53,12 +54,31 @@ const Index = () => {
     
     if (user) {
       checkEmailConnection();
+      fetchUserProfile();
       const timer = setTimeout(() => {
         fetchEmails();
       }, 0);
       return () => clearTimeout(timer);
     }
   }, [user, authLoading, navigate]);
+
+  const fetchUserProfile = async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('user_id', user.id)
+        .single();
+      
+      if (!error && data) {
+        setUserProfile(data);
+      }
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+    }
+  };
 
   const fetchEmails = async () => {
     if (!user) return;
@@ -338,7 +358,9 @@ const Index = () => {
             {user && (
               <div className="flex items-center justify-center space-x-2 mt-3 sm:mt-4">
                 <User className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />
-                <span className="text-xs sm:text-sm text-primary font-medium truncate max-w-[250px]">{user.email}</span>
+                <span className="text-xs sm:text-sm text-primary font-medium truncate max-w-[250px]">
+                  Welcome, {userProfile?.username || user.email?.split('@')[0] || 'User'}
+                </span>
               </div>
             )}
           </div>
@@ -358,16 +380,18 @@ const Index = () => {
                 Sync Gmail
               </Button>
             )}
-            <Button 
-              onClick={fetchEmails} 
-              disabled={loading} 
-              variant="outline" 
-              className="w-full sm:w-auto border-primary/30 hover:border-primary/50 hover-button text-xs sm:text-sm"
-              size="sm"
-            >
-              <Mail className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-              Refresh
-            </Button>
+            {gmailConnected && (
+              <Button 
+                onClick={fetchEmails} 
+                disabled={loading} 
+                variant="outline" 
+                className="w-full sm:w-auto border-primary/30 hover:border-primary/50 hover-button text-xs sm:text-sm"
+                size="sm"
+              >
+                <Mail className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                Refresh
+              </Button>
+            )}
             {gmailConnected && (
               <AlertDialog open={showClearEmailsDialog} onOpenChange={setShowClearEmailsDialog}>
                 <AlertDialogTrigger asChild>
