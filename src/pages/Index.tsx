@@ -370,6 +370,14 @@ const Index = () => {
     
     return matchesSearch && matchesThreatFilter;
   });
+  
+  console.log('📧 Filter debug:', {
+    searchTerm,
+    threatFilter,
+    totalEmails: emailsToDisplay.length,
+    filteredCount: filteredEmails.length,
+    firstEmail: emailsToDisplay[0]
+  });
 
   const threatStats = emailsToDisplay.reduce((acc, email) => {
     // Map classification to threat levels for dashboard display
@@ -724,7 +732,7 @@ const Index = () => {
                         <div className="text-primary">SCANNING EMAIL THREATS...</div>
                       </div>
                     </div>
-                  ) : emailsToDisplay.length === 0 && userPreferences?.never_store_data ? (
+                  ) : emailsToDisplay.length === 0 ? (
                     <div className="space-y-6">
                       <div className="text-center space-y-4">
                         <Lock className="h-12 w-12 text-primary mx-auto" />
