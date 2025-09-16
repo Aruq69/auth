@@ -158,10 +158,10 @@ const SettingsPage = () => {
               <Button
                 variant="outline"
                 onClick={() => navigate("/")}
-                className="border-border/30 bg-background/80 backdrop-blur-sm hover:bg-background/90 hover:border-primary/50 transition-all duration-300 hover-scale"
+                className="group border-border/30 bg-background/80 backdrop-blur-sm hover:bg-gradient-to-r hover:from-primary/10 hover:to-primary/5 hover:border-primary/60 hover:shadow-lg hover:shadow-primary/20 transition-all duration-500 transform hover:scale-105 hover:-translate-y-0.5"
               >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Dashboard
+                <ArrowLeft className="w-4 h-4 mr-2 group-hover:text-primary group-hover:-translate-x-1 transition-all duration-300" />
+                <span className="group-hover:text-primary/90 transition-colors duration-300">Dashboard</span>
               </Button>
               
               <div className="flex items-center space-x-3">
@@ -185,7 +185,7 @@ const SettingsPage = () => {
 
           <div className="grid gap-6 lg:gap-8">
             {/* User Profile Card */}
-            <Card className="border-border/20 bg-card/50 backdrop-blur-md shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-[1.02] animate-scale-in">
+            <Card className="group border-border/20 bg-card/50 backdrop-blur-md shadow-xl hover:shadow-2xl hover:shadow-primary/10 transition-all duration-500 hover:scale-[1.02] hover:border-primary/30 animate-scale-in">
               <CardHeader className="pb-4">
                 <div className="flex items-center space-x-4">
                   <div className="relative">
@@ -233,7 +233,7 @@ const SettingsPage = () => {
             </Card>
 
             {/* Security Settings Card */}
-            <Card className="border-border/20 bg-card/50 backdrop-blur-md shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-[1.02] animate-scale-in [animation-delay:100ms]">
+            <Card className="group border-border/20 bg-card/50 backdrop-blur-md shadow-xl hover:shadow-2xl hover:shadow-emerald-500/10 transition-all duration-500 hover:scale-[1.02] hover:border-emerald-500/30 animate-scale-in [animation-delay:100ms]">
               <CardHeader className="pb-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
@@ -350,7 +350,7 @@ const SettingsPage = () => {
             </Card>
 
             {/* Preferences */}
-            <Card className="border-border/20 bg-card/50 backdrop-blur-md shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-[1.02] animate-scale-in [animation-delay:150ms]">
+            <Card className="group border-border/20 bg-card/50 backdrop-blur-md shadow-xl hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-500 hover:scale-[1.02] hover:border-blue-500/30 animate-scale-in [animation-delay:150ms]">
               <CardHeader className="pb-4">
                 <div className="flex items-center space-x-4">
                   <div className="p-3 rounded-full bg-gradient-to-br from-blue-500/20 to-indigo-500/20 border border-blue-500/30">
@@ -370,7 +370,7 @@ const SettingsPage = () => {
                     <span>Display Language</span>
                   </Label>
                   <Select value={language} onValueChange={handleLanguageChange}>
-                    <SelectTrigger className="w-full bg-background/50 border-border/30 hover:border-border/50 transition-colors">
+                    <SelectTrigger className="w-full bg-background/50 border-border/30 hover:border-primary/50 hover:shadow-md hover:shadow-primary/10 transition-all duration-300 hover:scale-[1.02]">
                       <SelectValue placeholder="Select language" />
                     </SelectTrigger>
                     <SelectContent className="bg-background/95 backdrop-blur-md border-border/50">
@@ -401,7 +401,7 @@ const SettingsPage = () => {
                     <span>Appearance Theme</span>
                   </Label>
                   <Select value={theme} onValueChange={setTheme}>
-                    <SelectTrigger className="w-full bg-background/50 border-border/30 hover:border-border/50 transition-colors">
+                    <SelectTrigger className="w-full bg-background/50 border-border/30 hover:border-primary/50 hover:shadow-md hover:shadow-primary/10 transition-all duration-300 hover:scale-[1.02]">
                       <SelectValue placeholder="Select theme" />
                     </SelectTrigger>
                     <SelectContent className="bg-background/95 backdrop-blur-md border-border/50">
@@ -445,7 +445,7 @@ const SettingsPage = () => {
             </Card>
 
             {/* Notifications */}
-            <Card className="border-border/20 bg-card/50 backdrop-blur-md shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-[1.02] animate-scale-in [animation-delay:175ms]">
+            <Card className="group border-border/20 bg-card/50 backdrop-blur-md shadow-xl hover:shadow-2xl hover:shadow-orange-500/10 transition-all duration-500 hover:scale-[1.02] hover:border-orange-500/30 animate-scale-in [animation-delay:175ms]">
               <CardHeader className="pb-4">
                 <div className="flex items-center space-x-4">
                   <div className="p-3 rounded-full bg-gradient-to-br from-amber-500/20 to-orange-500/20 border border-amber-500/30">
@@ -544,7 +544,7 @@ const SettingsPage = () => {
             </Card>
 
             {/* Account Actions */}
-            <Card className="border-violet-200/50 bg-gradient-to-br from-violet-50/40 to-purple-100/30 backdrop-blur-md shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-[1.02] animate-scale-in [animation-delay:200ms]">
+            <Card className="group border-violet-200/50 bg-gradient-to-br from-violet-50/40 to-purple-100/30 backdrop-blur-md shadow-xl hover:shadow-2xl hover:shadow-violet-500/20 transition-all duration-500 hover:scale-[1.02] hover:border-violet-400/50 animate-scale-in [animation-delay:200ms]">
               <CardHeader className="pb-4">
                 <div className="flex items-center space-x-4">
                   <div className="p-3 rounded-full bg-gradient-to-br from-violet-500/20 to-purple-500/20 border border-violet-500/30 shadow-lg">
@@ -570,12 +570,12 @@ const SettingsPage = () => {
                         <p className="text-sm text-violet-600">Securely sign out of your Mail Guard account</p>
                       </div>
                     </div>
-                    <Button
-                      variant="outline"
-                      onClick={handleSignOut}
-                      className="border-violet-300 text-violet-700 hover:bg-violet-100 hover:border-violet-400 transition-all duration-300 hover-scale shadow-sm"
-                    >
-                      <ArrowLeft className="w-4 h-4 mr-2" />
+                     <Button
+                       variant="outline"
+                       onClick={handleSignOut}
+                       className="group border-violet-300 text-violet-700 hover:bg-gradient-to-r hover:from-violet-100 hover:to-violet-50 hover:border-violet-400 hover:shadow-lg hover:shadow-violet-500/25 transition-all duration-300 transform hover:scale-105 hover:-translate-y-0.5"
+                     >
+                       <ArrowLeft className="w-4 h-4 mr-2 group-hover:text-violet-600 group-hover:-translate-x-1 transition-all duration-300" />
                       Sign Out
                     </Button>
                   </div>
