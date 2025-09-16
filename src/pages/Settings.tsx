@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Shield, Settings, User, ArrowLeft, CheckCircle, XCircle, Loader2, Calendar, Mail, Key, AlertTriangle, Trash2, Plus, Globe, Palette, Bell, Eye, Database, Download, Sun, Moon, Monitor, Languages } from "lucide-react";
 import { useTheme } from "next-themes";
+import { useLanguage } from "@/contexts/LanguageContext";
 import MFASetup from "@/components/MFASetup";
 
 const SettingsPage = () => {
@@ -26,6 +27,7 @@ const SettingsPage = () => {
   const [dataExportLoading, setDataExportLoading] = useState(false);
   const { user, signOut, loading: authLoading } = useAuth();
   const { theme, setTheme } = useTheme();
+  const { language: currentLang, t } = useLanguage();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -138,25 +140,73 @@ const SettingsPage = () => {
     setLanguage(newLanguage);
     
     try {
-      const { error } = await supabase
+      // First check if preferences exist
+      const { data: existingPrefs, error: checkError } = await supabase
         .from('user_preferences')
-        .upsert({
-          user_id: user.id,
-          language: newLanguage,
-          updated_at: new Date().toISOString()
-        });
+        .select('id')
+        .eq('user_id', user.id)
+        .maybeSingle();
 
-      if (error) {
-        console.error('Error updating language preference:', error);
+      let updateError;
+      
+      if (existingPrefs) {
+        // Update existing preferences
+        const { error } = await supabase
+          .from('user_preferences')
+          .update({
+            language: newLanguage,
+            updated_at: new Date().toISOString()
+          })
+          .eq('user_id', user.id);
+        updateError = error;
+      } else {
+        // Create new preferences
+        const { error } = await supabase
+          .from('user_preferences')
+          .insert({
+            user_id: user.id,
+            never_store_data: true, // Privacy-first default
+            email_notifications: true,
+            security_alerts: true,
+            language: newLanguage,
+            theme: 'system'
+          });
+        updateError = error;
       }
 
+      if (updateError) {
+        console.error('Error updating language preference:', updateError);
+        toast({
+          title: "Error",
+          description: "Failed to update language setting. Please try again.",
+          variant: "destructive",
+        });
+        // Revert the state if database update failed
+        setLanguage(language);
+        return;
+      }
+
+      // Update localStorage for immediate effect
       localStorage.setItem('preferred-language', newLanguage);
+      
+      // Apply language change to document for RTL support
+      document.documentElement.lang = newLanguage;
+      document.documentElement.dir = newLanguage === 'ar' ? 'rtl' : 'ltr';
+      
       toast({
-        title: "Language Updated",
-        description: `Language changed to ${newLanguage === 'ar' ? 'Arabic' : 'English'}`,
+        title: newLanguage === 'ar' ? "تم تحديث اللغة" : "Language Updated",
+        description: newLanguage === 'ar' 
+          ? "تم تغيير اللغة إلى العربية" 
+          : "Language changed to English",
       });
     } catch (error) {
       console.error('Error updating language:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update language setting. Please try again.",
+        variant: "destructive",
+      });
+      setLanguage(language);
     }
   };
 
@@ -312,9 +362,9 @@ const SettingsPage = () => {
                 </div>
                 <div>
                   <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
-                    Account Settings
+                    {t('account_settings')}
                   </h1>
-                  <p className="text-sm text-muted-foreground">Manage your security and preferences</p>
+                  <p className="text-sm text-muted-foreground">{t('manage_security')}</p>
                 </div>
               </div>
             </div>
@@ -383,7 +433,7 @@ const SettingsPage = () => {
                       <Shield className="h-6 w-6 text-emerald-600" />
                     </div>
                     <div>
-                      <CardTitle className="text-xl font-semibold">Security Center</CardTitle>
+                      <CardTitle className="text-xl font-semibold">{t('security_center')}</CardTitle>
                       <CardDescription>Multi-factor authentication and security settings</CardDescription>
                     </div>
                   </div>
@@ -499,8 +549,8 @@ const SettingsPage = () => {
                     <Settings className="h-6 w-6 text-blue-600" />
                   </div>
                   <div>
-                    <CardTitle className="text-xl font-semibold">Preferences</CardTitle>
-                    <CardDescription>Customize your Mail Guard experience</CardDescription>
+                    <CardTitle className="text-xl font-semibold">{t('preferences')}</CardTitle>
+                    <CardDescription>{t('customize_experience')}</CardDescription>
                   </div>
                 </div>
               </CardHeader>
@@ -509,11 +559,11 @@ const SettingsPage = () => {
                 <div className="space-y-3">
                   <Label className="text-sm font-medium flex items-center space-x-2">
                     <Languages className="h-4 w-4 text-muted-foreground" />
-                    <span>Display Language</span>
+                    <span>{t('display_language')}</span>
                   </Label>
                   <Select value={language} onValueChange={handleLanguageChange}>
                     <SelectTrigger className="w-full bg-background/50 border-border/30 hover:border-primary/50 hover:shadow-md hover:shadow-primary/10 transition-all duration-300 hover:scale-[1.02]">
-                      <SelectValue placeholder="Select language" />
+                      <SelectValue placeholder={t('display_language')} />
                     </SelectTrigger>
                     <SelectContent className="bg-background/95 backdrop-blur-md border-border/50">
                       <SelectItem value="en" className="hover:bg-muted/50 cursor-pointer">
