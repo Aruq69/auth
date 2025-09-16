@@ -325,21 +325,30 @@ serve(async (req) => {
 
       const classification = classifier.classifyEmail(subject, sender, content || '');
 
-      // Check user's privacy preference from the database
-      let shouldStore = true;
+      // Check user's privacy preference from the database (privacy-first approach)
+      let shouldStore = false; // Default to NOT storing (privacy-first)
       try {
         const { data: preferences, error: prefError } = await supabase
           .from('user_preferences')
           .select('never_store_data')
           .eq('user_id', userId)
-          .single();
+          .maybeSingle();
 
         if (!prefError && preferences) {
           shouldStore = !preferences.never_store_data;
+        } else {
+          // No preferences found - create default privacy-first preferences
+          await supabase
+            .from('user_preferences')
+            .insert({
+              user_id: userId,
+              never_store_data: true // Privacy-first default
+            });
+          shouldStore = false;
         }
       } catch (error) {
-        console.log('Could not check privacy preference, defaulting to store');
-        shouldStore = true;
+        console.log('Could not check privacy preference, defaulting to privacy-first (no storage)');
+        shouldStore = false;
       }
 
       if (shouldStore) {

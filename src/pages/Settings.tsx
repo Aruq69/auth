@@ -22,7 +22,7 @@ const SettingsPage = () => {
   const [language, setLanguage] = useState("en");
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [securityAlerts, setSecurityAlerts] = useState(true);
-  const [neverStoreData, setNeverStoreData] = useState(false);
+  const [neverStoreData, setNeverStoreData] = useState(true); // Privacy-first default
   const [dataExportLoading, setDataExportLoading] = useState(false);
   const { user, signOut, loading: authLoading } = useAuth();
   const { theme, setTheme } = useTheme();
@@ -58,19 +58,21 @@ const SettingsPage = () => {
         setSecurityAlerts(preferences.security_alerts);
         setLanguage(preferences.language);
       } else if (error?.code === 'PGRST116') {
-        // No preferences found, create default ones
+        // No preferences found, create privacy-first defaults
         const { error: insertError } = await supabase
           .from('user_preferences')
           .insert({
             user_id: user.id,
-            never_store_data: false,
+            never_store_data: true, // Privacy-first default
             email_notifications: true,
             security_alerts: true,
             language: 'en',
             theme: 'system'
           });
         
-        if (insertError) {
+        if (!insertError) {
+          setNeverStoreData(true); // Set UI to privacy-first default
+        } else {
           console.error('Error creating user preferences:', insertError);
         }
       }
@@ -219,8 +221,8 @@ const SettingsPage = () => {
       toast({
         title: enabled ? "Data Storage Disabled" : "Data Storage Enabled",
         description: enabled 
-          ? "New emails will not be stored permanently and existing data has been removed" 
-          : "Emails will be stored according to retention policy",
+          ? "Emails will not be stored permanently (privacy-first mode)" 
+          : "You have consented to email storage for enhanced features",
       });
     } catch (error) {
       console.error('Error updating preferences:', error);
@@ -617,8 +619,8 @@ const SettingsPage = () => {
                         <Database className="h-5 w-5 text-red-600" />
                       </div>
                       <div>
-                        <h4 className="font-semibold text-red-800">Never Store Data</h4>
-                        <p className="text-sm text-red-600">Disable permanent email storage for maximum privacy</p>
+                        <h4 className="font-semibold text-red-800">Privacy-First Mode</h4>
+                        <p className="text-sm text-red-600">By default, emails are NOT stored. Toggle off to consent to data storage.</p>
                       </div>
                     </div>
                     <Switch
@@ -641,7 +643,7 @@ const SettingsPage = () => {
                       </div>
                     </div>
                     <Badge variant="outline" className={`border-teal-200 text-teal-700 transition-opacity ${neverStoreData ? 'opacity-50' : ''}`}>
-                      {neverStoreData ? 'Disabled' : 'Active'}
+                      {neverStoreData ? 'Privacy-First (Default)' : 'Data Storage Enabled'}
                     </Badge>
                   </div>
                 </div>

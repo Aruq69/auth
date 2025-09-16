@@ -65,22 +65,32 @@ serve(async (req) => {
       );
     }
 
-    // Check user's privacy preference for data storage from the database
-    let neverStoreData = false;
+    // Check user's privacy preference for data storage from the database (privacy-first approach)
+    let neverStoreData = true; // Default to NOT storing emails (privacy-first)
     try {
       const { data: preferences, error: prefError } = await supabase
         .from('user_preferences')
         .select('never_store_data')
         .eq('user_id', user_id)
-        .single();
+        .maybeSingle();
 
       if (!prefError && preferences) {
         neverStoreData = preferences.never_store_data;
         console.log(`Privacy setting for user ${user_id}: never_store_data = ${neverStoreData}`);
+      } else {
+        // No preferences found - create default privacy-first preferences
+        await supabase
+          .from('user_preferences')
+          .insert({
+            user_id: user_id,
+            never_store_data: true // Privacy-first default
+          });
+        neverStoreData = true;
+        console.log(`No preferences found for user ${user_id}, created privacy-first defaults`);
       }
     } catch (error) {
-      console.log('Could not check privacy preference, defaulting to allow storage');
-      neverStoreData = false;
+      console.log('Could not check privacy preference, defaulting to privacy-first (no storage)');
+      neverStoreData = true;
     }
 
     // Get Gmail token for the authenticated user
