@@ -4,9 +4,10 @@ import { cn } from '@/lib/utils';
 interface FormattedAdviceProps {
   content: string;
   className?: string;
+  variant?: 'contained' | 'plain';
 }
 
-export const FormattedAdvice = ({ content, className }: FormattedAdviceProps) => {
+export const FormattedAdvice = ({ content, className, variant = 'contained' }: FormattedAdviceProps) => {
   const formatContent = (text: string) => {
     const lines = text.split('\n');
     const elements: React.ReactNode[] = [];
@@ -100,6 +101,14 @@ export const FormattedAdvice = ({ content, className }: FormattedAdviceProps) =>
     
     return elements;
   };
+
+  if (variant === 'plain') {
+    return (
+      <div className={cn("space-y-2", className)}>
+        {formatContent(content)}
+      </div>
+    );
+  }
 
   return (
     <div className={cn(

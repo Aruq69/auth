@@ -401,7 +401,7 @@ const ChatAssistant = ({ selectedEmail, emails = [] }: ChatAssistantProps) => {
                     )}
                     <div className="flex-1 min-w-0">
                       {message.isBot ? (
-                        <FormattedAdvice content={message.content} className="!p-0 !bg-transparent !border-0 !shadow-none" />
+                        <FormattedAdvice content={message.content} variant="plain" className="text-sm" />
                       ) : (
                         <p className="text-sm whitespace-pre-wrap leading-relaxed">{message.content}</p>
                       )}
