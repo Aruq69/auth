@@ -17,7 +17,7 @@ export const FormattedAdvice = ({ content, className }: FormattedAdviceProps) =>
       if (!trimmedLine) {
         // Skip empty lines but add spacing
         if (elements.length > 0) {
-          elements.push(<div key={`space-${index}`} className="h-2" />);
+          elements.push(<div key={`space-${index}`} className="h-3" />);
         }
         return;
       }
@@ -26,8 +26,8 @@ export const FormattedAdvice = ({ content, className }: FormattedAdviceProps) =>
       if (trimmedLine.startsWith('**') && trimmedLine.endsWith('**')) {
         const headerText = trimmedLine.slice(2, -2);
         elements.push(
-          <div key={index} className="mt-4 first:mt-0">
-            <h3 className="font-semibold text-foreground text-base mb-2 text-orange-600 dark:text-orange-400">
+          <div key={index} className="mt-5 first:mt-0">
+            <h3 className="font-semibold text-blue-300 dark:text-blue-300 text-base mb-3 leading-relaxed">
               {headerText}
             </h3>
           </div>
@@ -46,19 +46,19 @@ export const FormattedAdvice = ({ content, className }: FormattedAdviceProps) =>
           const regularPart = parts[1] || '';
           
           elements.push(
-            <div key={index} className="flex items-start space-x-2 mb-2">
-              <span className="text-orange-500 mt-1 text-sm font-bold">•</span>
+            <div key={index} className="flex items-start space-x-3 mb-3">
+              <span className="text-blue-400 mt-1 text-sm font-bold flex-shrink-0">•</span>
               <div className="flex-1">
-                <span className="font-medium text-foreground">{boldPart}:</span>
-                <span className="text-muted-foreground ml-1">{regularPart}</span>
+                <span className="font-medium text-blue-200">{boldPart}:</span>
+                <span className="text-gray-300 ml-1 leading-relaxed">{regularPart}</span>
               </div>
             </div>
           );
         } else {
           elements.push(
-            <div key={index} className="flex items-start space-x-2 mb-2">
-              <span className="text-orange-500 mt-1 text-sm font-bold">•</span>
-              <span className="text-muted-foreground flex-1 leading-relaxed">{bulletText}</span>
+            <div key={index} className="flex items-start space-x-3 mb-3">
+              <span className="text-blue-400 mt-1 text-sm font-bold flex-shrink-0">•</span>
+              <span className="text-gray-300 flex-1 leading-relaxed">{bulletText}</span>
             </div>
           );
         }
@@ -68,8 +68,8 @@ export const FormattedAdvice = ({ content, className }: FormattedAdviceProps) =>
       // Numbered items
       if (trimmedLine.match(/^\d+\./)) {
         elements.push(
-          <div key={index} className="mb-2">
-            <span className="font-medium text-foreground leading-relaxed">{trimmedLine}</span>
+          <div key={index} className="mb-3">
+            <span className="font-medium text-blue-200 leading-relaxed">{trimmedLine}</span>
           </div>
         );
         return;
@@ -82,7 +82,7 @@ export const FormattedAdvice = ({ content, className }: FormattedAdviceProps) =>
         const formattedParts = parts.map((part, partIndex) => {
           if (part.startsWith('**') && part.endsWith('**')) {
             return (
-              <span key={partIndex} className="font-medium text-foreground">
+              <span key={partIndex} className="font-medium text-blue-200">
                 {part.slice(2, -2)}
               </span>
             );
@@ -91,7 +91,7 @@ export const FormattedAdvice = ({ content, className }: FormattedAdviceProps) =>
         });
         
         elements.push(
-          <p key={index} className="text-muted-foreground leading-relaxed mb-2">
+          <p key={index} className="text-gray-300 leading-relaxed mb-3 text-sm">
             {formattedParts}
           </p>
         );
@@ -102,7 +102,11 @@ export const FormattedAdvice = ({ content, className }: FormattedAdviceProps) =>
   };
 
   return (
-    <div className={cn("prose prose-sm max-w-none", className)}>
+    <div className={cn(
+      "bg-slate-800 dark:bg-slate-900 rounded-lg p-5 border border-slate-700",
+      "prose prose-sm max-w-none",
+      className
+    )}>
       <div className="space-y-1">
         {formatContent(content)}
       </div>
