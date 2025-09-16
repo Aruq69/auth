@@ -15,6 +15,7 @@ import EmailSecurityAdvice from "@/components/EmailSecurityAdvice";
 import FloatingChatButton from "@/components/FloatingChatButton";
 import FeedbackSystem from "@/components/FeedbackSystem";
 import UserOnboarding from "@/components/UserOnboarding";
+import { cleanEmailContent, sanitizeText } from "@/lib/textUtils";
 
 interface Email {
   id: string;
@@ -1092,9 +1093,9 @@ const Index = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="bg-background/50 p-6 rounded-lg border-2 border-muted/20 min-h-[300px] max-h-[400px] overflow-y-auto">
-                      <pre className="whitespace-pre-wrap text-sm text-foreground font-mono">
-                        {selectedEmail.content || selectedEmail.raw_content || 'No content available'}
-                      </pre>
+                      <div className="whitespace-pre-wrap text-sm text-foreground">
+                        {cleanEmailContent(selectedEmail.content || selectedEmail.raw_content || 'No content available')}
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
