@@ -10,7 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Shield, Settings, User, ArrowLeft, CheckCircle, XCircle, Loader2, Calendar, Mail, Key, AlertTriangle, Trash2, Plus, Globe, Palette, Bell, Eye, Database, Download, Sun, Moon, Monitor, Languages } from "lucide-react";
+import { Shield, Settings, User, ArrowLeft, CheckCircle, XCircle, Loader2, Calendar, Mail, Key, AlertTriangle, Trash2, Plus, Globe, Palette, Bell, Eye, Database, Download, Sun, Moon, Monitor } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useLanguage } from "@/contexts/LanguageContext";
 import MFASetup from "@/components/MFASetup";
@@ -134,92 +134,6 @@ const SettingsPage = () => {
   const handleSignOut = async () => {
     await signOut();
     navigate("/auth");
-  };
-
-  const handleLanguageChange = async (newLanguage: string) => {
-    if (!user || newLanguage === currentLang) return;
-    
-    // Update language context immediately for UI changes
-    setContextLanguage(newLanguage);
-    
-    try {
-      // First check if preferences exist
-      const { data: existingPrefs, error: checkError } = await supabase
-        .from('user_preferences')
-        .select('id')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      let updateError;
-      
-      if (existingPrefs) {
-        // Update existing preferences
-        const { error } = await supabase
-          .from('user_preferences')
-          .update({
-            language: newLanguage,
-            updated_at: new Date().toISOString()
-          })
-          .eq('user_id', user.id);
-        updateError = error;
-      } else {
-        // Create new preferences
-        const { error } = await supabase
-          .from('user_preferences')
-          .insert({
-            user_id: user.id,
-            never_store_data: true, // Privacy-first default
-            email_notifications: true,
-            security_alerts: true,
-            language: newLanguage,
-            theme: 'system'
-          });
-        updateError = error;
-      }
-
-      if (updateError) {
-        console.error('Error updating language preference:', updateError);
-        toast({
-          title: "Error",
-          description: "Failed to update language setting. Please try again.",
-          variant: "destructive",
-        });
-        // Revert the state if database update failed
-        setContextLanguage(currentLang);
-        return;
-      }
-
-      // Update localStorage for immediate effect
-      localStorage.setItem('preferred-language', newLanguage);
-      
-      // Apply language change to document for RTL support
-      document.documentElement.lang = newLanguage;
-      document.documentElement.dir = newLanguage === 'ar' ? 'rtl' : 'ltr';
-      
-      // Add CSS class for RTL styling
-      if (newLanguage === 'ar') {
-        document.documentElement.classList.add('rtl');
-        document.body.classList.add('rtl');
-      } else {
-        document.documentElement.classList.remove('rtl');
-        document.body.classList.remove('rtl');
-      }
-      
-      toast({
-        title: newLanguage === 'ar' ? t('language_updated') : "Language Updated",
-        description: newLanguage === 'ar' 
-          ? t('language_changed_arabic')
-          : t('language_changed_english'),
-      });
-    } catch (error) {
-      console.error('Error updating language:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update language setting. Please try again.",
-        variant: "destructive",
-      });
-      setContextLanguage(currentLang);
-    }
   };
 
   const handleDataExport = async () => {
@@ -567,37 +481,6 @@ const SettingsPage = () => {
                 </div>
               </CardHeader>
               <CardContent className="space-y-6">
-                {/* Language Settings */}
-                <div className="space-y-3">
-                  <Label className="text-sm font-medium flex items-center space-x-2">
-                    <Languages className="h-4 w-4 text-muted-foreground" />
-                    <span>{t('display_language')}</span>
-                  </Label>
-                  <Select value={currentLang} onValueChange={handleLanguageChange}>
-                    <SelectTrigger className="w-full bg-background/50 border-border/30 hover:border-primary/50 hover:shadow-md hover:shadow-primary/10 transition-all duration-300 hover:scale-[1.02]">
-                      <SelectValue placeholder={t('display_language')} />
-                    </SelectTrigger>
-                    <SelectContent className="bg-background/95 backdrop-blur-md border-border/50">
-                      <SelectItem value="en" className="hover:bg-muted/50 cursor-pointer">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-6 h-4 rounded-sm bg-gradient-to-r from-blue-500 to-red-500 flex items-center justify-center">
-                            <span className="text-white text-xs font-bold">EN</span>
-                          </div>
-                          <span>English</span>
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="ar" className="hover:bg-muted/50 cursor-pointer">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-6 h-4 rounded-sm bg-gradient-to-r from-green-500 to-black flex items-center justify-center">
-                            <span className="text-white text-xs font-bold">AR</span>
-                          </div>
-                          <span>العربية (Arabic)</span>
-                        </div>
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
                 {/* Theme Settings */}
                 <div className="space-y-3">
                   <Label className="text-sm font-medium flex items-center space-x-2">
