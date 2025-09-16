@@ -108,17 +108,26 @@ export const FormattedAdvice = ({ content, className, variant = 'contained', thr
         const bulletText = trimmedLine.replace(/^[•-]\s*/, '');
         
         // Check if it's a bold bullet point
-        if (bulletText.startsWith('**') && bulletText.includes('**:')) {
-          const parts = bulletText.split('**:');
-          const boldPart = parts[0].replace('**', '');
-          const regularPart = parts[1] || '';
+        if (bulletText.includes('**') && bulletText.match(/\*\*[^*]+?\*\*/)) {
+          // Split by bold patterns and handle mixed formatting
+          const parts = bulletText.split(/(\*\*[^*]+?\*\*)/g);
+          const formattedBullet = parts.map((part, partIndex) => {
+            if (part.startsWith('**') && part.endsWith('**') && part.length > 4) {
+              const boldText = part.slice(2, -2);
+              return (
+                <span key={partIndex} className={`font-semibold ${colors.boldColor} break-words`}>
+                  {boldText}
+                </span>
+              );
+            }
+            return part;
+          });
           
           elements.push(
             <div key={index} className="flex items-start space-x-4 mb-4 group">
               <div className={`flex-shrink-0 w-2 h-2 bg-gradient-to-r ${colors.bulletColor} rounded-full mt-2.5 group-hover:scale-110 transition-transform duration-200`} />
-              <div className="flex-1 min-w-0">
-                <span className={`font-semibold ${colors.boldColor} text-base break-words`}>{boldPart}:</span>
-                <span className={`${colors.textColor} ml-2 leading-relaxed text-sm block break-words overflow-wrap-anywhere`}>{regularPart}</span>
+              <div className={`${colors.textColor} flex-1 leading-relaxed text-sm break-words overflow-wrap-anywhere min-w-0`}>
+                {formattedBullet}
               </div>
             </div>
           );
@@ -145,13 +154,14 @@ export const FormattedAdvice = ({ content, className, variant = 'contained', thr
       
       // Regular paragraphs
       if (trimmedLine.length > 0) {
-        // Check for inline bold text
-        const parts = trimmedLine.split(/(\*\*[^*]+\*\*)/g);
+        // Check for inline bold text with improved regex
+        const parts = trimmedLine.split(/(\*\*[^*]+?\*\*)/g);
         const formattedParts = parts.map((part, partIndex) => {
-          if (part.startsWith('**') && part.endsWith('**')) {
+          if (part.startsWith('**') && part.endsWith('**') && part.length > 4) {
+            const boldText = part.slice(2, -2);
             return (
               <span key={partIndex} className={`font-semibold ${colors.boldColor} break-words`}>
-                {part.slice(2, -2)}
+                {boldText}
               </span>
             );
           }
