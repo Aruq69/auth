@@ -15,6 +15,7 @@ import { useTheme } from "next-themes";
 import MFASetup from "@/components/MFASetup";
 
 const SettingsPage = () => {
+  // Force rebuild to clear cache
   const [mfaEnabled, setMfaEnabled] = useState(false);
   const [loading, setLoading] = useState(true);
   const [showMfaSetup, setShowMfaSetup] = useState(false);
