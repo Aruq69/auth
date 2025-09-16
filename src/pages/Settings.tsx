@@ -312,31 +312,31 @@ const SettingsPage = () => {
             </Card>
 
             {/* Danger Zone */}
-            <Card className="border-orange-200/50 bg-gradient-to-br from-orange-50/30 to-amber-100/20 backdrop-blur-md shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-[1.02] animate-scale-in [animation-delay:200ms]">
+            <Card className="border-slate-200/50 bg-gradient-to-br from-slate-50/50 to-slate-100/30 backdrop-blur-md shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-[1.02] animate-scale-in [animation-delay:200ms]">
               <CardHeader className="pb-4">
                 <div className="flex items-center space-x-4">
-                  <div className="p-3 rounded-full bg-gradient-to-br from-orange-500/20 to-amber-500/20 border border-orange-500/30">
-                    <AlertTriangle className="h-6 w-6 text-orange-600" />
+                  <div className="p-3 rounded-full bg-gradient-to-br from-slate-500/20 to-gray-500/20 border border-slate-500/30">
+                    <AlertTriangle className="h-6 w-6 text-slate-600" />
                   </div>
                   <div>
-                    <CardTitle className="text-xl font-semibold text-orange-700">Danger Zone</CardTitle>
-                    <CardDescription className="text-orange-600/80">
+                    <CardTitle className="text-xl font-semibold text-slate-700">Danger Zone</CardTitle>
+                    <CardDescription className="text-slate-600/80">
                       Irreversible and destructive actions that affect your account
                     </CardDescription>
                   </div>
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="p-4 border border-orange-200 rounded-xl bg-orange-50/30">
+                <div className="p-4 border border-slate-200 rounded-xl bg-slate-50/40">
                   <div className="flex items-center justify-between">
                     <div className="space-y-1">
-                      <h4 className="font-medium text-orange-800">Sign Out</h4>
-                      <p className="text-sm text-orange-600">End your current session and return to login</p>
+                      <h4 className="font-medium text-slate-800">Sign Out</h4>
+                      <p className="text-sm text-slate-600">End your current session and return to login</p>
                     </div>
                     <Button
                       variant="outline"
                       onClick={handleSignOut}
-                      className="border-orange-300 text-orange-700 hover:bg-orange-100 hover:border-orange-400 transition-all duration-300 hover-scale"
+                      className="border-slate-300 text-slate-700 hover:bg-slate-100 hover:border-slate-400 transition-all duration-300 hover-scale"
                     >
                       <ArrowLeft className="w-4 h-4 mr-2" />
                       Sign Out
@@ -344,7 +344,7 @@ const SettingsPage = () => {
                   </div>
                 </div>
                 
-                <div className="text-xs text-orange-500/70 bg-orange-50/50 p-3 rounded-lg border border-orange-100">
+                <div className="text-xs text-slate-500/80 bg-slate-50/60 p-3 rounded-lg border border-slate-150">
                   ⚠️ <strong>Note:</strong> Signing out will end your current session. You'll need to log in again to access Mail Guard.
                 </div>
               </CardContent>
