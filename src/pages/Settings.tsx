@@ -10,7 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Shield, Settings, User, ArrowLeft, CheckCircle, XCircle, Loader2, Calendar, Mail, Key, AlertTriangle, Trash2, Plus, Globe, Palette, Bell, Eye, Database, Download } from "lucide-react";
+import { Shield, Settings, User, ArrowLeft, CheckCircle, XCircle, Loader2, Calendar, Mail, Key, AlertTriangle, Trash2, Plus, Globe, Palette, Bell, Eye, Database, Download, Sun, Moon, Monitor, Languages } from "lucide-react";
 import { useTheme } from "next-themes";
 import MFASetup from "@/components/MFASetup";
 
@@ -366,16 +366,30 @@ const SettingsPage = () => {
                 {/* Language Settings */}
                 <div className="space-y-3">
                   <Label className="text-sm font-medium flex items-center space-x-2">
-                    <Globe className="h-4 w-4 text-muted-foreground" />
-                    <span>Language</span>
+                    <Languages className="h-4 w-4 text-muted-foreground" />
+                    <span>Display Language</span>
                   </Label>
                   <Select value={language} onValueChange={handleLanguageChange}>
-                    <SelectTrigger className="w-full bg-background/50 border-border/30">
+                    <SelectTrigger className="w-full bg-background/50 border-border/30 hover:border-border/50 transition-colors">
                       <SelectValue placeholder="Select language" />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="en">🇺🇸 English</SelectItem>
-                      <SelectItem value="ar">🇸🇦 العربية (Arabic)</SelectItem>
+                    <SelectContent className="bg-background/95 backdrop-blur-md border-border/50">
+                      <SelectItem value="en" className="hover:bg-muted/50 cursor-pointer">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-6 h-4 rounded-sm bg-gradient-to-r from-blue-500 to-red-500 flex items-center justify-center">
+                            <span className="text-white text-xs font-bold">EN</span>
+                          </div>
+                          <span>English</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="ar" className="hover:bg-muted/50 cursor-pointer">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-6 h-4 rounded-sm bg-gradient-to-r from-green-500 to-black flex items-center justify-center">
+                            <span className="text-white text-xs font-bold">AR</span>
+                          </div>
+                          <span>العربية (Arabic)</span>
+                        </div>
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -384,16 +398,46 @@ const SettingsPage = () => {
                 <div className="space-y-3">
                   <Label className="text-sm font-medium flex items-center space-x-2">
                     <Palette className="h-4 w-4 text-muted-foreground" />
-                    <span>Theme</span>
+                    <span>Appearance Theme</span>
                   </Label>
                   <Select value={theme} onValueChange={setTheme}>
-                    <SelectTrigger className="w-full bg-background/50 border-border/30">
+                    <SelectTrigger className="w-full bg-background/50 border-border/30 hover:border-border/50 transition-colors">
                       <SelectValue placeholder="Select theme" />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="light">☀️ Light Mode</SelectItem>
-                      <SelectItem value="dark">🌙 Dark Mode</SelectItem>
-                      <SelectItem value="system">💻 System Default</SelectItem>
+                    <SelectContent className="bg-background/95 backdrop-blur-md border-border/50">
+                      <SelectItem value="light" className="hover:bg-muted/50 cursor-pointer">
+                        <div className="flex items-center space-x-3">
+                          <div className="p-1.5 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 border border-amber-300">
+                            <Sun className="h-3.5 w-3.5 text-white" />
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="font-medium">Light Mode</span>
+                            <span className="text-xs text-muted-foreground">Bright and clean interface</span>
+                          </div>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="dark" className="hover:bg-muted/50 cursor-pointer">
+                        <div className="flex items-center space-x-3">
+                          <div className="p-1.5 rounded-full bg-gradient-to-br from-slate-600 to-slate-800 border border-slate-500">
+                            <Moon className="h-3.5 w-3.5 text-slate-200" />
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="font-medium">Dark Mode</span>
+                            <span className="text-xs text-muted-foreground">Easy on the eyes in low light</span>
+                          </div>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="system" className="hover:bg-muted/50 cursor-pointer">
+                        <div className="flex items-center space-x-3">
+                          <div className="p-1.5 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 border border-blue-400">
+                            <Monitor className="h-3.5 w-3.5 text-white" />
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="font-medium">System Default</span>
+                            <span className="text-xs text-muted-foreground">Match your device settings</span>
+                          </div>
+                        </div>
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
