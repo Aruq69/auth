@@ -206,8 +206,7 @@ serve(async (req) => {
       .filter((message, index, arr) => 
         arr.findIndex(m => m.id === message.id) === index
       )
-      .sort((a, b) => b.id.localeCompare(a.id)) // Sort by ID for consistency
-      .slice(0, 100); // Limit to 100 emails
+      .sort((a, b) => b.id.localeCompare(a.id)); // Sort by ID for consistency
     
     console.log(`Found ${uniqueMessages.length} unique messages`);
 
