@@ -5,9 +5,76 @@ interface FormattedAdviceProps {
   content: string;
   className?: string;
   variant?: 'contained' | 'plain';
+  threatLevel?: 'high' | 'medium' | 'low' | null;
 }
 
-export const FormattedAdvice = ({ content, className, variant = 'contained' }: FormattedAdviceProps) => {
+export const FormattedAdvice = ({ content, className, variant = 'contained', threatLevel }: FormattedAdviceProps) => {
+  // Define colors based on threat level
+  const getColors = () => {
+    if (!threatLevel) {
+      // Default chatbot colors (cyan/blue)
+      return {
+        headerColor: 'text-cyan-300',
+        bulletColor: 'from-cyan-400 to-blue-500',
+        boldColor: 'text-cyan-200',
+        textColor: 'text-slate-300',
+        borderColor: 'border-slate-700/50',
+        bgGradient: 'from-slate-800/90 via-slate-900/95 to-slate-800/90',
+        overlayGradient: 'from-cyan-500/5 via-transparent to-blue-500/5',
+        bottomGlow: 'from-transparent via-cyan-400/50 to-transparent'
+      };
+    }
+    
+    switch (threatLevel) {
+      case 'high':
+        return {
+          headerColor: 'text-red-300',
+          bulletColor: 'from-red-400 to-red-600',
+          boldColor: 'text-red-200',
+          textColor: 'text-red-100',
+          borderColor: 'border-red-700/50',
+          bgGradient: 'from-red-900/30 via-slate-900/95 to-red-900/30',
+          overlayGradient: 'from-red-500/10 via-transparent to-red-600/10',
+          bottomGlow: 'from-transparent via-red-400/50 to-transparent'
+        };
+      case 'medium':
+        return {
+          headerColor: 'text-orange-300',
+          bulletColor: 'from-orange-400 to-yellow-500',
+          boldColor: 'text-orange-200',
+          textColor: 'text-orange-100',
+          borderColor: 'border-orange-700/50',
+          bgGradient: 'from-orange-900/30 via-slate-900/95 to-orange-900/30',
+          overlayGradient: 'from-orange-500/10 via-transparent to-yellow-500/10',
+          bottomGlow: 'from-transparent via-orange-400/50 to-transparent'
+        };
+      case 'low':
+        return {
+          headerColor: 'text-green-300',
+          bulletColor: 'from-green-400 to-emerald-500',
+          boldColor: 'text-green-200',
+          textColor: 'text-green-100',
+          borderColor: 'border-green-700/50',
+          bgGradient: 'from-green-900/30 via-slate-900/95 to-green-900/30',
+          overlayGradient: 'from-green-500/10 via-transparent to-emerald-500/10',
+          bottomGlow: 'from-transparent via-green-400/50 to-transparent'
+        };
+      default:
+        return {
+          headerColor: 'text-cyan-300',
+          bulletColor: 'from-cyan-400 to-blue-500',
+          boldColor: 'text-cyan-200',
+          textColor: 'text-slate-300',
+          borderColor: 'border-slate-700/50',
+          bgGradient: 'from-slate-800/90 via-slate-900/95 to-slate-800/90',
+          overlayGradient: 'from-cyan-500/5 via-transparent to-blue-500/5',
+          bottomGlow: 'from-transparent via-cyan-400/50 to-transparent'
+        };
+    }
+  };
+
+  const colors = getColors();
+
   const formatContent = (text: string) => {
     const lines = text.split('\n');
     const elements: React.ReactNode[] = [];
@@ -28,7 +95,7 @@ export const FormattedAdvice = ({ content, className, variant = 'contained' }: F
         const headerText = trimmedLine.slice(2, -2);
         elements.push(
           <div key={index} className="mt-6 first:mt-0">
-            <h3 className="font-semibold text-cyan-300 text-lg mb-4 leading-relaxed tracking-wide">
+            <h3 className={`font-semibold ${colors.headerColor} text-lg mb-4 leading-relaxed tracking-wide`}>
               {headerText}
             </h3>
           </div>
@@ -48,18 +115,18 @@ export const FormattedAdvice = ({ content, className, variant = 'contained' }: F
           
           elements.push(
             <div key={index} className="flex items-start space-x-4 mb-4 group">
-              <div className="flex-shrink-0 w-2 h-2 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full mt-2.5 group-hover:scale-110 transition-transform duration-200" />
+              <div className={`flex-shrink-0 w-2 h-2 bg-gradient-to-r ${colors.bulletColor} rounded-full mt-2.5 group-hover:scale-110 transition-transform duration-200`} />
               <div className="flex-1 min-w-0">
-                <span className="font-semibold text-cyan-200 text-base break-words">{boldPart}:</span>
-                <span className="text-slate-300 ml-2 leading-relaxed text-sm block break-words overflow-wrap-anywhere">{regularPart}</span>
+                <span className={`font-semibold ${colors.boldColor} text-base break-words`}>{boldPart}:</span>
+                <span className={`${colors.textColor} ml-2 leading-relaxed text-sm block break-words overflow-wrap-anywhere`}>{regularPart}</span>
               </div>
             </div>
           );
         } else {
           elements.push(
             <div key={index} className="flex items-start space-x-4 mb-4 group">
-              <div className="flex-shrink-0 w-2 h-2 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full mt-2.5 group-hover:scale-110 transition-transform duration-200" />
-              <span className="text-slate-300 flex-1 leading-relaxed text-sm break-words overflow-wrap-anywhere min-w-0">{bulletText}</span>
+              <div className={`flex-shrink-0 w-2 h-2 bg-gradient-to-r ${colors.bulletColor} rounded-full mt-2.5 group-hover:scale-110 transition-transform duration-200`} />
+              <span className={`${colors.textColor} flex-1 leading-relaxed text-sm break-words overflow-wrap-anywhere min-w-0`}>{bulletText}</span>
             </div>
           );
         }
@@ -70,7 +137,7 @@ export const FormattedAdvice = ({ content, className, variant = 'contained' }: F
       if (trimmedLine.match(/^\d+\./)) {
         elements.push(
           <div key={index} className="mb-4 pl-4">
-            <span className="font-medium text-cyan-200 leading-relaxed text-sm break-words overflow-wrap-anywhere">{trimmedLine}</span>
+            <span className={`font-medium ${colors.boldColor} leading-relaxed text-sm break-words overflow-wrap-anywhere`}>{trimmedLine}</span>
           </div>
         );
         return;
@@ -83,7 +150,7 @@ export const FormattedAdvice = ({ content, className, variant = 'contained' }: F
         const formattedParts = parts.map((part, partIndex) => {
           if (part.startsWith('**') && part.endsWith('**')) {
             return (
-              <span key={partIndex} className="font-semibold text-cyan-200 break-words">
+              <span key={partIndex} className={`font-semibold ${colors.boldColor} break-words`}>
                 {part.slice(2, -2)}
               </span>
             );
@@ -92,7 +159,7 @@ export const FormattedAdvice = ({ content, className, variant = 'contained' }: F
         });
         
         elements.push(
-          <p key={index} className="text-slate-300 leading-relaxed mb-4 text-sm break-words overflow-wrap-anywhere">
+          <p key={index} className={`${colors.textColor} leading-relaxed mb-4 text-sm break-words overflow-wrap-anywhere`}>
             {formattedParts}
           </p>
         );
@@ -112,14 +179,15 @@ export const FormattedAdvice = ({ content, className, variant = 'contained' }: F
 
   return (
     <div className={cn(
-      "relative overflow-hidden rounded-xl border border-slate-700/50",
-      "bg-gradient-to-br from-slate-800/90 via-slate-900/95 to-slate-800/90",
+      "relative overflow-hidden rounded-xl border",
+      colors.borderColor,
+      `bg-gradient-to-br ${colors.bgGradient}`,
       "backdrop-blur-sm shadow-2xl break-words overflow-wrap-anywhere",
       "animate-fade-in",
       className
     )}>
       {/* Subtle gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 via-transparent to-blue-500/5 pointer-events-none" />
+      <div className={`absolute inset-0 bg-gradient-to-r ${colors.overlayGradient} pointer-events-none`} />
       
       {/* Content */}
       <div className="relative p-6">
@@ -129,7 +197,7 @@ export const FormattedAdvice = ({ content, className, variant = 'contained' }: F
       </div>
       
       {/* Bottom glow effect */}
-      <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-cyan-400/50 to-transparent" />
+      <div className={`absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r ${colors.bottomGlow}`} />
     </div>
   );
 };

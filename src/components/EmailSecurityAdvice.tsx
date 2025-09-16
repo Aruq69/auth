@@ -137,7 +137,7 @@ const EmailSecurityAdvice = ({ email }: EmailSecurityAdviceProps) => {
 
         {advice && !loading && !error && (
           <div className="space-y-4">
-            <FormattedAdvice content={advice} />
+            <FormattedAdvice content={advice} threatLevel={email.threat_level as 'high' | 'medium' | 'low'} />
             
             <div className="flex items-center justify-between pt-3 text-xs text-muted-foreground border-t border-orange-500/20">
               <span className="flex items-center space-x-2">
