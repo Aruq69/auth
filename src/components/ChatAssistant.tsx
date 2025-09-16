@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { FormattedAdvice } from "@/components/ui/formatted-advice";
 import { Bot, Send, User, MessageSquare, Loader2, Shield, AlertTriangle, Activity, Eye, Brain, TrendingUp } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -395,7 +396,11 @@ const ChatAssistant = ({ selectedEmail, emails = [] }: ChatAssistantProps) => {
                       <User className="h-4 w-4 text-secondary mt-0.5 flex-shrink-0" />
                     )}
                     <div className="flex-1">
-                      <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                      {message.isBot ? (
+                        <FormattedAdvice content={message.content} className="text-sm" />
+                      ) : (
+                        <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                      )}
                       <p className="text-xs text-muted-foreground mt-1">
                         {message.timestamp.toLocaleTimeString()}
                       </p>
