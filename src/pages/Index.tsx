@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import EmailSubmissionForm from "@/components/EmailSubmissionForm";
 import EmailSecurityAdvice from "@/components/EmailSecurityAdvice";
+import { SecurityInsights } from "@/components/SecurityInsights";
 import FloatingChatButton from "@/components/FloatingChatButton";
 import FeedbackSystem from "@/components/FeedbackSystem";
 import UserOnboarding from "@/components/UserOnboarding";
@@ -46,6 +47,7 @@ const Index = () => {
   const [userPreferences, setUserPreferences] = useState<{never_store_data: boolean} | null>(null);
   const [recentActivity, setRecentActivity] = useState<Array<{id: string, action: string, timestamp: Date, details?: string}>>([]);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [emailStats, setEmailStats] = useState<any[]>([]);
   const { toast } = useToast();
   const { user, signOut, loading: authLoading } = useAuth();
   const navigate = useNavigate();
@@ -59,13 +61,34 @@ const Index = () => {
     if (user) {
       checkEmailConnection();
       fetchUserProfile();
-      fetchUserPreferences(); // Added this missing call!
+      fetchUserPreferences();
+      fetchEmailStats(); // Add this to fetch email statistics
       const timer = setTimeout(() => {
         fetchEmails();
       }, 0);
       return () => clearTimeout(timer);
     }
   }, [user, authLoading, navigate]);
+
+  // Fetch email statistics for insights
+  const fetchEmailStats = async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('email_statistics')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('date', { ascending: false })
+        .limit(30); // Last 30 days
+      
+      if (!error && data) {
+        setEmailStats(data);
+      }
+    } catch (error) {
+      console.error('Error fetching email statistics:', error);
+    }
+  };
 
   const fetchUserProfile = async () => {
     if (!user) return;
@@ -690,7 +713,18 @@ const Index = () => {
 
 
         {/* Email Submission Form */}
-        <EmailSubmissionForm onEmailSubmitted={fetchEmails} />
+        {/* Email Submission Form and Security Insights */}
+        <div className="grid lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
+            <EmailSubmissionForm onEmailSubmitted={fetchEmails} />
+          </div>
+          <div className="lg:col-span-1">
+            <SecurityInsights 
+              selectedEmail={selectedEmail}
+              emailStats={emailStats}
+            />
+          </div>
+        </div>
 
         {/* Main Content - Full Width */}
         <div className="space-y-6">
