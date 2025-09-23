@@ -52,7 +52,7 @@ serve(async (req) => {
   try {
     const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
     
-    // Get user_id from request body
+    // Get user_id from request 
     const { user_id } = await req.json();
     console.log('📨 Received user_id:', user_id);
     console.log('🔍 Starting Gmail email fetch process...');
