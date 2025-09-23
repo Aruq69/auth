@@ -210,6 +210,8 @@ serve(async (req) => {
     
     console.log(`Found ${uniqueMessages.length} unique messages`);
 
+    let isFirstEmail = true; // Track if this is the first email being processed
+
     // Fetch details for each message and classify them (process all up to 100)
     const emailPromises = uniqueMessages.map(async (message: any) => {
       try {
