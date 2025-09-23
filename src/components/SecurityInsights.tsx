@@ -125,7 +125,8 @@ export const SecurityInsights = ({ selectedEmail, emailStats }: SecurityInsights
     return emailStats.reduce((acc, stat) => ({
       total_emails: acc.total_emails + (stat.total_emails || 0),
       safe_emails: acc.safe_emails + (stat.safe_emails || 0),
-      threat_emails: acc.threat_emails + (stat.high_threat_emails || 0) + (stat.medium_threat_emails || 0) + (stat.low_threat_emails || 0),
+      // Only count high threats to match dashboard logic
+      threat_emails: acc.threat_emails + (stat.high_threat_emails || 0),
       spam_emails: acc.spam_emails + (stat.spam_emails || 0),
       phishing_emails: acc.phishing_emails + (stat.phishing_emails || 0)
     }), {
