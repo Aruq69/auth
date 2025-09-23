@@ -1,73 +1,157 @@
-# Welcome to your Lovable project
+# MailGuard - Email Security Analysis Platform
 
-## Project info
+MailGuard is a comprehensive email security platform that helps users analyze, secure, and manage their email communications. The platform provides AI-powered security insights, threat detection, and proactive recommendations to protect against email-based attacks.
 
-**URL**: https://lovable.dev/projects/4a245192-55d5-454c-8b1c-2d652a6212f2
+## Features
 
-## How can I edit this code?
+### 🔒 Email Security Analysis
+- Real-time email threat detection and classification
+- AI-powered security recommendations
+- Comprehensive email pattern analysis
+- Breach detection and security scoring
 
-There are several ways of editing your application.
+### 🤖 Intelligent Chat Assistant
+- Interactive AI assistant for email security guidance
+- Contextual security advice based on email content
+- Real-time threat analysis and recommendations
 
-**Use Lovable**
+### 🔐 Advanced Authentication
+- Multi-factor authentication (MFA) support
+- Secure user onboarding and profile management
+- OAuth integration with Gmail
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/4a245192-55d5-454c-8b1c-2d652a6212f2) and start prompting.
+### 📊 Security Insights Dashboard
+- Detailed security analytics and reporting
+- User behavior pattern analysis
+- Threat trend visualization
 
-Changes made via Lovable will be committed automatically to this repo.
+### 📧 Gmail Integration
+- Seamless Gmail account connection
+- Automated email fetching and analysis
+- Real-time security monitoring
 
-**Use your preferred IDE**
+### 💬 Feedback System
+- User feedback collection and analysis
+- Continuous improvement through user insights
+- Rating and review system
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## Technology Stack
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+- **Frontend**: React 18 with TypeScript
+- **Build Tool**: Vite
+- **Styling**: Tailwind CSS with custom design system
+- **UI Components**: Radix UI primitives with shadcn/ui
+- **Backend**: Supabase (Database, Authentication, Edge Functions)
+- **AI Integration**: Groq API for intelligent analysis
+- **Email Integration**: Gmail API
+- **Deployment**: Vercel
 
-Follow these steps:
+## Getting Started
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+### Prerequisites
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+- Node.js (v18 or higher)
+- npm or yarn package manager
+- Supabase account and project setup
+- Groq API key for AI functionality
 
-# Step 3: Install the necessary dependencies.
-npm i
+### Installation
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+1. Clone the repository:
+```bash
+git clone <repository-url>
+cd mailguard
+```
+
+2. Install dependencies:
+```bash
+npm install
+```
+
+3. Set up environment variables:
+Create a `.env` file in the root directory with:
+```env
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+
+4. Set up the database:
+Run the provided SQL schema file in your Supabase project:
+```bash
+# Import mailguard_consolidated_schema.sql to your Supabase project
+```
+
+5. Deploy Supabase Edge Functions:
+```bash
+# Deploy all edge functions to your Supabase project
+supabase functions deploy
+```
+
+6. Start the development server:
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+The application will be available at `http://localhost:5173`
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Project Structure
 
-**Use GitHub Codespaces**
+```
+src/
+├── components/          # React components
+│   ├── auth/           # Authentication components
+│   └── ui/             # Reusable UI components
+├── pages/              # Main application pages
+├── hooks/              # Custom React hooks
+├── lib/                # Utility functions and helpers
+└── integrations/       # External service integrations
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+supabase/
+├── functions/          # Edge functions for backend logic
+└── migrations/         # Database schema and migrations
+```
 
-## What technologies are used for this project?
+## Key Components
 
-This project is built with:
+- **EmailSubmissionForm**: Submit emails for security analysis
+- **EmailSecurityAdvice**: Display AI-powered security recommendations
+- **ChatAssistant**: Interactive AI chat for security guidance
+- **SecurityInsights**: Analytics dashboard for security metrics
+- **MFASetup/MFAChallenge**: Multi-factor authentication flow
+- **UserOnboarding**: New user setup and configuration
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## API Endpoints
 
-## How can I deploy this project?
+The platform uses Supabase Edge Functions for backend processing:
 
-Simply open [Lovable](https://lovable.dev/projects/4a245192-55d5-454c-8b1c-2d652a6212f2) and click on Share -> Publish.
+- `email-classifier`: Classify and analyze email threats
+- `email-security-advisor`: Generate AI-powered security advice
+- `chat-assistant`: Handle chat interactions with AI
+- `gmail-auth`: Manage Gmail OAuth authentication
+- `fetch-gmail-emails`: Retrieve emails from Gmail
+- `store-feedback`: Save user feedback
+- `check-password-breach`: Verify password security
 
-## Can I connect a custom domain to my Lovable project?
+## Security Features
 
-Yes, you can!
+- Password breach detection using HaveIBeenPwned API
+- Row Level Security (RLS) policies in database
+- Encrypted data storage and transmission
+- Secure authentication flows
+- Privacy-focused design
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## Contributing
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/new-feature`)
+3. Commit your changes (`git commit -am 'Add new feature'`)
+4. Push to the branch (`git push origin feature/new-feature`)
+5. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Support
+
+For support and questions, please open an issue in the repository or contact the development team.
