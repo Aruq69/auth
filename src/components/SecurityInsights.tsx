@@ -139,7 +139,7 @@ export const SecurityInsights = ({ selectedEmail, emailStats }: SecurityInsights
         // Safe emails already includes low threat emails in the database calculation
         safe_emails: acc.safe_emails + (stat.safe_emails || 0),
         // Only count medium and high threats as actual threats (matching dashboard logic)
-        threat_emails: acc.threat_emails + (stat.medium_threat_emails || 0) + (stat.high_threat_emails || 0),
+        threat_emails: acc.threat_emails + (stat.total_emails || 0) - (stat.safe_emails || 0),
         spam_emails: acc.spam_emails + (stat.spam_emails || 0),
         phishing_emails: acc.phishing_emails + (stat.phishing_emails || 0)
       };
