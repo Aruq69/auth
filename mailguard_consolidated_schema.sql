@@ -70,7 +70,6 @@ CREATE TABLE IF NOT EXISTS public.email_statistics (
     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
     date DATE NOT NULL DEFAULT CURRENT_DATE,
     total_emails INTEGER DEFAULT 0,
-    safe_emails INTEGER DEFAULT 0,
     low_threat_emails INTEGER DEFAULT 0,
     medium_threat_emails INTEGER DEFAULT 0,
     high_threat_emails INTEGER DEFAULT 0,
