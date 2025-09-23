@@ -321,36 +321,43 @@ serve(async (req) => {
         // Always store the email analysis temporarily for session (regardless of privacy setting)
         // But only persist to database if privacy setting allows
         if (!neverStoreData) {
-          const { data: existingEmail } = await supabase
-            .from('emails')
-            .select('id')
-            .eq('gmail_id', message.id)
-            .eq('user_id', user_id)
-            .single();
-
-          if (!existingEmail) {
-            // Store the email analysis in the database for permanent storage
-            const { error: insertError } = await supabase
+          // For the first email in the batch, delete all previous emails for this user
+          if (isFirstEmail) {
+            isFirstEmail = false; // Mark that we've processed the first email
+            console.log(`Deleting previous emails for user ${user_id} before storing new sync...`);
+            const { error: deleteError } = await supabase
               .from('emails')
-              .insert({
-                user_id: user_id,
-                message_id: message.id,
-                gmail_id: message.id,
-                subject,
-                sender,
-                content: content.substring(0, 1000),
-                raw_content: fullContent.substring(0, 5000),
-                classification: classification.classification,
-                threat_level: classification.threat_level,
-                threat_type: classification.threat_type,
-                confidence: classification.confidence,
-                keywords: classification.keywords,
-                received_date: new Date(date).toISOString(),
-              });
-
-            if (insertError) {
-              console.error('Error inserting email:', insertError);
+              .delete()
+              .eq('user_id', user_id);
+            
+            if (deleteError) {
+              console.error('Error deleting previous emails:', deleteError);
+            } else {
+              console.log('Successfully deleted previous emails');
             }
+          }
+
+          // Store the email analysis in the database for permanent storage
+          const { error: insertError } = await supabase
+            .from('emails')
+            .insert({
+              user_id: user_id,
+              message_id: message.id,
+              gmail_id: message.id,
+              subject,
+              sender,
+              content: content.substring(0, 1000),
+              raw_content: fullContent.substring(0, 5000),
+              classification: classification.classification,
+              threat_level: classification.threat_level,
+              threat_type: classification.threat_type,
+              confidence: classification.confidence,
+              keywords: classification.keywords,
+              received_date: new Date(date).toISOString(),
+            });
+
+          if (insertError) {
+            console.error('Error inserting email:', insertError);
           }
         } else {
           console.log('Email processed but not permanently stored due to privacy settings');
@@ -387,7 +394,10 @@ serve(async (req) => {
       JSON.stringify({
         success: true,
         emails: processedEmails,
-        total: processedEmails.length
+        total: processedEmails.length,
+        fetched_count: processedEmails.length,
+        sync_timestamp: new Date().toISOString(),
+        storage_enabled: !neverStoreData
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
