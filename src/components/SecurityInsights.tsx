@@ -122,20 +122,35 @@ export const SecurityInsights = ({ selectedEmail, emailStats }: SecurityInsights
   const calculateTotalStats = () => {
     if (!emailStats?.length) return null;
     
-    return emailStats.reduce((acc, stat) => ({
-      total_emails: acc.total_emails + (stat.total_emails || 0),
-      safe_emails: acc.safe_emails + (stat.safe_emails || 0),
-      // Count high and medium threats to match what users expect
-      threat_emails: acc.threat_emails + (stat.high_threat_emails || 0) + (stat.medium_threat_emails || 0),
-      spam_emails: acc.spam_emails + (stat.spam_emails || 0),
-      phishing_emails: acc.phishing_emails + (stat.phishing_emails || 0)
-    }), {
+    console.log('📊 SecurityInsights emailStats:', emailStats);
+    console.log('📊 Number of stat rows:', emailStats.length);
+    
+    const result = emailStats.reduce((acc, stat) => {
+      console.log('📊 Processing stat row:', {
+        date: stat.date,
+        high_threat_emails: stat.high_threat_emails,
+        medium_threat_emails: stat.medium_threat_emails,
+        low_threat_emails: stat.low_threat_emails
+      });
+      
+      return {
+        total_emails: acc.total_emails + (stat.total_emails || 0),
+        safe_emails: acc.safe_emails + (stat.safe_emails || 0),
+        // Count high and medium threats to match what users expect
+        threat_emails: acc.threat_emails + (stat.high_threat_emails || 0) + (stat.medium_threat_emails || 0),
+        spam_emails: acc.spam_emails + (stat.spam_emails || 0),
+        phishing_emails: acc.phishing_emails + (stat.phishing_emails || 0)
+      };
+    }, {
       total_emails: 0,
       safe_emails: 0,
       threat_emails: 0,
       spam_emails: 0,
       phishing_emails: 0
     });
+    
+    console.log('📊 Final calculated stats:', result);
+    return result;
   };
 
   const stats = calculateTotalStats();
