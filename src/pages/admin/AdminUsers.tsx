@@ -16,16 +16,28 @@ export default function AdminUsers() {
   const { data: users, isLoading, refetch } = useQuery({
     queryKey: ['admin-users'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // Get profiles first
+      const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
-        .select(`
-          *,
-          user_roles (role)
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      return data;
+      if (profilesError) throw profilesError;
+
+      // Get user roles separately
+      const userIds = profiles?.map(p => p.user_id) || [];
+      const { data: roles } = await supabase
+        .from('user_roles')
+        .select('user_id, role')
+        .in('user_id', userIds);
+
+      // Combine the data
+      const usersWithRoles = profiles?.map(profile => ({
+        ...profile,
+        user_roles: roles?.filter(role => role.user_id === profile.user_id) || []
+      })) || [];
+
+      return usersWithRoles;
     }
   });
 
