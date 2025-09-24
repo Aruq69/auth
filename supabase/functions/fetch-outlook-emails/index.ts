@@ -70,6 +70,7 @@ serve(async (req) => {
     }
 
     // Fetch emails from Microsoft Graph API
+    console.log('Fetching emails from Microsoft Graph API...');
     const graphResponse = await fetch('https://graph.microsoft.com/v1.0/me/messages?$top=10&$orderby=receivedDateTime desc', {
       headers: {
         'Authorization': `Bearer ${tokenData.access_token}`,
@@ -77,10 +78,14 @@ serve(async (req) => {
       },
     });
 
+    console.log('Graph API response status:', graphResponse.status);
+
     if (!graphResponse.ok) {
+      const errorText = await graphResponse.text();
+      console.error('Graph API error:', errorText);
       return new Response(
         JSON.stringify({ 
-          error: `Failed to fetch emails: ${graphResponse.status}`,
+          error: `Failed to fetch emails: ${graphResponse.status} - ${errorText}`,
           success: false 
         }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -89,6 +94,8 @@ serve(async (req) => {
 
     const graphData = await graphResponse.json();
     const emails = graphData.value || [];
+    
+    console.log(`Microsoft Graph returned ${emails.length} emails`);
     
     // Process emails
     const processedEmails = [];
