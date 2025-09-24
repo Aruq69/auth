@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import OutlookCallback from "./pages/OutlookCallback";
 import Settings from "./pages/Settings";
+import MLAnalytics from "./pages/MLAnalytics";
 
 import NotFound from "./pages/NotFound";
 
@@ -27,6 +28,7 @@ const App = () => (
               <Route path="/auth" element={<Auth />} />
               <Route path="/outlook-callback" element={<OutlookCallback />} />
               <Route path="/settings" element={<Settings />} />
+              <Route path="/ml-analytics" element={<MLAnalytics />} />
               
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
