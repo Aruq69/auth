@@ -182,15 +182,27 @@ const Auth = () => {
               variant="outline"
               onClick={handleOutlookSignIn}
               disabled={submitLoading}
-              className="w-full border-border/20 bg-background/30 hover:bg-background/50"
+              className="group w-full relative overflow-hidden border-border/20 bg-gradient-to-r from-blue-600/10 via-blue-500/5 to-blue-600/10 hover:from-blue-600/20 hover:via-blue-500/10 hover:to-blue-600/20 hover:border-blue-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/25 hover:scale-[1.02] disabled:hover:scale-100 disabled:hover:shadow-none"
             >
-              {submitLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="none">
-                <path d="M23.5 12c0-6.627-5.373-12-12-12S-0.5 5.373-0.5 12s5.373 12 12 12 12-5.373 12-12z" fill="#0078d4"/>
-                <path d="M12.5 5.8c3.905 0 7.067 3.162 7.067 7.067 0 3.905-3.162 7.067-7.067 7.067S5.433 16.772 5.433 12.867c0-3.905 3.162-7.067 7.067-7.067z" fill="#ffffff"/>
-                <path d="M9.167 9.333h6.666v1.334H9.167V9.333zm0 2h6.666v1.334H9.167v-1.334zm0 2h4v1.334h-4v-1.334z" fill="#0078d4"/>
-              </svg>
-              Continue with Outlook
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-pulse" />
+              
+              {submitLoading && <Loader2 className="w-4 h-4 mr-3 animate-spin text-blue-500" />}
+              
+              <div className="relative flex items-center justify-center space-x-3">
+                <div className="p-1.5 rounded-md bg-gradient-to-br from-blue-500/20 to-blue-600/20 group-hover:from-blue-500/30 group-hover:to-blue-600/30 transition-all duration-300 group-hover:scale-110">
+                  <svg className="w-5 h-5 text-blue-600 group-hover:text-blue-500 transition-colors duration-300" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M23.5 12c0-6.627-5.373-12-12-12S-0.5 5.373-0.5 12s5.373 12 12 12 12-5.373 12-12z"/>
+                    <path d="M12.5 5.8c3.905 0 7.067 3.162 7.067 7.067 0 3.905-3.162 7.067-7.067 7.067S5.433 16.772 5.433 12.867c0-3.905 3.162-7.067 7.067-7.067z" fill="white"/>
+                    <path d="M9.167 9.333h6.666v1.334H9.167V9.333zm0 2h6.666v1.334H9.167v-1.334zm0 2h4v1.334h-4v-1.334z" fill="currentColor"/>
+                  </svg>
+                </div>
+                
+                <span className="font-medium text-foreground group-hover:text-blue-600 transition-colors duration-300">
+                  Continue with Outlook
+                </span>
+              </div>
+              
+              <div className="absolute inset-0 rounded-md ring-2 ring-blue-500/0 group-hover:ring-blue-500/20 transition-all duration-300" />
             </Button>
           </CardContent>
         </Card>
