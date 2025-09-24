@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
@@ -12,12 +11,10 @@ import UserOnboarding from "@/components/UserOnboarding";
 import MFAChallenge from "@/components/MFAChallenge";
 
 const Auth = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [submitLoading, setSubmitLoading] = useState(false);
   const [error, setError] = useState("");
   
-  const { signIn, user, needsMfa, loading: authLoading } = useAuth();
+  const { user, needsMfa, loading: authLoading } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -52,32 +49,6 @@ const Auth = () => {
       </div>
     );
   }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSubmitLoading(true);
-    setError("");
-
-    try {
-      const { error } = await signIn(email, password);
-      if (error) {
-        if (error.message.includes("Invalid login credentials")) {
-          setError("Invalid email or password. Please try again.");
-        } else {
-          setError(error.message);
-        }
-      } else {
-        toast({
-          title: "Access Granted!",
-          description: "Welcome to the security command center.",
-        });
-      }
-    } catch (err) {
-      setError("An unexpected error occurred. Please try again.");
-    } finally {
-      setSubmitLoading(false);
-    }
-  };
 
   const handleOutlookSignIn = async () => {
     try {
@@ -129,53 +100,11 @@ const Auth = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {error && (
-                <Alert variant="destructive" className="border-destructive/20">
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              )}
-              
-              <div className="space-y-2">
-                <Input
-                  type="email"
-                  placeholder="Email address"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="bg-background/50 border-border/20"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Input
-                  type="password"
-                  placeholder="Password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  className="bg-background/50 border-border/20"
-                />
-              </div>
-              
-              <Button 
-                type="submit" 
-                className="w-full hover-button" 
-                disabled={submitLoading}
-              >
-                {submitLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                Sign In
-              </Button>
-            </form>
-            
-            <div className="relative my-6">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-border/20" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
-              </div>
-            </div>
+            {error && (
+              <Alert variant="destructive" className="border-destructive/20 mb-6">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
             
             <Button
               type="button"
