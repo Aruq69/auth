@@ -75,18 +75,75 @@ serve(async (req) => {
       );
     }
 
-    // Check if token is expired
+    // Check if token is expired and attempt refresh if needed
     const now = new Date();
     const expiresAt = new Date(tokenData.expires_at);
     
     if (now >= expiresAt) {
-      return new Response(
-        JSON.stringify({ 
-          error: 'Access token expired. Please reconnect your Outlook account.',
-          success: false 
-        }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      console.log('Access token expired, attempting to refresh...');
+      
+      // Try to refresh the token using refresh_token
+      if (tokenData.refresh_token) {
+        try {
+          const microsoftClientId = Deno.env.get('MICROSOFT_CLIENT_ID');
+          const microsoftClientSecret = Deno.env.get('MICROSOFT_CLIENT_SECRET');
+          
+          const refreshResponse = await fetch('https://login.microsoftonline.com/common/oauth2/v2.0/token', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({
+              client_id: microsoftClientId!,
+              client_secret: microsoftClientSecret!,
+              refresh_token: tokenData.refresh_token,
+              grant_type: 'refresh_token',
+            }),
+          });
+
+          if (refreshResponse.ok) {
+            const refreshData = await refreshResponse.json();
+            const newExpiresAt = new Date(Date.now() + (refreshData.expires_in * 1000)).toISOString();
+            
+            // Update the tokens in database
+            await supabase
+              .from('outlook_tokens')
+              .update({
+                access_token: refreshData.access_token,
+                refresh_token: refreshData.refresh_token || tokenData.refresh_token,
+                expires_at: newExpiresAt,
+              })
+              .eq('user_id', user.id);
+            
+            // Update tokenData for this request
+            tokenData.access_token = refreshData.access_token;
+            tokenData.expires_at = newExpiresAt;
+            
+            console.log('Token refreshed successfully');
+          } else {
+            throw new Error('Token refresh failed');
+          }
+        } catch (refreshError) {
+          console.error('Failed to refresh token:', refreshError);
+          return new Response(
+            JSON.stringify({ 
+              error: 'Access token expired and refresh failed. Please reconnect your Outlook account.',
+              success: false,
+              reconnect_required: true
+            }),
+            { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+      } else {
+        return new Response(
+          JSON.stringify({ 
+            error: 'Access token expired and no refresh token available. Please reconnect your Outlook account.',
+            success: false,
+            reconnect_required: true
+          }),
+          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
     }
 
     // Fetch emails from Microsoft Graph API
