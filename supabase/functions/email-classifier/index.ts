@@ -10,89 +10,141 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-  // Email Classifier using provided training data
 class EmailClassifier {
-  private spamFeatures: Map<string, number> = new Map();
-  private hamFeatures: Map<string, number> = new Map();
-  private spamEmails: number = 0;
-  private hamEmails: number = 0;
+  private spamWordCounts: Map<string, number> = new Map();
+  private hamWordCounts: Map<string, number> = new Map();
+  private spamEmailCount: number = 0;
+  private hamEmailCount: number = 0;
   private vocabulary: Set<string> = new Set();
+  private isTrained: boolean = false;
 
   constructor() {
-    this.loadTrainingData();
+    // Training will be done lazily when first needed
   }
 
-  private loadTrainingData() {
-    // Enhanced spam patterns based on training datasets
+  private async loadTrainingData() {
+    if (this.isTrained) return;
+
+    try {
+      // Load the first dataset (email.csv)
+      const emailDatasetPath = './datasets/email.csv';
+      let emailDatasetContent = '';
+      try {
+        emailDatasetContent = await Deno.readTextFile(emailDatasetPath);
+      } catch (error) {
+        console.log('Could not load email.csv, using fallback patterns');
+        this.loadFallbackPatterns();
+        return;
+      }
+
+      // Load the second dataset (spam.csv) 
+      const spamDatasetPath = './datasets/spam.csv';
+      let spamDatasetContent = '';
+      try {
+        spamDatasetContent = await Deno.readTextFile(spamDatasetPath);
+      } catch (error) {
+        console.log('Could not load spam.csv, continuing with email.csv only');
+      }
+
+      // Parse and process both datasets
+      this.processDataset(emailDatasetContent, 'Category,Message');
+      if (spamDatasetContent) {
+        this.processDataset(spamDatasetContent, 'v1,v2,,,');
+      }
+
+      console.log(`Training completed: ${this.hamEmailCount} ham, ${this.spamEmailCount} spam, vocabulary: ${this.vocabulary.size}`);
+      this.isTrained = true;
+
+    } catch (error) {
+      console.error('Error loading training data:', error);
+      this.loadFallbackPatterns();
+    }
+  }
+
+  private processDataset(content: string, headerFormat: string) {
+    const lines = content.split('\n').slice(1); // Skip header
+    
+    for (const line of lines) {
+      if (!line.trim()) continue;
+      
+      let label = '';
+      let message = '';
+      
+      // Parse CSV line - handle different formats
+      if (headerFormat.includes('Category,Message')) {
+        const match = line.match(/^(ham|spam),(.*)$/);
+        if (match) {
+          label = match[1];
+          message = match[2].replace(/^"|"$/g, ''); // Remove surrounding quotes
+        }
+      } else {
+        // Format: v1,v2,,,
+        const match = line.match(/^(ham|spam),(.*)$/);
+        if (match) {
+          label = match[1];
+          message = match[2].split(',')[0].replace(/^"|"$/g, ''); // Take first part after label
+        }
+      }
+      
+      if (label && message) {
+        this.trainOnMessage(label, message);
+      }
+    }
+  }
+
+  private trainOnMessage(label: string, message: string) {
+    const words = this.tokenize(message);
+    
+    if (label === 'spam') {
+      this.spamEmailCount++;
+      for (const word of words) {
+        this.spamWordCounts.set(word, (this.spamWordCounts.get(word) || 0) + 1);
+        this.vocabulary.add(word);
+      }
+    } else if (label === 'ham') {
+      this.hamEmailCount++;
+      for (const word of words) {
+        this.hamWordCounts.set(word, (this.hamWordCounts.get(word) || 0) + 1);
+        this.vocabulary.add(word);
+      }
+    }
+  }
+
+  private loadFallbackPatterns() {
+    // Enhanced fallback patterns when datasets aren't available
     const spamPatterns = {
-      // Financial scams
-      'lottery': 15, 'winner': 14, 'congratulations': 13, 'million': 12, 'inheritance': 14,
-      'beneficiary': 12, 'fund': 10, 'transfer': 11, 'bank': 8, 'account': 9,
-      
-      // Phishing
-      'verify': 16, 'confirm': 14, 'suspended': 17, 'expire': 13, 'update': 11,
-      'security': 12, 'breach': 15, 'unauthorized': 14, 'locked': 15, 'access': 10,
-      
-      // Urgency tactics
-      'urgent': 13, 'immediate': 12, 'deadline': 11, 'expires': 12, 'limited': 10,
-      'hurry': 11, 'rush': 10, 'asap': 12, 'emergency': 11, 'critical': 10,
-      
-      // Marketing spam
-      'free': 9, 'offer': 8, 'deal': 7, 'discount': 8, 'sale': 7,
-      'cheap': 8, 'guarantee': 10, 'risk': 9, 'money': 9, 'cash': 10,
-      
-      // Malicious content
-      'download': 11, 'attachment': 10, 'click': 12, 'link': 10, 'install': 13,
-      'software': 9, 'update': 9, 'patch': 10, 'exe': 15, 'zip': 12,
-      
-      // Pharmacy/health scams
-      'pills': 12, 'medication': 11, 'pharmacy': 13, 'prescription': 10,
-      'viagra': 15, 'cialis': 15, 'health': 8, 'doctor': 7, 'medical': 7,
-      
-      // Romance/419 scams
-      'love': 10, 'relationship': 9, 'widow': 12, 'soldier': 11, 'diplomat': 12,
-      'refugee': 11, 'orphan': 10, 'charity': 9, 'donation': 9, 'help': 7
+      'free': 25, 'win': 23, 'winner': 24, 'prize': 22, 'cash': 20,
+      'urgent': 21, 'claim': 26, 'limited': 19, 'offer': 18, 'deal': 17,
+      'lottery': 28, 'congratulations': 25, 'selected': 24, 'bonus': 20,
+      'click': 22, 'link': 20, 'download': 21, 'install': 23,
+      'verify': 26, 'confirm': 24, 'suspended': 27, 'expire': 23,
+      'bank': 18, 'account': 19, 'security': 22, 'breach': 25,
+      'inheritance': 24, 'million': 22, 'transfer': 21, 'beneficiary': 22,
+      'pills': 22, 'medication': 21, 'pharmacy': 23, 'viagra': 30
     };
 
-    // Legitimate email patterns
     const hamPatterns = {
-      // Business communication
-      'meeting': 8, 'conference': 8, 'schedule': 7, 'agenda': 7, 'presentation': 8,
-      'proposal': 8, 'contract': 9, 'agreement': 8, 'policy': 7, 'procedure': 7,
-      
-      // Professional language
-      'please': 6, 'thank': 7, 'thanks': 7, 'appreciate': 8, 'regards': 8,
-      'sincerely': 9, 'cordially': 8, 'respectfully': 8, 'best': 6, 'kind': 6,
-      
-      // Customer service
-      'customer': 7, 'service': 6, 'support': 7, 'assistance': 7, 'help': 5,
-      'inquiry': 8, 'question': 6, 'response': 7, 'resolution': 8,
-      
-      // Transactional
-      'order': 8, 'purchase': 8, 'invoice': 9, 'receipt': 9, 'payment': 7,
-      'transaction': 8, 'confirmation': 8, 'tracking': 8, 'delivery': 7,
-      
-      // Educational/informational
-      'information': 6, 'newsletter': 7, 'update': 5, 'news': 6, 'article': 7,
-      'blog': 6, 'tutorial': 7, 'guide': 7, 'documentation': 8, 'manual': 7,
-      
-      // Legitimate notifications
-      'notification': 7, 'alert': 6, 'reminder': 7, 'announcement': 7,
-      'bulletin': 7, 'notice': 7, 'advisory': 8, 'report': 8
+      'meeting': 15, 'conference': 15, 'schedule': 14, 'thank': 16,
+      'please': 12, 'regards': 18, 'sincerely': 20, 'best': 13,
+      'customer': 14, 'service': 13, 'support': 14, 'order': 16,
+      'invoice': 17, 'receipt': 17, 'payment': 15, 'information': 13,
+      'newsletter': 14, 'update': 10, 'notification': 14, 'reminder': 14
     };
 
-    // Build training data
-    for (const [word, weight] of Object.entries(spamPatterns)) {
-      this.spamFeatures.set(word, weight);
+    for (const [word, count] of Object.entries(spamPatterns)) {
+      this.spamWordCounts.set(word, count);
       this.vocabulary.add(word);
-      this.spamEmails += Math.floor(weight / 2);
+      this.spamEmailCount += Math.floor(count / 3);
     }
 
-    for (const [word, weight] of Object.entries(hamPatterns)) {
-      this.hamFeatures.set(word, weight);
+    for (const [word, count] of Object.entries(hamPatterns)) {
+      this.hamWordCounts.set(word, count);
       this.vocabulary.add(word);
-      this.hamEmails += Math.floor(weight / 2);
+      this.hamEmailCount += Math.floor(count / 3);
     }
+
+    this.isTrained = true;
+    console.log('Using fallback training patterns');
   }
 
   private cleanText(text: string): string {
@@ -107,26 +159,32 @@ class EmailClassifier {
   private tokenize(text: string): string[] {
     return this.cleanText(text)
       .split(' ')
-      .filter(word => word.length > 2);
+      .filter(word => word.length > 2 && word.length < 20);
   }
 
-  private calculateNaiveBayesProbability(text: string): { probability: number; confidence: number; features: string[] } {
+  private async calculateNaiveBayesProbability(text: string): Promise<{ probability: number; confidence: number; features: string[] }> {
+    await this.loadTrainingData();
+    
     const words = this.tokenize(text);
     const foundFeatures: string[] = [];
     
     // Prior probabilities
-    const totalEmails = this.spamEmails + this.hamEmails;
-    let spamScore = Math.log(this.spamEmails / totalEmails);
-    let hamScore = Math.log(this.hamEmails / totalEmails);
+    const totalEmails = this.spamEmailCount + this.hamEmailCount;
+    if (totalEmails === 0) {
+      return { probability: 0.5, confidence: 0.5, features: [] };
+    }
+    
+    let spamScore = Math.log(this.spamEmailCount / totalEmails);
+    let hamScore = Math.log(this.hamEmailCount / totalEmails);
     
     // Calculate feature probabilities with Laplace smoothing
     for (const word of words) {
-      const spamCount = this.spamFeatures.get(word) || 0;
-      const hamCount = this.hamFeatures.get(word) || 0;
+      const spamCount = this.spamWordCounts.get(word) || 0;
+      const hamCount = this.hamWordCounts.get(word) || 0;
       
-      // Laplace smoothing (add-one smoothing)
-      const spamProb = (spamCount + 1) / (this.spamEmails + this.vocabulary.size);
-      const hamProb = (hamCount + 1) / (this.hamEmails + this.vocabulary.size);
+      // Laplace smoothing
+      const spamProb = (spamCount + 1) / (this.spamEmailCount + this.vocabulary.size);
+      const hamProb = (hamCount + 1) / (this.hamEmailCount + this.vocabulary.size);
       
       spamScore += Math.log(spamProb);
       hamScore += Math.log(hamProb);
@@ -144,76 +202,64 @@ class EmailClassifier {
     const spamProbability = expSpam / total;
     
     // Calculate confidence based on feature strength and count
-    const strongFeatures = foundFeatures.filter(word => 
-      (this.spamFeatures.get(word) || 0) > 10 || (this.hamFeatures.get(word) || 0) > 8
-    ).length;
+    const strongFeatures = foundFeatures.filter(word => {
+      const spamCount = this.spamWordCounts.get(word) || 0;
+      const hamCount = this.hamWordCounts.get(word) || 0;
+      return spamCount > 5 || hamCount > 5;
+    }).length;
     
-    const baseConfidence = 0.65;
-    const featureBoost = Math.min(0.25, foundFeatures.length * 0.03);
-    const strongFeatureBoost = Math.min(0.15, strongFeatures * 0.05);
+    const baseConfidence = 0.7;
+    const featureBoost = Math.min(0.2, foundFeatures.length * 0.02);
+    const strongFeatureBoost = Math.min(0.1, strongFeatures * 0.03);
     
-    const confidence = Math.min(0.97, baseConfidence + featureBoost + strongFeatureBoost);
+    const confidence = Math.min(0.95, baseConfidence + featureBoost + strongFeatureBoost);
     
     return {
       probability: spamProbability,
       confidence,
-      features: foundFeatures.slice(0, 8)
+      features: foundFeatures.slice(0, 10)
     };
   }
 
-  // Enhanced sender validation with domain reputation
+  // Enhanced sender validation
   private validateSender(sender: string): { trustScore: number; issues: string[] } {
     const email = sender.toLowerCase();
     const domain = email.split('@')[1] || '';
-    let trustScore = 0.5; // Neutral starting point
+    let trustScore = 0.5;
     const issues: string[] = [];
 
-    // Trusted domains (higher trust)
+    // Trusted domains
     const trustedDomains = [
       'gmail.com', 'outlook.com', 'yahoo.com', 'icloud.com', 'protonmail.com',
-      'microsoft.com', 'google.com', 'apple.com', 'amazon.com', 'paypal.com',
-      'linkedin.com', 'facebook.com', 'twitter.com', 'github.com', 'stackoverflow.com'
+      'microsoft.com', 'google.com', 'apple.com', 'amazon.com', 'paypal.com'
     ];
-
-    // Educational and government domains
-    const institutionalDomains = ['.edu', '.gov', '.org', '.ac.', '.university'];
 
     // Suspicious patterns
     const suspiciousPatterns = [
       /[0-9]{3,}/, // Many numbers
-      /[a-z]{20,}/, // Very long strings
-      /-secure-/, /-verify-/, /-update-/, /-account-/, // Phishing prefixes
-      /\.tk$/, /\.ml$/, /\.ga$/, /\.cf$/ // Suspicious TLDs
+      /[a-z]{25,}/, // Very long strings
+      /-secure-|verify-|update-|account-/, // Phishing prefixes
+      /\.tk$|\.ml$|\.ga$|\.cf$/ // Suspicious TLDs
     ];
 
-    // Check trusted domains
     if (trustedDomains.includes(domain)) {
       trustScore += 0.3;
-    } else if (institutionalDomains.some(inst => domain.includes(inst))) {
-      trustScore += 0.25;
     }
 
-    // Check for suspicious patterns
     for (const pattern of suspiciousPatterns) {
       if (pattern.test(domain)) {
         trustScore -= 0.3;
-        issues.push(`Suspicious domain pattern: ${pattern.source}`);
+        issues.push(`Suspicious domain pattern detected`);
       }
     }
 
     // Check for domain spoofing
-    const majorBrands = ['google', 'microsoft', 'apple', 'amazon', 'paypal', 'facebook'];
+    const majorBrands = ['google', 'microsoft', 'apple', 'amazon', 'paypal'];
     for (const brand of majorBrands) {
       if (domain.includes(brand) && !domain.endsWith(`${brand}.com`)) {
         trustScore -= 0.4;
         issues.push(`Possible domain spoofing of ${brand}`);
       }
-    }
-
-    // Check email structure
-    if (email.includes('..') || email.startsWith('.') || email.endsWith('.')) {
-      trustScore -= 0.2;
-      issues.push('Invalid email structure');
     }
 
     return {
@@ -223,12 +269,11 @@ class EmailClassifier {
   }
 
   // Main classification method
-  classifyEmail(subject: string, sender: string, content: string) {
-    
+  async classifyEmail(subject: string, sender: string, content: string) {
     const fullText = `${subject} ${content}`;
     
-    // Get ML-based probability
-    const mlResult = this.calculateNaiveBayesProbability(fullText);
+    // Get ML-based probability using real training data
+    const mlResult = await this.calculateNaiveBayesProbability(fullText);
     
     // Validate sender
     const senderValidation = this.validateSender(sender);
@@ -238,9 +283,9 @@ class EmailClassifier {
     
     // Adjust based on sender trust
     if (senderValidation.trustScore > 0.7) {
-      adjustedProbability *= 0.7; // Reduce spam probability for trusted senders
+      adjustedProbability *= 0.8; // Reduce spam probability for trusted senders
     } else if (senderValidation.trustScore < 0.3) {
-      adjustedProbability = Math.min(0.95, adjustedProbability + 0.3); // Increase for suspicious senders
+      adjustedProbability = Math.min(0.95, adjustedProbability + 0.2);
     }
     
     // Determine classification and threat level
@@ -248,34 +293,34 @@ class EmailClassifier {
     let threatLevel = 'low';
     let confidence = mlResult.confidence;
     
-    if (adjustedProbability > 0.8) {
+    if (adjustedProbability > 0.75) {
       classification = 'spam';
       threatLevel = 'high';
-      confidence = Math.max(0.85, confidence);
-    } else if (adjustedProbability > 0.6) {
+      confidence = Math.max(0.8, confidence);
+    } else if (adjustedProbability > 0.55) {
       classification = 'spam';
       threatLevel = 'medium';
-      confidence = Math.max(0.75, Math.min(0.90, confidence));
-    } else if (adjustedProbability > 0.4) {
+      confidence = Math.max(0.7, Math.min(0.9, confidence));
+    } else if (adjustedProbability > 0.35) {
       threatLevel = 'medium';
-      confidence = Math.max(0.65, Math.min(0.85, confidence));
+      confidence = Math.max(0.6, Math.min(0.85, confidence));
     } else {
-      confidence = Math.max(0.70, confidence);
+      confidence = Math.max(0.65, confidence);
     }
     
-    // Determine specific threat type based on features
+    // Determine specific threat type
     let threatType = null;
     if (classification === 'spam') {
       const features = mlResult.features;
       
-      if (features.some(f => ['verify', 'confirm', 'suspended', 'security'].includes(f))) {
+      if (features.some(f => ['verify', 'confirm', 'suspended', 'security', 'breach'].includes(f))) {
         threatType = 'phishing';
-      } else if (features.some(f => ['lottery', 'winner', 'inheritance', 'million'].includes(f))) {
+      } else if (features.some(f => ['lottery', 'winner', 'prize', 'million', 'cash'].includes(f))) {
         threatType = 'financial_scam';
-      } else if (features.some(f => ['download', 'attachment', 'install', 'exe'].includes(f))) {
+      } else if (features.some(f => ['download', 'attachment', 'install', 'click', 'link'].includes(f))) {
         threatType = 'malware';
-      } else if (features.some(f => ['love', 'relationship', 'help', 'emergency'].includes(f))) {
-        threatType = 'social_engineering';
+      } else if (features.some(f => ['free', 'offer', 'deal', 'discount', 'sale'].includes(f))) {
+        threatType = 'promotional_spam';
       } else {
         threatType = 'spam';
       }
@@ -290,7 +335,8 @@ class EmailClassifier {
       sender_trust: senderValidation.trustScore,
       sender_issues: senderValidation.issues,
       ml_probability: Math.round(adjustedProbability * 100) / 100,
-      reasoning: `Enhanced ML classification using training data: ${classification}${threatType ? ` (${threatType})` : ''}, ML probability: ${Math.round(adjustedProbability * 100)}%, sender trust: ${Math.round(senderValidation.trustScore * 100)}%, features: ${mlResult.features.length}`
+      training_info: `Trained on ${this.hamEmailCount + this.spamEmailCount} emails (${this.hamEmailCount} ham, ${this.spamEmailCount} spam)`,
+      reasoning: `Real dataset ML classification: ${classification}${threatType ? ` (${threatType})` : ''}, probability: ${Math.round(adjustedProbability * 100)}%, sender trust: ${Math.round(senderValidation.trustScore * 100)}%`
     };
   }
 }
@@ -323,7 +369,7 @@ serve(async (req) => {
         continue;
       }
 
-      const classification = classifier.classifyEmail(subject, sender, content || '');
+      const classification = await classifier.classifyEmail(subject, sender, content || '');
 
       // Check user's privacy preference from the database (privacy-first approach)
       let shouldStore = false; // Default to NOT storing (privacy-first)
