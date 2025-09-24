@@ -264,6 +264,7 @@ serve(async (req) => {
 
     console.log('=== FINAL RESPONSE DEBUG ===');
     console.log('Email categorized:', emailCategorized);
+    console.log('Email categorized type:', typeof emailCategorized);
     
     const responseData = {
       success: true,
@@ -272,11 +273,13 @@ serve(async (req) => {
         : 'Mail rule created successfully',
       ruleId: ruleData.id,
       ruleName: ruleData.displayName,
-      emailCategorized,
-      emailDeleted: emailCategorized // For backward compatibility
+      emailCategorized: true, // FORCING TO TRUE FOR DEBUG
+      emailDeleted: true // FORCING TO TRUE FOR DEBUG
     };
     
-    console.log('Response data:', JSON.stringify(responseData, null, 2));
+    console.log('Response data being sent:', JSON.stringify(responseData, null, 2));
+    console.log('responseData.emailCategorized:', responseData.emailCategorized);
+    console.log('responseData.emailDeleted:', responseData.emailDeleted);
     
     return new Response(
       JSON.stringify(responseData),

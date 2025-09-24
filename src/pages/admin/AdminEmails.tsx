@@ -110,9 +110,14 @@ export default function AdminEmails() {
             variant: 'default',
           });
         } else {
+          console.log('=== FRONTEND RULE RESULT DEBUG ===');
+          console.log('Full ruleResult:', ruleResult);
+          console.log('ruleResult.emailCategorized:', ruleResult?.emailCategorized);
+          console.log('ruleResult.emailDeleted:', ruleResult?.emailDeleted);
+          
           const wasEmailCategorized = ruleResult?.emailCategorized || ruleResult?.emailDeleted;
-          console.log('Rule result:', ruleResult);
-          console.log('Email categorized/deleted:', wasEmailCategorized);
+          console.log('wasEmailCategorized final value:', wasEmailCategorized);
+          console.log('wasEmailCategorized type:', typeof wasEmailCategorized);
           
           toast({
             title: 'Email Blocked',
