@@ -22,6 +22,7 @@ export default function AdminActions() {
   const { data: blockedEmails, isLoading, refetch } = useQuery({
     queryKey: ['admin-blocks', actionFilter],
     queryFn: async () => {
+      console.log('AdminActions: Fetching blocks with filter:', actionFilter);
       // Get email blocks first
       let query = supabase
         .from('email_blocks')
@@ -35,7 +36,12 @@ export default function AdminActions() {
       }
 
       const { data: blocks, error } = await query;
-      if (error) throw error;
+      if (error) {
+        console.error('AdminActions: Error fetching blocks:', error);
+        throw error;
+      }
+      
+      console.log('AdminActions: Fetched blocks:', blocks?.length || 0, blocks);
 
       // Get related email data and profiles separately
       const emailIds = [...new Set(blocks?.map(block => block.email_id) || [])];
@@ -53,6 +59,7 @@ export default function AdminActions() {
         profiles: profiles.data?.find(p => p.user_id === block.blocked_by_user_id)
       })) || [];
 
+      console.log('AdminActions: Final blocks with data:', blocksWithData?.length || 0);
       return blocksWithData;
     }
   });
@@ -60,17 +67,29 @@ export default function AdminActions() {
   const { data: auditLog } = useQuery({
     queryKey: ['admin-audit'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // Get audit log data
+      const { data: auditData, error } = await supabase
         .from('admin_audit_log')
-        .select(`
-          *,
-          profiles (username)
-        `)
+        .select('*')
         .order('created_at', { ascending: false })
         .limit(50);
 
       if (error) throw error;
-      return data;
+
+      // Get profiles for admin users
+      const userIds = [...new Set(auditData?.map(log => log.admin_user_id) || [])];
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('user_id, username')
+        .in('user_id', userIds);
+
+      // Map profiles to audit log
+      const auditWithProfiles = auditData?.map(log => ({
+        ...log,
+        profiles: profiles?.find(p => p.user_id === log.admin_user_id)
+      })) || [];
+
+      return auditWithProfiles;
     }
   });
 
