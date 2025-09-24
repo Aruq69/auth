@@ -233,8 +233,10 @@ const Index = () => {
         
         // If privacy mode is enabled, store emails in session state
         if (userPreferences?.never_store_data && data.emails) {
-          console.log('📧 Setting session emails:', data.emails.length);
+          console.log('📧 Setting session emails:', data.emails.length, data.emails);
           setSessionEmails(data.emails);
+        } else if (userPreferences?.never_store_data) {
+          console.log('📧 Privacy mode enabled but no emails in response');
         }
         
         // Show debug info in toast for troubleshooting
@@ -247,8 +249,10 @@ const Index = () => {
           description: `Processed ${processedCount} emails successfully. ${debugMsg}`,
         });
         
-        // Refresh the emails list
-        fetchEmails();
+        // Only refresh database emails if not in privacy mode
+        if (!userPreferences?.never_store_data) {
+          fetchEmails();
+        }
       } else {
         throw new Error(data.error || 'Unknown error occurred');
       }
