@@ -378,10 +378,10 @@ const SettingsPage = () => {
         window.location.href = data.auth_url;
       }
     } catch (error) {
-      console.error('Error connecting Gmail:', error);
+      console.error('Error connecting Outlook:', error);
       toast({
         title: "Connection Error",
-        description: "Failed to connect to Gmail. Please try again.",
+        description: "Failed to connect to Outlook. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -409,10 +409,10 @@ const SettingsPage = () => {
         description: "Your Outlook account has been disconnected successfully.",
       });
     } catch (error) {
-      console.error('Error disconnecting Gmail:', error);
+      console.error('Error disconnecting Outlook:', error);
       toast({
         title: "Disconnection Error",
-        description: "Failed to disconnect Gmail. Please try again.",
+        description: "Failed to disconnect Outlook. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -737,7 +737,7 @@ const SettingsPage = () => {
               </CardContent>
             </Card>
 
-            {/* Gmail Integration Card */}
+            {/* Microsoft Outlook Integration Card */}
             <Card className="group border-border/20 bg-card/50 backdrop-blur-md shadow-xl hover:shadow-2xl hover:shadow-orange-500/10 transition-all duration-500 hover:scale-[1.02] hover:border-orange-500/30 animate-scale-in [animation-delay:250ms]">
               <CardHeader className="pb-4">
                 <div className="flex items-center space-x-4">
@@ -824,7 +824,7 @@ const SettingsPage = () => {
                           ) : (
                             <>
                               <Link className="h-4 w-4 mr-2" />
-                              Connect Gmail
+                              Connect Outlook
                             </>
                           )}
                         </>
