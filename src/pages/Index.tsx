@@ -249,7 +249,7 @@ const Index = () => {
         // Show success message without debug info
         toast({
           title: "Outlook sync completed",
-          description: `Successfully processed ${processedCount} emails`,
+          description: `Successfully fetched ${totalFetched} emails`,
         });
         
         // Only refresh database emails if not in privacy mode
