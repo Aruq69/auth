@@ -16,6 +16,7 @@ import FloatingChatButton from "@/components/FloatingChatButton";
 import FeedbackSystem from "@/components/FeedbackSystem";
 import UserOnboarding from "@/components/UserOnboarding";
 import { AlertEmailButton } from "@/components/AlertEmailButton";
+import { OutlookSessionTimeoutDialog } from "@/components/OutlookSessionTimeoutDialog";
 import { useUserRole } from "@/hooks/useUserRole";
 import { cleanEmailContent, sanitizeText } from "@/lib/textUtils";
 
@@ -45,6 +46,7 @@ const Index = () => {
   const [showEmailDialog, setShowEmailDialog] = useState(false);
   const [showSignOutDialog, setShowSignOutDialog] = useState(false); // Add sign out confirmation dialog
   const [showClearEmailsDialog, setShowClearEmailsDialog] = useState(false); // Add clear emails confirmation dialog
+  const [showOutlookTimeoutDialog, setShowOutlookTimeoutDialog] = useState(false); // Add outlook timeout dialog
   const [userProfile, setUserProfile] = useState<{username: string} | null>(null);
   const [userPreferences, setUserPreferences] = useState<{never_store_data: boolean} | null>(null);
   const [recentActivity, setRecentActivity] = useState<Array<{id: string, action: string, timestamp: Date, details?: string}>>([]);
@@ -219,12 +221,11 @@ const Index = () => {
       });
 
       console.log('🔄 Fetch response received:', { data, error, hasData: !!data, hasError: !!error });
-      console.log('🔄 Complete response structure:', JSON.stringify({ data, error }, null, 2));
 
       if (error) {
         console.error('Outlook fetch error:', error);
         toast({
-          title: "Function Error",
+          title: "Sync Failed",
           description: `Edge function error: ${error.message}`,
           variant: "destructive",
         });
@@ -233,11 +234,7 @@ const Index = () => {
 
       if (data.success) {
         console.log('📧 Outlook fetch response:', data);
-        console.log('📧 Privacy mode enabled:', userPreferences?.never_store_data);
-        console.log('📧 Emails in response:', data.emails?.length);
-        console.log('🐛 Debug info:', data.debug_info);
         
-        // Get current email count to see how many were actually new
         const processedCount = data.emails_processed || 0;
         const totalFetched = data.total_emails_fetched || 0;
         
@@ -249,7 +246,6 @@ const Index = () => {
           setSessionEmails(data.emails);
         }
         
-        // Show success message without debug info
         toast({
           title: "Outlook sync completed",
           description: `Successfully fetched ${totalFetched} emails`,
@@ -260,10 +256,17 @@ const Index = () => {
           fetchEmails();
         }
       } else {
-        throw new Error(data.error || 'Unknown error occurred');
+        // Check if it's a session timeout / reconnect required error
+        if (data.reconnect_required) {
+          setShowOutlookTimeoutDialog(true);
+          setOutlookConnected(false);
+        } else {
+          throw new Error(data.error || 'Unknown error occurred');
+        }
       }
       
     } catch (error) {
+      console.error('Outlook sync error:', error);
       toast({
         title: "Outlook sync failed",
         description: error.message || "Failed to fetch emails from Outlook. Please try again.",
@@ -1239,6 +1242,13 @@ const Index = () => {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Outlook Session Timeout Dialog */}
+        <OutlookSessionTimeoutDialog
+          open={showOutlookTimeoutDialog}
+          onOpenChange={setShowOutlookTimeoutDialog}
+          onReconnect={connectOutlook}
+        />
       </div>
     </div>
   );
