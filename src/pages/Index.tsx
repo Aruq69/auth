@@ -826,17 +826,6 @@ const Index = () => {
                           </div>
                         </div>
                       )}
-                      
-                      <div className="text-center">
-                        <Button 
-                          onClick={() => navigate('/settings')} 
-                          variant="outline" 
-                          size="sm"
-                        >
-                          <Settings className="h-4 w-4 mr-2" />
-                          Go to Settings
-                        </Button>
-                      </div>
                     </div>
                   ) : filteredEmails.length === 0 ? (
                     <div className="flex items-center justify-center py-12">
