@@ -97,22 +97,25 @@ serve(async (req) => {
     
     console.log(`Microsoft Graph returned ${emails.length} emails`);
     
+    // Delete all previous emails for this user before adding new ones
+    console.log('Deleting previous emails for fresh sync...');
+    const { error: deleteError } = await supabase
+      .from('emails')
+      .delete()
+      .eq('user_id', user.id);
+    
+    if (deleteError) {
+      console.warn('Warning: Could not delete previous emails:', deleteError);
+      // Continue anyway - this is not a critical error
+    } else {
+      console.log('Previous emails deleted successfully');
+    }
+    
     // Process emails
     const processedEmails = [];
     
     for (const email of emails) {
       try {
-        // Check if email already exists
-        const { data: existingEmail } = await supabase
-          .from('emails')
-          .select('id')
-          .eq('outlook_id', email.id)
-          .eq('user_id', user.id)
-          .maybeSingle();
-
-        if (existingEmail) {
-          continue; // Skip existing emails
-        }
 
         // Extract text content
         let textContent = email.bodyPreview || '';
