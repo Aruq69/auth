@@ -105,7 +105,7 @@ serve(async (req) => {
       const errorText = await graphResponse.text();
       console.error('Graph API error:', errorText);
       return new Response(
-        JSON.stringify({ error: `Failed to fetch emails: ${graphResponse.status}` }),
+        JSON.stringify({ error: `Failed to fetch emails: ${graphResponse.status} - ${errorText}` }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -113,25 +113,34 @@ serve(async (req) => {
     const graphData = await graphResponse.json();
     const emails: OutlookEmail[] = graphData.value || [];
     
-    console.log(`Fetched ${emails.length} emails from Outlook`);
+    console.log(`Fetched ${emails.length} emails from Outlook for user: ${user.id}`);
 
     // Process and store emails
     const processedEmails = [];
     
     for (const email of emails) {
       try {
+        console.log(`Processing email: ${email.id} - Subject: ${email.subject}`);
+        
         // Check if email already exists
-        const { data: existingEmail } = await supabase
+        const { data: existingEmail, error: checkError } = await supabase
           .from('emails')
           .select('id')
           .eq('outlook_id', email.id)
           .eq('user_id', user.id)
-          .single();
+          .maybeSingle();
 
-        if (existingEmail) {
-          console.log(`Email ${email.id} already exists, skipping...`);
+        if (checkError) {
+          console.error('Error checking existing email:', checkError);
           continue;
         }
+
+        if (existingEmail) {
+          console.log(`Email ${email.id} already exists for user ${user.id}, skipping...`);
+          continue;
+        }
+
+        console.log(`Processing new email: ${email.id}`);
 
         // Extract text content from HTML
         let textContent = email.bodyPreview || '';
