@@ -31,12 +31,12 @@ const Auth = () => {
       return;
     }
     
-    // Redirect authenticated users with a small delay to prevent race conditions
+    // Redirect authenticated users with a delay to ensure auth state is stable
     if (user) {
       console.log('Auth: user authenticated, redirecting to home');
       const timer = setTimeout(() => {
         navigate("/");
-      }, 100);
+      }, 500); // Longer delay for OAuth flows
       return () => clearTimeout(timer);
     }
   }, [user, authLoading, navigate]);
@@ -85,8 +85,8 @@ const Auth = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'azure',
         options: {
-          redirectTo: `${window.location.origin}/outlook-callback`,
-          scopes: 'https://graph.microsoft.com/Mail.Read'
+          redirectTo: `${window.location.origin}/`,
+          scopes: 'openid profile email'
         }
       });
       

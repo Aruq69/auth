@@ -55,21 +55,25 @@ const Index = () => {
   useEffect(() => {
     console.log('Index: auth state changed', { user: !!user, authLoading, currentPath: window.location.pathname });
     
-    // Wait for auth to fully load before making redirect decisions
+    // Only check auth after loading is complete and give extra time for OAuth callbacks
     if (authLoading) {
       console.log('Index: auth still loading, waiting...');
       return;
     }
     
-    // Only redirect to auth if we're certain there's no user
+    // If no user after auth is loaded, redirect to auth (but with delay to handle OAuth)
     if (!user) {
       console.log('Index: no user found, redirecting to auth');
       const timer = setTimeout(() => {
-        navigate("/auth");
-      }, 100); // Small delay to prevent race conditions
+        // Double-check user hasn't been set in the meantime
+        if (!user && !authLoading) {
+          navigate("/auth");
+        }
+      }, 1000); // Longer delay for OAuth flows
       return () => clearTimeout(timer);
     }
     
+    // User is authenticated, load data
     if (user) {
       console.log('Index: user authenticated, loading data');
       checkEmailConnection();
