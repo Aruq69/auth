@@ -229,13 +229,28 @@ serve(async (req) => {
         console.log('Delete response status:', deleteResponse.status);
         console.log('Delete response headers:', Object.fromEntries(deleteResponse.headers.entries()));
 
-        if (deleteResponse.ok || deleteResponse.status === 404) {
+        if (deleteResponse.ok) {
           emailDeleted = true;
           console.log('Email deleted successfully from mailbox');
+        } else if (deleteResponse.status === 404) {
+          // Email not found - might have already been deleted by the mail rule or moved
+          emailDeleted = true;
+          console.log('Email not found (404) - assuming already deleted by mail rule');
         } else {
           const deleteErrorText = await deleteResponse.text();
           console.error('Failed to delete email from mailbox. Status:', deleteResponse.status);
           console.error('Error response:', deleteErrorText);
+          
+          // Check if it's a specific Graph API error
+          try {
+            const errorJson = JSON.parse(deleteErrorText);
+            if (errorJson?.error?.code === 'ErrorItemNotFound') {
+              emailDeleted = true;
+              console.log('Email not found via Graph API error - assuming already deleted');
+            }
+          } catch (parseError) {
+            // Ignore parse errors
+          }
         }
       } catch (deleteError) {
         console.error('Exception during email deletion:', deleteError);
