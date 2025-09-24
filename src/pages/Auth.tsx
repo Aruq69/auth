@@ -55,12 +55,12 @@ const Auth = () => {
       setSubmitLoading(true);
       console.log('Starting Outlook OAuth flow...');
       
-      // Use Supabase's built-in Azure OAuth
+      // Use Supabase's built-in Azure OAuth for SIGN-IN only
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'azure',
         options: {
           redirectTo: `${window.location.origin}/`,
-          scopes: 'email'
+          scopes: 'openid email profile' // Only basic profile info, no mail access
         }
       });
       
