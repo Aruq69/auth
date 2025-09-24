@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { Mail, Search, Shield, AlertTriangle, Clock, CheckCircle, Ban, FileText } from 'lucide-react';
+import { Mail, Search, Shield, AlertTriangle, Clock, CheckCircle, Ban, FileText, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { AlertEmailButton } from '@/components/AlertEmailButton';
 
@@ -15,6 +15,7 @@ export default function AdminEmails() {
   const [searchTerm, setSearchTerm] = useState('');
   const [threatFilter, setThreatFilter] = useState<string>('all');
   const [userFilter, setUserFilter] = useState<string>('all');
+  const [blockingEmails, setBlockingEmails] = useState<Set<string>>(new Set());
   const { toast } = useToast();
 
   const { data: emails, isLoading, refetch } = useQuery({
@@ -68,6 +69,9 @@ export default function AdminEmails() {
   });
 
   const handleBlockEmail = async (emailId: string, blockReason: string) => {
+    // Add email to blocking set
+    setBlockingEmails(prev => new Set(prev).add(emailId));
+    
     try {
       // Get the email details first
       const { data: emailData, error: emailError } = await supabase
@@ -154,6 +158,13 @@ export default function AdminEmails() {
         title: 'Error',
         description: 'Failed to block email',
         variant: 'destructive',
+      });
+    } finally {
+      // Remove email from blocking set
+      setBlockingEmails(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(emailId);
+        return newSet;
       });
     }
   };
@@ -294,9 +305,20 @@ export default function AdminEmails() {
                             size="sm"
                             variant="outline"
                             onClick={() => handleBlockEmail(email.id, 'Admin blocked - suspicious content')}
+                            disabled={blockingEmails.has(email.id)}
+                            className="animate-scale-in hover-scale"
                           >
-                            <Ban className="h-3 w-3 mr-1" />
-                            Block
+                            {blockingEmails.has(email.id) ? (
+                              <>
+                                <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                                Blocking...
+                              </>
+                            ) : (
+                              <>
+                                <Ban className="h-3 w-3 mr-1" />
+                                Block
+                              </>
+                            )}
                           </Button>
                         </div>
                       </TableCell>
