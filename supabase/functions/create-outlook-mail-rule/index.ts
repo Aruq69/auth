@@ -205,78 +205,63 @@ serve(async (req) => {
     const ruleData = await graphResponse.json();
     console.log('Mail rule created successfully:', ruleData.id);
 
-    // If emailId is provided, try to delete the specific email from mailbox
+    // If emailId is provided, try to move/delete the specific email from mailbox
     let emailDeleted = false;
     if (emailId) {
       try {
-        console.log('Attempting to delete email from mailbox:');
+        console.log('Attempting to delete/move email from mailbox:');
         console.log('Email ID:', emailId);
         
-        // First try direct deletion by message ID
         const encodedEmailId = encodeURIComponent(emailId);
-        const deleteUrl = `https://graph.microsoft.com/v1.0/me/messages/${encodedEmailId}`;
-        console.log('Trying direct deletion with URL:', deleteUrl);
         
-        const deleteResponse = await fetch(deleteUrl, {
-          method: 'DELETE',
+        // Try moving to deleted items folder first (often more permissive than deletion)
+        console.log('Trying to move email to Deleted Items folder');
+        const moveResponse = await fetch(`https://graph.microsoft.com/v1.0/me/messages/${encodedEmailId}/move`, {
+          method: 'POST',
           headers: {
             'Authorization': `Bearer ${tokenData.access_token}`,
+            'Content-Type': 'application/json',
           },
+          body: JSON.stringify({
+            destinationId: 'deleteditems'
+          }),
         });
 
-        console.log('Delete response status:', deleteResponse.status);
+        console.log('Move response status:', moveResponse.status);
 
-        if (deleteResponse.ok) {
+        if (moveResponse.ok) {
           emailDeleted = true;
-          console.log('Email deleted successfully via direct deletion');
-        } else if (deleteResponse.status === 404) {
+          console.log('Email moved to Deleted Items successfully');
+        } else if (moveResponse.status === 404) {
           emailDeleted = true;
-          console.log('Email not found (404) - assuming already deleted');
+          console.log('Email not found (404) - assuming already deleted/moved');
         } else {
-          const deleteErrorText = await deleteResponse.text();
-          console.error('Direct deletion failed. Status:', deleteResponse.status);
-          console.error('Error response:', deleteErrorText);
+          const moveErrorText = await moveResponse.text();
+          console.error('Move to Deleted Items failed. Status:', moveResponse.status);
+          console.error('Move error response:', moveErrorText);
           
-          // Try alternative: search for the message and delete it
-          console.log('Trying alternative: search and delete approach');
-          try {
-            // Search for the message by its ID
-            const searchUrl = `https://graph.microsoft.com/v1.0/me/messages?$filter=id eq '${emailId}'`;
-            const searchResponse = await fetch(searchUrl, {
-              headers: {
-                'Authorization': `Bearer ${tokenData.access_token}`,
-              },
-            });
-            
-            if (searchResponse.ok) {
-              const searchData = await searchResponse.json();
-              if (searchData.value && searchData.value.length > 0) {
-                // Try to delete using the found message
-                const foundMessage = searchData.value[0];
-                const deleteFoundResponse = await fetch(`https://graph.microsoft.com/v1.0/me/messages/${foundMessage.id}`, {
-                  method: 'DELETE',
-                  headers: {
-                    'Authorization': `Bearer ${tokenData.access_token}`,
-                  },
-                });
-                
-                if (deleteFoundResponse.ok || deleteFoundResponse.status === 404) {
-                  emailDeleted = true;
-                  console.log('Email deleted successfully via search approach');
-                } else {
-                  console.error('Search-based deletion also failed:', deleteFoundResponse.status);
-                }
-              } else {
-                emailDeleted = true;
-                console.log('Email not found in search - assuming already deleted');
-              }
-            }
-          } catch (searchError) {
-            console.error('Search approach failed:', searchError);
+          // If moving failed, try direct deletion as fallback
+          console.log('Trying direct deletion as fallback');
+          const deleteResponse = await fetch(`https://graph.microsoft.com/v1.0/me/messages/${encodedEmailId}`, {
+            method: 'DELETE',
+            headers: {
+              'Authorization': `Bearer ${tokenData.access_token}`,
+            },
+          });
+
+          console.log('Delete response status:', deleteResponse.status);
+
+          if (deleteResponse.ok || deleteResponse.status === 404) {
+            emailDeleted = true;
+            console.log('Email deleted successfully via direct deletion');
+          } else {
+            const deleteErrorText = await deleteResponse.text();
+            console.error('Direct deletion also failed. Status:', deleteResponse.status);
+            console.error('Delete error response:', deleteErrorText);
           }
         }
-      } catch (deleteError) {
-        console.error('Exception during email deletion:', deleteError);
+      } catch (error) {
+        console.error('Exception during email deletion/move:', error);
       }
     }
 
