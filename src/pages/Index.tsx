@@ -521,18 +521,6 @@ const Index = () => {
               </Button>
             )}
             {outlookConnected && (
-              <Button 
-                onClick={fetchEmails} 
-                disabled={loading} 
-                variant="outline" 
-                className="w-full sm:w-auto border-primary/30 hover:border-primary/50 hover-button text-xs sm:text-sm"
-                size="sm"
-              >
-                <Mail className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                Refresh
-              </Button>
-            )}
-            {outlookConnected && (
               <AlertDialog open={showClearEmailsDialog} onOpenChange={setShowClearEmailsDialog}>
                 <AlertDialogTrigger asChild>
                   <Button 
@@ -584,15 +572,6 @@ const Index = () => {
                 SOC Dashboard
               </Button>
             )}
-            <Button 
-              onClick={() => navigate('/settings')} 
-              variant="outline" 
-              className="w-full sm:w-auto border-muted-foreground/30 hover:border-muted hover:bg-muted hover:text-muted-foreground transition-all duration-300 hover-button text-xs sm:text-sm"
-              size="sm"
-            >
-              <Settings className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-              Settings
-            </Button>
             <Button 
               onClick={() => setShowSignOutDialog(true)} 
               variant="outline" 
