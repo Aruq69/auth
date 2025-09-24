@@ -28,13 +28,10 @@ const Auth = () => {
       return;
     }
     
-    // Redirect authenticated users with a delay to ensure auth state is stable
+    // Redirect authenticated users immediately (no delay to prevent loop)
     if (user) {
       console.log('Auth: user authenticated, redirecting to home');
-      const timer = setTimeout(() => {
-        navigate("/");
-      }, 500); // Longer delay for OAuth flows
-      return () => clearTimeout(timer);
+      navigate("/", { replace: true });
     }
   }, [user, authLoading, navigate]);
 
