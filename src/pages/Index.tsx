@@ -916,8 +916,9 @@ const Index = () => {
                                     </div>
                                   </div>
                                   
-                                  {/* Keywords tags - mobile responsive */}
-                                  {email.keywords && email.keywords.length > 0 && (
+                                   {/* Keywords tags - mobile responsive - only for medium/high threats */}
+                                   {email.keywords && email.keywords.length > 0 && 
+                                    (email.threat_level === 'medium' || email.threat_level === 'high') && (
                                     <div className="flex flex-wrap gap-1 sm:gap-2">
                                       {email.keywords.slice(0, 2).map((keyword, keywordIndex) => (
                                         <span
@@ -1097,8 +1098,9 @@ const Index = () => {
                 {/* AI Security Advice Section - Only for high/medium threats */}
                 <EmailSecurityAdvice email={selectedEmail} />
 
-                {/* Keywords */}
-                {selectedEmail.keywords && selectedEmail.keywords.length > 0 && (
+                {/* Keywords - only show for medium/high threats */}
+                {selectedEmail.keywords && selectedEmail.keywords.length > 0 && 
+                 (selectedEmail.threat_level === 'medium' || selectedEmail.threat_level === 'high') && (
                   <Card className="border-border/20 bg-card/50 backdrop-blur-sm hover-card">
                     <CardHeader>
                       <CardTitle className="text-sm text-primary">🔍 DETECTED KEYWORDS</CardTitle>
