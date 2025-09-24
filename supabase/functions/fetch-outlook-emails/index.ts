@@ -16,11 +16,18 @@ serve(async (req) => {
   }
 
   try {
+    console.log('=== FETCH OUTLOOK EMAILS FUNCTION START ===');
+    console.log('Request method:', req.method);
+    console.log('Request URL:', req.url);
+    
     const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
     
     // Get the authorization header to verify the user
     const authHeader = req.headers.get('Authorization');
+    console.log('Auth header present:', !!authHeader);
+    
     if (!authHeader) {
+      console.error('No authorization header provided');
       return new Response(
         JSON.stringify({ error: 'Authorization header required', success: false }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -29,14 +36,27 @@ serve(async (req) => {
 
     // Verify the JWT token and get user info
     const jwt = authHeader.replace('Bearer ', '');
+    console.log('JWT token length:', jwt.length);
+    
     const { data: { user }, error: authError } = await supabase.auth.getUser(jwt);
     
-    if (authError || !user) {
+    if (authError) {
+      console.error('Auth error:', authError);
       return new Response(
         JSON.stringify({ error: 'Invalid or expired token', success: false }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+    
+    if (!user) {
+      console.error('No user found from token');
+      return new Response(
+        JSON.stringify({ error: 'Invalid or expired token', success: false }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    console.log('User authenticated:', user.id);
 
     // Get the user's Outlook tokens
     const { data: tokenData, error: tokenError } = await supabase
@@ -188,6 +208,10 @@ serve(async (req) => {
     );
 
   } catch (error) {
+    console.error('=== FETCH OUTLOOK EMAILS ERROR ===');
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
+    
     return new Response(
       JSON.stringify({ 
         error: error.message,
