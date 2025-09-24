@@ -10,40 +10,17 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-interface OutlookEmail {
-  id: string;
-  subject: string;
-  from: {
-    emailAddress: {
-      address: string;
-      name: string;
-    };
-  };
-  receivedDateTime: string;
-  bodyPreview: string;
-  body: {
-    content: string;
-    contentType: string;
-  };
-}
-
 serve(async (req) => {
-  console.log('=== FETCH OUTLOOK EMAILS FUNCTION START ===');
-  
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    console.log('Creating Supabase client...');
     const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
     
     // Get the authorization header to verify the user
     const authHeader = req.headers.get('Authorization');
-    console.log('Auth header present:', !!authHeader);
-    
     if (!authHeader) {
-      console.log('No authorization header provided');
       return new Response(
         JSON.stringify({ error: 'Authorization header required', success: false }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -52,21 +29,16 @@ serve(async (req) => {
 
     // Verify the JWT token and get user info
     const jwt = authHeader.replace('Bearer ', '');
-    console.log('Verifying JWT token...');
     const { data: { user }, error: authError } = await supabase.auth.getUser(jwt);
     
     if (authError || !user) {
-      console.error('Auth error:', authError);
       return new Response(
         JSON.stringify({ error: 'Invalid or expired token', success: false }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log('Authenticated user:', user.id);
-
     // Get the user's Outlook tokens
-    console.log('Fetching Outlook tokens for user:', user.id);
     const { data: tokenData, error: tokenError } = await supabase
       .from('outlook_tokens')
       .select('*')
@@ -74,95 +46,70 @@ serve(async (req) => {
       .single();
 
     if (tokenError || !tokenData) {
-      console.error('Token fetch error:', tokenError);
       return new Response(
         JSON.stringify({ 
           error: 'No Outlook token found. Please connect your Outlook account first.',
-          success: false,
-          debug_info: { user_id: user.id, token_error: tokenError }
+          success: false 
         }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log('Found Outlook token for user, expires at:', tokenData.expires_at);
-
-    // Check if token is expired and refresh if needed
+    // Check if token is expired
     const now = new Date();
     const expiresAt = new Date(tokenData.expires_at);
     
-    let accessToken = tokenData.access_token;
-    
     if (now >= expiresAt) {
-      console.log('Token expired, attempting refresh...');
-      // Token refresh logic would go here
-      // For now, return an error asking user to re-authenticate
       return new Response(
-        JSON.stringify({ error: 'Access token expired. Please reconnect your Outlook account.' }),
+        JSON.stringify({ 
+          error: 'Access token expired. Please reconnect your Outlook account.',
+          success: false 
+        }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log('Fetching emails from Microsoft Graph API...');
-    
     // Fetch emails from Microsoft Graph API
-    const graphResponse = await fetch('https://graph.microsoft.com/v1.0/me/messages?$top=50&$orderby=receivedDateTime desc', {
+    const graphResponse = await fetch('https://graph.microsoft.com/v1.0/me/messages?$top=10&$orderby=receivedDateTime desc', {
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
+        'Authorization': `Bearer ${tokenData.access_token}`,
         'Content-Type': 'application/json',
       },
     });
 
     if (!graphResponse.ok) {
-      const errorText = await graphResponse.text();
-      console.error('Graph API error:', errorText);
       return new Response(
-        JSON.stringify({ error: `Failed to fetch emails: ${graphResponse.status} - ${errorText}` }),
+        JSON.stringify({ 
+          error: `Failed to fetch emails: ${graphResponse.status}`,
+          success: false 
+        }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
     const graphData = await graphResponse.json();
-    const emails: OutlookEmail[] = graphData.value || [];
+    const emails = graphData.value || [];
     
-    console.log(`Fetched ${emails.length} emails from Outlook for user: ${user.id}`);
-    console.log('Sample email data:', emails.length > 0 ? {
-      id: emails[0].id,
-      subject: emails[0].subject,
-      hasFrom: !!emails[0].from
-    } : 'No emails returned');
-
-    // Process and store emails
+    // Process emails
     const processedEmails = [];
     
     for (const email of emails) {
       try {
-        console.log(`Processing email: ${email.id} - Subject: ${email.subject}`);
-        
         // Check if email already exists
-        const { data: existingEmail, error: checkError } = await supabase
+        const { data: existingEmail } = await supabase
           .from('emails')
           .select('id')
           .eq('outlook_id', email.id)
           .eq('user_id', user.id)
           .maybeSingle();
 
-        if (checkError) {
-          console.error('Error checking existing email:', checkError);
-          continue;
-        }
-
         if (existingEmail) {
-          console.log(`Email ${email.id} already exists for user ${user.id}, skipping...`);
-          continue;
+          continue; // Skip existing emails
         }
 
-        console.log(`Processing new email: ${email.id}`);
-
-        // Extract text content from HTML
+        // Extract text content
         let textContent = email.bodyPreview || '';
         if (email.body && email.body.content) {
-          // Simple HTML to text conversion
           textContent = email.body.content
             .replace(/<[^>]*>/g, ' ')
             .replace(/\s+/g, ' ')
@@ -188,31 +135,8 @@ serve(async (req) => {
           .select()
           .single();
 
-        if (insertError) {
-          console.error('Error inserting email:', insertError);
-          continue;
-        }
-
-        processedEmails.push(insertedEmail);
-        
-        // Classify the email using the email-classifier function
-        try {
-          const { data: classificationData, error: classificationError } = await supabase.functions.invoke('email-classifier', {
-            body: {
-              email_id: insertedEmail.id,
-              subject: emailData.subject,
-              sender: emailData.sender,
-              content: emailData.content
-            }
-          });
-
-          if (classificationError) {
-            console.error('Classification error:', classificationError);
-          } else {
-            console.log('Email classified successfully:', classificationData);
-          }
-        } catch (classificationError) {
-          console.error('Error calling classification function:', classificationError);
+        if (!insertError && insertedEmail) {
+          processedEmails.push(insertedEmail);
         }
 
       } catch (error) {
@@ -221,19 +145,16 @@ serve(async (req) => {
       }
     }
 
-    console.log(`Successfully processed ${processedEmails.length} new emails`);
-
     return new Response(
       JSON.stringify({
         success: true,
-        message: `Successfully fetched and processed ${processedEmails.length} emails`,
+        message: `Successfully processed ${processedEmails.length} emails`,
         emails_processed: processedEmails.length,
         total_emails_fetched: emails.length,
         debug_info: {
           user_id: user.id,
           emails_from_api: emails.length,
-          processed_count: processedEmails.length,
-          sample_email_subjects: emails.slice(0, 3).map(e => e.subject)
+          processed_count: processedEmails.length
         }
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -244,7 +165,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         error: error.message,
-        details: 'Check function logs for more information'
+        success: false
       }),
       { 
         status: 500, 
