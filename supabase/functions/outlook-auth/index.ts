@@ -48,7 +48,7 @@ serve(async (req) => {
     if (action === 'get_auth_url') {
       // Generate OAuth URL for Microsoft Graph
       const redirectUri = 'https://mailguard5123.vercel.app/outlook-callback';
-      const scopes = 'https://graph.microsoft.com/Mail.ReadWrite https://graph.microsoft.com/User.Read offline_access';
+      const scopes = 'https://graph.microsoft.com/Mail.ReadWrite https://graph.microsoft.com/Mail.Read https://graph.microsoft.com/User.Read offline_access';
       
       const authUrl = `https://login.microsoftonline.com/common/oauth2/v2.0/authorize?` +
         `client_id=${microsoftClientId}&` +
