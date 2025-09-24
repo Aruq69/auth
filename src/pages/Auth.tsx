@@ -53,6 +53,8 @@ const Auth = () => {
   const handleOutlookSignIn = async () => {
     try {
       setSubmitLoading(true);
+      
+      // Use Supabase's built-in Azure OAuth instead of our custom edge function
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'azure',
         options: {
@@ -62,9 +64,11 @@ const Auth = () => {
       });
       
       if (error) {
-        setError(error.message);
+        console.error('Azure OAuth error:', error);
+        setError(error.message || "Failed to connect to Outlook. Please try again.");
       }
     } catch (err) {
+      console.error('Outlook connection error:', err);
       setError("Failed to sign in with Outlook. Please try again.");
     } finally {
       setSubmitLoading(false);
