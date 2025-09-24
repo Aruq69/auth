@@ -216,6 +216,7 @@ const Index = () => {
       });
 
       console.log('🔄 Fetch response received:', { data, error, hasData: !!data, hasError: !!error });
+      console.log('🔄 Complete response structure:', JSON.stringify({ data, error }, null, 2));
 
       if (error) {
         console.error('Outlook fetch error:', error);
