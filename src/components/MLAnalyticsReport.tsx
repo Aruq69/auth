@@ -73,8 +73,7 @@ export const MLAnalyticsReport = () => {
       // Calculate real performance metrics using proper ML validation methodology
       // This mimics your Python approach: train_test_split + accuracy_score
       const calculateMLAccuracy = (emails: EmailData[]) => {
-        if (emails.length === 0) return 85.2; // Default accuracy when no data
-        if (emails.length < 5) return 82.5; // Minimum data fallback
+        if (emails.length === 0) return 0; // No data = no accuracy
         
         // Sort emails by date to simulate temporal validation
         const sortedEmails = [...emails].sort((a, b) => 
@@ -85,7 +84,10 @@ export const MLAnalyticsReport = () => {
         const splitIndex = Math.max(1, Math.floor(sortedEmails.length * 0.8));
         const testSet = sortedEmails.slice(splitIndex);
         
-        if (testSet.length === 0) return 85.2; // Fallback accuracy
+        if (testSet.length === 0) {
+          // If no test set, use all data for accuracy calculation
+          testSet.push(...sortedEmails);
+        }
         
         // Calculate accuracy based on classification consistency and confidence
         let correctPredictions = 0;
@@ -122,7 +124,7 @@ export const MLAnalyticsReport = () => {
         });
         
         const accuracy = (correctPredictions / testSet.length) * 100;
-        return Math.max(75, Math.min(98, accuracy)); // Realistic bounds
+        return accuracy; // Return actual calculated accuracy without bounds
       };
       
       const dailyStats = new Map<string, {
