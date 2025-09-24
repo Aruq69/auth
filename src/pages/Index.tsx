@@ -217,7 +217,10 @@ const Index = () => {
         console.log('📧 Emails in response:', data.emails?.length);
         
         // Get current email count to see how many were actually new
-        addRecentActivity(`Processed ${data.total} emails`, 
+        const processedCount = data.emails_processed || 0;
+        const totalFetched = data.total_emails_fetched || 0;
+        
+        addRecentActivity(`Processed ${processedCount} emails`, 
           userPreferences?.never_store_data ? "Analyzed without storing (Privacy Mode)" : "Analyzed and stored");
         
         // If privacy mode is enabled, store emails in session state
@@ -228,7 +231,7 @@ const Index = () => {
         
         toast({
           title: "Outlook sync completed",
-          description: `Processed ${data.total} emails successfully`,
+          description: `Processed ${processedCount} emails successfully`,
         });
         
         // Refresh the emails list
