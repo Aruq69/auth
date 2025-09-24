@@ -200,23 +200,34 @@ serve(async (req) => {
     let emailDeleted = false;
     if (emailId) {
       try {
-        console.log('Deleting email from mailbox:', emailId);
-        const deleteResponse = await fetch(`https://graph.microsoft.com/v1.0/me/messages/${emailId}`, {
+        console.log('Attempting to delete email from mailbox:');
+        console.log('Email ID:', emailId);
+        console.log('Email ID type:', typeof emailId);
+        console.log('Email ID length:', emailId.length);
+        
+        const deleteUrl = `https://graph.microsoft.com/v1.0/me/messages/${emailId}`;
+        console.log('Delete URL:', deleteUrl);
+        
+        const deleteResponse = await fetch(deleteUrl, {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${tokenData.access_token}`,
           },
         });
 
+        console.log('Delete response status:', deleteResponse.status);
+        console.log('Delete response headers:', Object.fromEntries(deleteResponse.headers.entries()));
+
         if (deleteResponse.ok || deleteResponse.status === 404) {
           emailDeleted = true;
           console.log('Email deleted successfully from mailbox');
         } else {
           const deleteErrorText = await deleteResponse.text();
-          console.warn('Failed to delete email from mailbox:', deleteErrorText);
+          console.error('Failed to delete email from mailbox. Status:', deleteResponse.status);
+          console.error('Error response:', deleteErrorText);
         }
       } catch (deleteError) {
-        console.warn('Error deleting email from mailbox:', deleteError);
+        console.error('Exception during email deletion:', deleteError);
       }
     }
 
