@@ -146,12 +146,16 @@ const Index = () => {
   const fetchEmails = async () => {
     if (!user) return;
     
+    console.log('🔍 Fetching emails for user:', user.id);
+    
     try {
       const { data, error } = await supabase
         .from('emails')
         .select('*')
         .eq('user_id', user.id)
         .order('received_date', { ascending: false });
+      
+      console.log('📧 Emails query result:', { data: data?.length, error });
       
       if (error) {
         console.error('Error fetching emails:', error);
