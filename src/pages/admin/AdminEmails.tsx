@@ -114,16 +114,13 @@ export default function AdminEmails() {
             variant: 'default',
           });
         } else {
-          const wasEmailCategorized = ruleResult?.emailCategorized || ruleResult?.emailDeleted;
-          const hadOutlookId = ruleResult?.hadOutlookId;
+          const alertEmailSent = ruleResult?.alertEmailSent;
           
           let description;
-          if (wasEmailCategorized) {
-            description = 'Email blocked in app and categorized as "Blocked" in Outlook. Rule created for future emails.';
-          } else if (hadOutlookId === false) {
-            description = 'Email blocked in app and Outlook rule created for future emails. This email was not from Outlook so could not be categorized.';
+          if (alertEmailSent) {
+            description = 'Email blocked in app, Outlook rule created for future emails, and security alert sent to user.';
           } else {
-            description = 'Email blocked in app and Outlook rule created for future emails. Could not categorize the existing email.';
+            description = 'Email blocked in app and Outlook rule created for future emails. Could not send alert email.';
           }
           
           toast({

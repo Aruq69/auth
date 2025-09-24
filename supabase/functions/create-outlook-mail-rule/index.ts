@@ -1,9 +1,11 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.4';
+import { Resend } from "npm:resend@2.0.0";
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL');
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+const resend = new Resend(Deno.env.get('RESEND_API_KEY'));
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -205,83 +207,102 @@ serve(async (req) => {
     const ruleData = await graphResponse.json();
     console.log('Mail rule created successfully:', ruleData.id);
 
-    // If emailId is provided, try to categorize the specific email as "Blocked"
-    let emailCategorized = false;
-    if (emailId && emailId.trim() !== '') {
-      console.log('=== EMAIL CATEGORIZATION ATTEMPT ===');
-      console.log('Email ID received:', emailId);
-      
-      try {
-        const encodedEmailId = encodeURIComponent(emailId);
+    // Send alert email to user about the suspicious email
+    let emailSent = false;
+    try {
+      // Get user's email from the profiles table
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('user_id', user.id)
+        .single();
+
+      if (profileError) {
+        console.error('Failed to get user profile:', profileError);
+      } else {
+        const userEmail = profileData.username; // username is actually email
         
-        // First, ensure the "Blocked" category exists
-        console.log('Creating/ensuring "Blocked" category exists');
-        try {
-          const categoryResponse = await fetch('https://graph.microsoft.com/v1.0/me/outlook/masterCategories', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${tokenData.access_token}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              displayName: 'Blocked',
-              color: 'preset2'
-            }),
-          });
-          
-          if (categoryResponse.ok) {
-            console.log('Blocked category created successfully');
-          } else if (categoryResponse.status === 409) {
-            console.log('Blocked category already exists');
-          } else {
-            console.log('Category creation response status:', categoryResponse.status);
-          }
-        } catch (categoryError) {
-          console.log('Category creation error (continuing anyway):', categoryError.message);
-        }
+        console.log('Sending alert email to:', userEmail);
         
-        // Now try to add the "Blocked" category to the email
-        console.log('Adding "Blocked" category to email');
-        const updateResponse = await fetch(`https://graph.microsoft.com/v1.0/me/messages/${encodedEmailId}`, {
-          method: 'PATCH',
-          headers: {
-            'Authorization': `Bearer ${tokenData.access_token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            categories: ['Blocked']
-          }),
+        const emailResponse = await resend.emails.send({
+          from: "MailGuard Security <security@yourdomain.com>",
+          to: [userEmail],
+          subject: "🛡️ Security Alert: Suspicious Email Blocked",
+          html: `
+            <div style="max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+              <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; color: white;">
+                <h1 style="margin: 0; font-size: 28px;">🛡️ MailGuard Security Alert</h1>
+                <p style="margin: 10px 0 0 0; opacity: 0.9;">We've protected you from a suspicious email</p>
+              </div>
+              
+              <div style="padding: 30px; background: #f9f9f9;">
+                <div style="background: white; padding: 25px; border-radius: 8px; border-left: 4px solid #ff6b6b;">
+                  <h2 style="color: #d63031; margin-top: 0;">⚠️ Suspicious Email Blocked</h2>
+                  <p><strong>From:</strong> ${senderEmail}</p>
+                  <p><strong>Action Taken:</strong> Future emails from this sender will be automatically blocked</p>
+                  <p><strong>Reason:</strong> ${blockType === 'domain' ? 'Entire domain flagged as suspicious' : 'Sender flagged as suspicious'}</p>
+                </div>
+                
+                <div style="background: white; padding: 25px; border-radius: 8px; margin-top: 20px; border-left: 4px solid #00b894;">
+                  <h3 style="color: #00b894; margin-top: 0;">🛡️ Security Recommendations</h3>
+                  <ul style="padding-left: 20px;">
+                    <li><strong>Don't click suspicious links:</strong> Verify sender identity before clicking any links</li>
+                    <li><strong>Check sender carefully:</strong> Look for misspelled domains or suspicious email addresses</li>
+                    <li><strong>Verify requests independently:</strong> If someone asks for sensitive info, verify through other channels</li>
+                    <li><strong>Keep software updated:</strong> Update your email client and browser regularly</li>
+                    <li><strong>Use strong passwords:</strong> Enable 2FA on important accounts</li>
+                  </ul>
+                </div>
+                
+                <div style="background: white; padding: 25px; border-radius: 8px; margin-top: 20px; border-left: 4px solid #fdcb6e;">
+                  <h3 style="color: #e17055; margin-top: 0;">🚨 Common Email Threats</h3>
+                  <div style="display: grid; gap: 15px;">
+                    <div>
+                      <strong>Phishing:</strong> Fake emails trying to steal your login credentials or personal information
+                    </div>
+                    <div>
+                      <strong>Malware:</strong> Attachments or links that install malicious software on your device
+                    </div>
+                    <div>
+                      <strong>Scams:</strong> Fraudulent schemes asking for money, gift cards, or financial information
+                    </div>
+                    <div>
+                      <strong>Spoofing:</strong> Emails that appear to be from trusted sources but are actually fake
+                    </div>
+                  </div>
+                </div>
+                
+                <div style="text-align: center; margin-top: 30px; padding: 20px; background: white; border-radius: 8px;">
+                  <p style="margin: 0; color: #636e72;">
+                    <strong>Stay Safe!</strong><br>
+                    MailGuard is continuously monitoring your emails to keep you protected.
+                  </p>
+                </div>
+              </div>
+              
+              <div style="background: #2d3436; color: white; padding: 20px; text-align: center; font-size: 14px;">
+                <p style="margin: 0;">This is an automated security notification from MailGuard</p>
+              </div>
+            </div>
+          `,
         });
 
-        console.log('Email categorization response status:', updateResponse.status);
-
-        if (updateResponse.ok) {
-          emailCategorized = true;
-          console.log('Email categorized as "Blocked" successfully');
-        } else if (updateResponse.status === 404) {
-          console.log('Email not found (404) - may have been already processed');
-        } else {
-          const updateErrorText = await updateResponse.text();
-          console.error('Email categorization failed. Status:', updateResponse.status);
-          console.error('Categorization error response:', updateErrorText);
-        }
-      } catch (error) {
-        console.error('Exception during email categorization:', error);
+        console.log('Alert email sent successfully:', emailResponse);
+        emailSent = true;
       }
-    } else {
-      console.log('No valid email ID provided for categorization');
+    } catch (emailError) {
+      console.error('Failed to send alert email:', emailError);
     }
 
     const responseData = {
       success: true,
-      message: emailCategorized 
-        ? 'Mail rule created and email categorized as "Blocked" successfully'
+      message: emailSent 
+        ? 'Mail rule created and security alert sent to user successfully'
         : 'Mail rule created successfully - future emails will be blocked',
       ruleId: ruleData.id,
       ruleName: ruleData.displayName,
-      emailCategorized,
-      emailDeleted: emailCategorized, // For backward compatibility
-      hadOutlookId: !!emailId
+      alertEmailSent: emailSent,
+      emailDeleted: false // Keep for backward compatibility but always false now
     };
     
     return new Response(
