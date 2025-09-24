@@ -30,21 +30,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     let mounted = true;
-    let hasInitialized = false;
 
-    // Check for existing session first
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (mounted && !hasInitialized) {
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
-        hasInitialized = true;
-      }
-    });
-
-    // Set up auth state listener
+    // Set up auth state listener FIRST to avoid missing events
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth event:', event, 'Session:', !!session);
         if (mounted) {
           if (event === 'MFA_CHALLENGE_VERIFIED') {
             setNeedsMfa(false);
@@ -52,12 +42,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           
           setSession(session);
           setUser(session?.user ?? null);
-          if (hasInitialized) {
-            setLoading(false);
-          }
+          setLoading(false);
         }
       }
     );
+
+    // Then check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('Initial session check:', !!session);
+      if (mounted) {
+        setSession(session);
+        setUser(session?.user ?? null);
+        setLoading(false);
+      }
+    });
 
     return () => {
       mounted = false;

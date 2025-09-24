@@ -17,16 +17,17 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   
-  const { signIn, user, needsMfa } = useAuth();
+  const { signIn, user, needsMfa, loading: authLoading } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // Redirect authenticated users to home page
+  // Redirect authenticated users to home page (but only after auth is fully loaded)
   useEffect(() => {
-    if (user) {
+    if (!authLoading && user) {
+      console.log('Auth: redirecting authenticated user to home');
       navigate("/");
     }
-  }, [user, navigate]);
+  }, [user, authLoading, navigate]);
 
   // If MFA is required, show the MFA challenge
   if (needsMfa) {
