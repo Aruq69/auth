@@ -69,7 +69,7 @@ const UserOnboarding = () => {
     {
       id: 'connect',
       title: 'Connect Your Email',
-      description: 'Connect your Gmail account securely using OAuth 2.0. We never store passwords and only analyze for threats.',
+      description: 'Connect your Microsoft Outlook account securely using OAuth 2.0. We never store passwords and only analyze for threats.',
       icon: Mail,
       action: 'Get Started'
     }

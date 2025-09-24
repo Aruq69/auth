@@ -24,8 +24,8 @@ const SettingsPage = () => {
   const [securityAlerts, setSecurityAlerts] = useState(true);
   const [neverStoreData, setNeverStoreData] = useState(true); // Privacy-first default
   const [dataExportLoading, setDataExportLoading] = useState(false);
-  const [gmailConnected, setGmailConnected] = useState(false);
-  const [gmailLoading, setGmailLoading] = useState(false);
+  const [outlookConnected, setOutlookConnected] = useState(false);
+  const [outlookLoading, setOutlookLoading] = useState(false);
   const { user, signOut, loading: authLoading } = useAuth();
   const { theme, setTheme } = useTheme();
   const { toast } = useToast();
@@ -40,7 +40,7 @@ const SettingsPage = () => {
     if (user) {
       checkMfaStatus();
       loadUserPreferences();
-      checkGmailConnection();
+      checkOutlookConnection();
     }
   }, [user, authLoading, navigate]);
 
@@ -339,7 +339,7 @@ const SettingsPage = () => {
     }
   };
 
-  const checkGmailConnection = async () => {
+  const checkOutlookConnection = async () => {
     if (!user) return;
     
     try {
@@ -350,22 +350,22 @@ const SettingsPage = () => {
         .limit(1);
       
       if (!error && data && data.length > 0) {
-        setGmailConnected(true);
+        setOutlookConnected(true);
       } else {
-        setGmailConnected(false);
+        setOutlookConnected(false);
       }
     } catch (error) {
-      console.error('Error checking Gmail connection:', error);
-      setGmailConnected(false);
+      console.error('Error checking Outlook connection:', error);
+      setOutlookConnected(false);
     }
   };
 
-  const handleGmailConnect = async () => {
+  const handleOutlookConnect = async () => {
     if (!user) return;
     
-    setGmailLoading(true);
+    setOutlookLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('gmail-auth', {
+      const { data, error } = await supabase.functions.invoke('outlook-auth', {
         body: { action: 'get_auth_url' }
       });
 
@@ -385,14 +385,14 @@ const SettingsPage = () => {
         variant: "destructive",
       });
     } finally {
-      setGmailLoading(false);
+      setOutlookLoading(false);
     }
   };
 
-  const handleGmailDisconnect = async () => {
+  const handleOutlookDisconnect = async () => {
     if (!user) return;
     
-    setGmailLoading(true);
+    setOutlookLoading(true);
     try {
       const { error } = await supabase
         .from('outlook_tokens')
@@ -403,10 +403,10 @@ const SettingsPage = () => {
         throw error;
       }
 
-      setGmailConnected(false);
+      setOutlookConnected(false);
       toast({
-        title: "Gmail Disconnected",
-        description: "Your Gmail account has been disconnected successfully.",
+        title: "Outlook Disconnected",
+        description: "Your Outlook account has been disconnected successfully.",
       });
     } catch (error) {
       console.error('Error disconnecting Gmail:', error);
@@ -416,7 +416,7 @@ const SettingsPage = () => {
         variant: "destructive",
       });
     } finally {
-      setGmailLoading(false);
+      setOutlookLoading(false);
     }
   };
 
@@ -753,8 +753,8 @@ const SettingsPage = () => {
               <CardContent className="space-y-6">
                 <div className="flex items-center justify-between p-4 bg-gradient-to-r from-muted/30 to-muted/10 rounded-xl border">
                   <div className="flex items-center space-x-3">
-                    <div className={`p-2 rounded-full border ${gmailConnected ? 'bg-emerald-500/20 border-emerald-500/30' : 'bg-orange-500/20 border-orange-500/30'}`}>
-                      {gmailConnected ? (
+                    <div className={`p-2 rounded-full border ${outlookConnected ? 'bg-emerald-500/20 border-emerald-500/30' : 'bg-orange-500/20 border-orange-500/30'}`}>
+                      {outlookConnected ? (
                         <Link className="h-5 w-5 text-emerald-600" />
                       ) : (
                         <Unlink className="h-5 w-5 text-orange-600" />
@@ -762,19 +762,19 @@ const SettingsPage = () => {
                     </div>
                     <div>
                       <p className="font-medium">
-                        {gmailConnected ? "Gmail Connected" : "Gmail Not Connected"}
+                        {outlookConnected ? "Outlook Connected" : "Outlook Not Connected"}
                       </p>
                       <p className="text-sm text-muted-foreground">
-                        {gmailConnected 
-                          ? "Your Gmail account is connected and ready for analysis" 
-                          : "Connect your Gmail to enable email security analysis"
+                        {outlookConnected 
+                          ? "Your Outlook account is connected and ready for analysis" 
+                          : "Connect your Outlook to enable email security analysis"
                         }
                       </p>
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Badge variant={gmailConnected ? "default" : "destructive"} className="text-xs">
-                      {gmailConnected ? "Connected" : "Disconnected"}
+                    <Badge variant={outlookConnected ? "default" : "destructive"} className="text-xs">
+                      {outlookConnected ? "Connected" : "Disconnected"}
                     </Badge>
                   </div>
                 </div>
@@ -782,41 +782,41 @@ const SettingsPage = () => {
                 <div className="border-t pt-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
-                      {gmailConnected ? (
+                      {outlookConnected ? (
                         <Unlink className="h-4 w-4 text-muted-foreground" />
                       ) : (
                         <Link className="h-4 w-4 text-muted-foreground" />
                       )}
                       <div>
                         <p className="font-medium">
-                          {gmailConnected ? "Disconnect Gmail" : "Connect Gmail"}
+                          {outlookConnected ? "Disconnect Outlook" : "Connect Outlook"}
                         </p>
                         <p className="text-sm text-muted-foreground">
-                          {gmailConnected 
-                            ? "Remove Gmail connection and delete stored tokens"
-                            : "Authorize Mail Guard to access your Gmail for security analysis"
+                          {outlookConnected 
+                            ? "Remove Outlook connection and delete stored tokens"
+                            : "Authorize Mail Guard to access your Outlook for security analysis"
                           }
                         </p>
                       </div>
                     </div>
                     <Button
-                      variant={gmailConnected ? "destructive" : "default"}
+                      variant={outlookConnected ? "destructive" : "default"}
                       size="sm"
-                      onClick={gmailConnected ? handleGmailDisconnect : handleGmailConnect}
-                      disabled={gmailLoading}
-                      className={gmailConnected 
+                      onClick={outlookConnected ? handleOutlookDisconnect : handleOutlookConnect}
+                      disabled={outlookLoading}
+                      className={outlookConnected 
                         ? "hover:shadow-md hover:shadow-red-500/10 transition-all duration-300"
                         : "hover:shadow-md hover:shadow-primary/10 transition-all duration-300"
                       }
                     >
-                      {gmailLoading ? (
+                      {outlookLoading ? (
                         <>
                           <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          {gmailConnected ? "Disconnecting..." : "Connecting..."}
+                          {outlookConnected ? "Disconnecting..." : "Connecting..."}
                         </>
                       ) : (
                         <>
-                          {gmailConnected ? (
+                          {outlookConnected ? (
                             <>
                               <Unlink className="h-4 w-4 mr-2" />
                               Disconnect

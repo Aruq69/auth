@@ -38,7 +38,7 @@ const Index = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [threatFilter, setThreatFilter] = useState<string | null>(null); // Add threat level filter
-  const [gmailConnected, setGmailConnected] = useState(false);
+  const [outlookConnected, setOutlookConnected] = useState(false);
   const [selectedEmail, setSelectedEmail] = useState<Email | null>(null);
   const [showEmailDialog, setShowEmailDialog] = useState(false);
   const [showSignOutDialog, setShowSignOutDialog] = useState(false); // Add sign out confirmation dialog
@@ -185,7 +185,7 @@ const Index = () => {
     setRecentActivity(prev => [newActivity, ...prev.slice(0, 4)]); // Keep only last 5 activities
   };
 
-  const fetchGmailEmails = async () => {
+  const fetchOutlookEmails = async () => {
     if (!user) {
       toast({
         title: "Authentication required",
@@ -197,22 +197,22 @@ const Index = () => {
     
     setLoading(true);
     setIsProcessing(true);
-    addRecentActivity("Gmail sync initiated", "Checking for new emails...");
+    addRecentActivity("Outlook sync initiated", "Checking for new emails...");
     
     try {
-      console.log('🔄 Invoking Gmail email fetch...');
+      console.log('🔄 Invoking Outlook email fetch...');
       
-      const { data, error } = await supabase.functions.invoke('fetch-gmail-emails', {
+      const { data, error } = await supabase.functions.invoke('fetch-outlook-emails', {
         body: { user_id: user.id }
       });
 
       if (error) {
-        console.error('Gmail fetch error:', error);
+        console.error('Outlook fetch error:', error);
         throw error;
       }
 
       if (data.success) {
-        console.log('📧 Gmail fetch response:', data);
+        console.log('📧 Outlook fetch response:', data);
         console.log('📧 Privacy mode enabled:', userPreferences?.never_store_data);
         console.log('📧 Emails in response:', data.emails?.length);
         
@@ -227,7 +227,7 @@ const Index = () => {
         }
         
         toast({
-          title: "Gmail sync completed",
+          title: "Outlook sync completed",
           description: `Processed ${data.total} emails successfully`,
         });
         
@@ -238,10 +238,10 @@ const Index = () => {
       }
       
     } catch (error) {
-      console.error('🚨 Gmail fetch error:', error);
+      console.error('🚨 Outlook fetch error:', error);
       toast({
-        title: "Gmail sync failed",
-        description: error.message || "Failed to fetch emails from Gmail. Please try again.",
+        title: "Outlook sync failed",
+        description: error.message || "Failed to fetch emails from Outlook. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -262,9 +262,9 @@ const Index = () => {
         .eq('user_id', user.id)
         .limit(1);
       
-      setGmailConnected(!!(data && data.length > 0) && !error);
+      setOutlookConnected(!!(data && data.length > 0) && !error);
     } catch (error) {
-      setGmailConnected(false);
+      setOutlookConnected(false);
     }
   };
 
@@ -272,7 +272,7 @@ const Index = () => {
     if (!user) return;
     
     try {
-      // Only clear emails, keep Gmail connection active
+      // Only clear emails, keep Outlook connection active
       await supabase
         .from('emails')
         .delete()
@@ -280,7 +280,7 @@ const Index = () => {
       
       toast({
         title: "Data Cleared",
-        description: "All email data has been cleared. Gmail connection remains active.",
+        description: "All email data has been cleared. Outlook connection remains active.",
       });
       
       // Refresh to show empty state
@@ -294,20 +294,20 @@ const Index = () => {
     }
   };
 
-  const connectGmail = async () => {
+  const connectOutlook = async () => {
     try {
       
-      const { data, error } = await supabase.functions.invoke('gmail-auth', {
+      const { data, error } = await supabase.functions.invoke('outlook-auth', {
         body: { action: 'get_auth_url' },
       });
 
       
 
       if (error) {
-        console.error('Gmail auth error:', error);
+        console.error('Outlook auth error:', error);
         toast({
           title: "Connection failed",
-          description: error.message || "Failed to connect to Gmail. Please try again.",
+          description: error.message || "Failed to connect to Outlook. Please try again.",
           variant: "destructive",
         });
         return;
@@ -325,7 +325,7 @@ const Index = () => {
         });
       }
     } catch (error) {
-      console.error('Gmail connection error:', error);
+      console.error('Outlook connection error:', error);
       toast({
         title: "Error",
         description: `An unexpected error occurred: ${error.message}`,
@@ -482,9 +482,9 @@ const Index = () => {
 
         {/* Mobile-optimized Action Buttons */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:space-x-2">
-            {gmailConnected && (
+            {outlookConnected && (
               <Button 
-                onClick={fetchGmailEmails} 
+                onClick={fetchOutlookEmails} 
                 disabled={loading} 
                 variant="outline" 
                 className={`w-full sm:w-auto border-primary/30 hover:border-primary/50 hover-button text-xs sm:text-sm ${isProcessing ? 'animate-pulse' : ''}`}
@@ -495,10 +495,10 @@ const Index = () => {
                 ) : (
                   <Activity className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                 )}
-                {isProcessing ? 'Processing...' : 'Sync Gmail'}
+                {isProcessing ? 'Processing...' : 'Sync Outlook'}
               </Button>
             )}
-            {gmailConnected && (
+            {outlookConnected && (
               <Button 
                 onClick={fetchEmails} 
                 disabled={loading} 
@@ -510,7 +510,7 @@ const Index = () => {
                 Refresh
               </Button>
             )}
-            {gmailConnected && (
+            {outlookConnected && (
               <AlertDialog open={showClearEmailsDialog} onOpenChange={setShowClearEmailsDialog}>
                 <AlertDialogTrigger asChild>
                   <Button 
@@ -531,7 +531,7 @@ const Index = () => {
                       Clear All Emails?
                     </AlertDialogTitle>
                     <AlertDialogDescription className="text-center text-muted-foreground">
-                      This action will permanently delete all email data from our system. Your Gmail connection will remain active, but all analyzed emails will be removed.
+                      This action will permanently delete all email data from our system. Your Outlook connection will remain active, but all analyzed emails will be removed.
                       <br />
                       <span className="font-medium text-orange-500">This action cannot be undone.</span>
                     </AlertDialogDescription>
@@ -633,16 +633,16 @@ const Index = () => {
           </Card>
         </div>
 
-        {/* Gmail Connection */}
-        {!gmailConnected && (
+        {/* Outlook Connection */}
+        {!outlookConnected && (
           <Card className="border-border/20 bg-card/50 backdrop-blur-sm hover-card">
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
                 <Mail className="h-5 w-5 text-primary" />
-                <span>Connect Gmail Account</span>
+                <span>Connect Outlook Account</span>
               </CardTitle>
               <CardDescription>
-                Connect your Gmail account to start analyzing emails for threats
+                Connect your Microsoft Outlook account to start analyzing emails for threats
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -657,7 +657,7 @@ const Index = () => {
                     <div className="absolute -top-1 -right-1 h-3 w-3 bg-orange-500 rounded-full animate-pulse" />
                   </div>
                   <h3 className="text-sm font-semibold text-foreground mb-1">Universal</h3>
-                  <p className="text-xs text-muted-foreground">Works with Gmail</p>
+                  <p className="text-xs text-muted-foreground">Works with Outlook</p>
                 </div>
                 
                 {/* AI Analysis */}
@@ -697,7 +697,7 @@ const Index = () => {
                 </div>
               </div>
 
-              {/* Gmail Connection Button */}
+              {/* Outlook Connection Button */}
               <div className="text-center space-y-4">
                 <div className="relative p-6 rounded-lg bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/20 backdrop-blur-sm">
                   <div className="flex items-center justify-center space-x-4 mb-4">
@@ -709,9 +709,9 @@ const Index = () => {
                       <p className="text-sm text-muted-foreground">Secure OAuth 2.0 connection to your Microsoft account</p>
                     </div>
                   </div>
-                  <Button onClick={connectGmail} className="w-full gradient-button" size="lg">
+                  <Button onClick={connectOutlook} className="w-full gradient-button" size="lg">
                     <Mail className="h-5 w-5 mr-2" />
-                    Connect Gmail Account
+                    Connect Outlook Account
                   </Button>
                 </div>
                 
