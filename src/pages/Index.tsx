@@ -80,7 +80,6 @@ const Index = () => {
   // Listen for sign out to clear session data in privacy mode
   useEffect(() => {
     const handleClearSessionData = () => {
-      console.log('📧 Clearing session data on sign out');
       setSessionEmails([]);
     };
 
@@ -244,14 +243,10 @@ const Index = () => {
         
         // Always store emails in session state for display, regardless of privacy mode
         if (data.emails && data.emails.length > 0) {
-          console.log('📧 Setting session emails for display:', data.emails.length, data.emails);
           setSessionEmails(data.emails);
-        } else if (data.debug_info?.emails_from_api > 0) {
-          console.log('📧 API returned emails but no processed emails in response');
-          // Still try to display something if we got emails from API but they're not in the processed response
         }
         
-        // Show debug info in toast for troubleshooting
+        // Show success message without debug info
         const debugMsg = data.debug_info 
           ? `Debug: API returned ${data.debug_info.emails_from_api} emails, processed ${data.debug_info.processed_count}`
           : '';
@@ -420,14 +415,6 @@ const Index = () => {
   // Always display session emails first (for both privacy mode and regular mode)
   // This ensures we show the latest fetched emails immediately
   const emailsToDisplay = sessionEmails.length > 0 ? sessionEmails : emails;
-  
-  console.log('📧 Debug display logic:', {
-    privacyMode: userPreferences?.never_store_data,
-    sessionEmailsCount: sessionEmails.length,
-    storedEmailsCount: emails.length,
-    displayEmailsCount: emailsToDisplay.length,
-    usingSessionEmails: sessionEmails.length > 0
-  });
   
   const filteredEmails = emailsToDisplay.filter(email => {
     // Apply search filter

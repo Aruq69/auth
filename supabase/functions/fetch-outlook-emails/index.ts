@@ -70,7 +70,6 @@ serve(async (req) => {
     }
 
     // Fetch emails from Microsoft Graph API
-    console.log('Fetching emails from Microsoft Graph API...');
     const graphResponse = await fetch('https://graph.microsoft.com/v1.0/me/messages?$top=10&$orderby=receivedDateTime desc', {
       headers: {
         'Authorization': `Bearer ${tokenData.access_token}`,
@@ -78,11 +77,8 @@ serve(async (req) => {
       },
     });
 
-    console.log('Graph API response status:', graphResponse.status);
-
     if (!graphResponse.ok) {
       const errorText = await graphResponse.text();
-      console.error('Graph API error:', errorText);
       return new Response(
         JSON.stringify({ 
           error: `Failed to fetch emails: ${graphResponse.status} - ${errorText}`,
@@ -95,20 +91,14 @@ serve(async (req) => {
     const graphData = await graphResponse.json();
     const emails = graphData.value || [];
     
-    console.log(`Microsoft Graph returned ${emails.length} emails`);
-    
     // Delete all previous emails for this user before adding new ones
-    console.log('Deleting previous emails for fresh sync...');
     const { error: deleteError } = await supabase
       .from('emails')
       .delete()
       .eq('user_id', user.id);
     
     if (deleteError) {
-      console.warn('Warning: Could not delete previous emails:', deleteError);
       // Continue anyway - this is not a critical error
-    } else {
-      console.log('Previous emails deleted successfully');
     }
     
     // Process emails
@@ -149,10 +139,7 @@ serve(async (req) => {
           const classificationResponse = await classificationResult.json();
           if (classificationResponse.success && classificationResponse.results && classificationResponse.results.length > 0) {
             classificationData = classificationResponse.results[0];
-            console.log('Email classified successfully:', classificationData);
           }
-        } else {
-          console.warn('Classification failed, proceeding without classification');
         }
 
         const emailData = {
@@ -184,10 +171,9 @@ serve(async (req) => {
           processedEmails.push(insertedEmail);
         }
 
-      } catch (error) {
-        console.error('Error processing email:', error);
-        continue;
-      }
+        } catch (error) {
+          continue;
+        }
     }
 
     return new Response(
@@ -197,17 +183,11 @@ serve(async (req) => {
         emails_processed: processedEmails.length,
         total_emails_fetched: emails.length,
         emails: processedEmails, // Return processed emails for display
-        debug_info: {
-          user_id: user.id,
-          emails_from_api: emails.length,
-          processed_count: processedEmails.length
-        }
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error) {
-    console.error('Error in fetch-outlook-emails function:', error);
     return new Response(
       JSON.stringify({ 
         error: error.message,
