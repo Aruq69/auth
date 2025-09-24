@@ -69,17 +69,59 @@ export default function AdminEmails() {
 
   const handleBlockEmail = async (emailId: string, blockReason: string) => {
     try {
+      // Get the email details first
+      const { data: emailData, error: emailError } = await supabase
+        .from('emails')
+        .select('sender, subject')
+        .eq('id', emailId)
+        .single();
+
+      if (emailError) throw emailError;
+
+      // Block in app database
       const { error } = await supabase
         .from('email_blocks')
         .insert({
           email_id: emailId,
           blocked_by_user_id: (await supabase.auth.getUser()).data.user?.id,
           block_reason: blockReason,
-          block_type: 'spam',
+          block_type: 'admin_action',
           is_active: true
         });
 
       if (error) throw error;
+
+      // Create actual Outlook mail rule to block future emails from this sender
+      try {
+        const { data: ruleResult, error: ruleError } = await supabase.functions.invoke('create-outlook-mail-rule', {
+          body: {
+            senderEmail: emailData.sender,
+            ruleName: `Block ${emailData.sender} - ${blockReason}`,
+            blockType: 'sender'
+          }
+        });
+
+        if (ruleError) {
+          console.warn('Failed to create Outlook rule:', ruleError);
+          toast({
+            title: 'Partial Success',
+            description: 'Email blocked in app but failed to create Outlook rule. The email is only blocked within the app.',
+            variant: 'default',
+          });
+        } else {
+          toast({
+            title: 'Email Blocked',
+            description: 'Email blocked in app and Outlook rule created to block future emails from this sender.',
+          });
+        }
+      } catch (ruleError) {
+        console.warn('Failed to create Outlook rule:', ruleError);
+        toast({
+          title: 'Partial Success',
+          description: 'Email blocked in app but failed to create Outlook rule. The email is only blocked within the app.',
+          variant: 'default',
+        });
+      }
 
       // Log admin action
       await supabase
@@ -89,13 +131,8 @@ export default function AdminEmails() {
           action_type: 'block_email',
           target_type: 'email',
           target_id: emailId,
-          action_details: { block_reason: blockReason }
+          action_details: { block_reason: blockReason, sender: emailData.sender }
         });
-
-      toast({
-        title: 'Email Blocked',
-        description: 'Email has been successfully blocked',
-      });
       
       refetch();
     } catch (error) {
