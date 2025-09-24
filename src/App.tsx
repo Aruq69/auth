@@ -8,7 +8,7 @@ import { AuthProvider } from "@/components/auth/AuthProvider";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Settings from "./pages/Settings";
-import GmailCallback from "./pages/GmailCallback";
+import OutlookCallback from "./pages/OutlookCallback";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -25,7 +25,7 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/settings" element={<Settings />} />
-              <Route path="/gmail-callback" element={<GmailCallback />} />
+              <Route path="/outlook-callback" element={<OutlookCallback />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

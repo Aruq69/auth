@@ -71,10 +71,10 @@ export type Database = {
           confidence: number | null
           content: string | null
           created_at: string
-          gmail_id: string | null
           id: string
           keywords: string[] | null
           message_id: string
+          outlook_id: string | null
           processed_at: string | null
           raw_content: string | null
           received_date: string
@@ -90,10 +90,10 @@ export type Database = {
           confidence?: number | null
           content?: string | null
           created_at?: string
-          gmail_id?: string | null
           id?: string
           keywords?: string[] | null
           message_id: string
+          outlook_id?: string | null
           processed_at?: string | null
           raw_content?: string | null
           received_date: string
@@ -109,10 +109,10 @@ export type Database = {
           confidence?: number | null
           content?: string | null
           created_at?: string
-          gmail_id?: string | null
           id?: string
           keywords?: string[] | null
           message_id?: string
+          outlook_id?: string | null
           processed_at?: string | null
           raw_content?: string | null
           received_date?: string
@@ -125,7 +125,7 @@ export type Database = {
         }
         Relationships: []
       }
-      gmail_tokens: {
+      outlook_tokens: {
         Row: {
           access_token: string
           created_at: string

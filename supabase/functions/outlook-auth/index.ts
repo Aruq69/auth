@@ -2,8 +2,8 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.4';
 
-const googleClientId = Deno.env.get('GOOGLE_CLIENT_ID');
-const googleClientSecret = Deno.env.get('GOOGLE_CLIENT_SECRET');
+const microsoftClientId = Deno.env.get('MICROSOFT_CLIENT_ID');
+const microsoftClientSecret = Deno.env.get('MICROSOFT_CLIENT_SECRET');
 const supabaseUrl = Deno.env.get('SUPABASE_URL');
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
@@ -13,8 +13,8 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  console.log('=== GMAIL AUTH FUNCTION START ===');
-  console.log('Gmail auth function called, method:', req.method);
+  console.log('=== OUTLOOK AUTH FUNCTION START ===');
+  console.log('Outlook auth function called, method:', req.method);
   
   if (req.method === 'OPTIONS') {
     console.log('Handling CORS preflight');
@@ -42,7 +42,6 @@ serve(async (req) => {
     console.log('Parsed action:', action, 'code present:', !!code);
     
     console.log('=== PARSING ORIGIN HEADERS ===');
-    // Extract origin from referer if no origin header (with error handling)
     let refererOrigin = null;
     try {
       const refererUrl = req.headers.get('referer');
@@ -56,13 +55,12 @@ serve(async (req) => {
     }
     
     const requestOrigin = req.headers.get('origin') || refererOrigin;
-    console.log('=== GMAIL AUTH DEBUG ===');
+    console.log('=== OUTLOOK AUTH DEBUG ===');
     console.log('Request origin header:', req.headers.get('origin'));
     console.log('Request referer header:', req.headers.get('referer'));
     console.log('Extracted origin:', requestOrigin);
     
-    // Prefer request origin, then referer origin, then fallback to Lovable
-    let origin = 'https://4a245192-55d5-454c-8b1c-2d652a6212f2.lovableproject.com'; // fallback
+    let origin = 'https://4a245192-55d5-454c-8b1c-2d652a6212f2.lovableproject.com';
     if (requestOrigin && (requestOrigin.includes('vercel.app') || requestOrigin.includes('lovableproject.com'))) {
       origin = requestOrigin;
     }
@@ -72,30 +70,27 @@ serve(async (req) => {
     // Handle auth URL generation
     if (action === 'get_auth_url') {
       console.log('Generating auth URL...');
-      console.log('Google Client ID present:', !!googleClientId);
-      console.log('Google Client Secret present:', !!googleClientSecret);
+      console.log('Microsoft Client ID present:', !!microsoftClientId);
+      console.log('Microsoft Client Secret present:', !!microsoftClientSecret);
       
-      if (!googleClientId || !googleClientSecret) {
-        console.error('Google Client ID or Secret not found');
-        console.error('Client ID exists:', !!googleClientId);
-        console.error('Client Secret exists:', !!googleClientSecret);
+      if (!microsoftClientId || !microsoftClientSecret) {
+        console.error('Microsoft Client ID or Secret not found');
         return new Response(
-          JSON.stringify({ error: 'Google OAuth not configured. Please set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET.' }),
+          JSON.stringify({ error: 'Microsoft OAuth not configured. Please set MICROSOFT_CLIENT_ID and MICROSOFT_CLIENT_SECRET.' }),
           { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
 
-      const scope = 'https://www.googleapis.com/auth/gmail.readonly';
-      const redirectUri = `${origin}/gmail-callback`;
+      const scope = 'https://graph.microsoft.com/Mail.Read openid profile email';
+      const redirectUri = `${origin}/outlook-callback`;
       
-      const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
-      authUrl.searchParams.set('client_id', googleClientId);
+      const authUrl = new URL('https://login.microsoftonline.com/common/oauth2/v2.0/authorize');
+      authUrl.searchParams.set('client_id', microsoftClientId);
       authUrl.searchParams.set('redirect_uri', redirectUri);
       authUrl.searchParams.set('response_type', 'code');
       authUrl.searchParams.set('scope', scope);
-      authUrl.searchParams.set('access_type', 'offline');
+      authUrl.searchParams.set('response_mode', 'query');
       authUrl.searchParams.set('prompt', 'consent');
-      authUrl.searchParams.set('state', 'anonymous');
 
       console.log('Generated auth URL:', authUrl.toString());
       return new Response(
@@ -108,10 +103,10 @@ serve(async (req) => {
     if (action === 'exchange_token') {
       console.log('Starting token exchange with code:', !!code);
       
-      if (!googleClientId || !googleClientSecret) {
-        console.error('Google OAuth credentials not configured');
+      if (!microsoftClientId || !microsoftClientSecret) {
+        console.error('Microsoft OAuth credentials not configured');
         return new Response(
-          JSON.stringify({ error: 'Google OAuth not configured. Please set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET.' }),
+          JSON.stringify({ error: 'Microsoft OAuth not configured. Please set MICROSOFT_CLIENT_ID and MICROSOFT_CLIENT_SECRET.' }),
           { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
@@ -123,19 +118,18 @@ serve(async (req) => {
         );
       }
 
-      const redirectUri = `${origin}/gmail-callback`;
+      const redirectUri = `${origin}/outlook-callback`;
       console.log('Using redirect URI for token exchange:', redirectUri);
-      console.log('Using Client ID:', googleClientId?.substring(0, 20) + '...');
 
       // Exchange authorization code for access token
-      const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+      const tokenResponse = await fetch('https://login.microsoftonline.com/common/oauth2/v2.0/token', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
         body: new URLSearchParams({
-          client_id: googleClientId,
-          client_secret: googleClientSecret,
+          client_id: microsoftClientId,
+          client_secret: microsoftClientSecret,
           code,
           grant_type: 'authorization_code',
           redirect_uri: redirectUri,
@@ -146,7 +140,6 @@ serve(async (req) => {
         const errorText = await tokenResponse.text();
         console.error('Token exchange error:', errorText);
         console.error('Response status:', tokenResponse.status);
-        console.error('Response headers:', Object.fromEntries(tokenResponse.headers.entries()));
         
         let errorDetails;
         try {
@@ -170,10 +163,10 @@ serve(async (req) => {
       
       console.log('Token exchange successful');
 
-      // Get user's email address from Google
-      let userEmail = 'user@gmail.com';
+      // Get user's email address from Microsoft Graph
+      let userEmail = 'user@outlook.com';
       try {
-        const profileResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+        const profileResponse = await fetch('https://graph.microsoft.com/v1.0/me', {
           headers: {
             'Authorization': `Bearer ${tokenData.access_token}`,
           },
@@ -181,7 +174,7 @@ serve(async (req) => {
         
         if (profileResponse.ok) {
           const profileData = await profileResponse.json();
-          userEmail = profileData.email || userEmail;
+          userEmail = profileData.mail || profileData.userPrincipalName || userEmail;
           console.log('Retrieved user email:', userEmail);
         }
       } catch (error) {
@@ -191,7 +184,7 @@ serve(async (req) => {
       // Create Supabase client
       const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
 
-      // Get user_id from the already parsed jsonBody
+      // Get user_id from the request body
       const { user_id } = jsonBody;
       
       if (!user_id) {
@@ -201,12 +194,12 @@ serve(async (req) => {
         );
       }
 
-      // Store the Gmail token in the database
+      // Store the Outlook token in the database
       const { error: upsertError } = await supabase
-        .from('gmail_tokens')
+        .from('outlook_tokens')
         .upsert({
           user_id: user_id,
-          email_address: userEmail, // Now using actual email
+          email_address: userEmail,
           access_token: tokenData.access_token,
           refresh_token: tokenData.refresh_token,
           expires_at: new Date(Date.now() + (tokenData.expires_in * 1000)).toISOString(),
@@ -219,12 +212,12 @@ serve(async (req) => {
         throw new Error(`Failed to store token: ${upsertError.message}`);
       }
 
-      console.log('Gmail token stored successfully');
+      console.log('Outlook token stored successfully');
 
       return new Response(
         JSON.stringify({
           success: true,
-          message: 'Gmail access token stored successfully'
+          message: 'Outlook access token stored successfully'
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
@@ -237,7 +230,7 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('Error in gmail-auth function:', error);
+    console.error('Error in outlook-auth function:', error);
     console.error('Error stack:', error.stack);
     return new Response(
       JSON.stringify({ 

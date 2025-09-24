@@ -238,9 +238,9 @@ const Index = () => {
     if (!user) return;
     
     try {
-      // Check if user has Gmail tokens (indicates they've connected Gmail)
+      // Check if user has Outlook tokens (indicates they've connected Outlook)
       const { data, error } = await supabase
-        .from('gmail_tokens')
+        .from('outlook_tokens')
         .select('id')
         .eq('user_id', user.id)
         .limit(1);

@@ -344,7 +344,7 @@ const SettingsPage = () => {
     
     try {
       const { data, error } = await supabase
-        .from('gmail_tokens')
+        .from('outlook_tokens')
         .select('id')
         .eq('user_id', user.id)
         .limit(1);
@@ -395,7 +395,7 @@ const SettingsPage = () => {
     setGmailLoading(true);
     try {
       const { error } = await supabase
-        .from('gmail_tokens')
+        .from('outlook_tokens')
         .delete()
         .eq('user_id', user.id);
 
