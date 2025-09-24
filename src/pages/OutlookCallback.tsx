@@ -26,7 +26,7 @@ const OutlookCallback = () => {
         console.error('OAuth error:', error);
         setStatus('error');
         setMessage(`OAuth error: ${error}. Please try again.`);
-        setTimeout(() => navigate("/"), 3000); // Redirect to dashboard
+        setTimeout(() => navigate("/settings"), 3000); // Back to settings to retry
         return;
       }
 
@@ -34,7 +34,7 @@ const OutlookCallback = () => {
         console.error('No authorization code received');
         setStatus('error');
         setMessage('No authorization code received. Please try again.');
-        setTimeout(() => navigate("/"), 3000); // Redirect to dashboard
+        setTimeout(() => navigate("/settings"), 3000); // Back to settings to retry
         return;
       }
 
@@ -69,7 +69,7 @@ const OutlookCallback = () => {
             console.error('Function error:', functionError);
             setStatus('error');
             setMessage(`Connection failed: ${functionError.message || 'Unknown error'}. Please try again.`);
-            setTimeout(() => navigate("/"), 3000); // Redirect to dashboard
+            setTimeout(() => navigate("/settings"), 3000); // Back to settings to retry
             return;
           }
 
@@ -77,18 +77,18 @@ const OutlookCallback = () => {
             console.log('OutlookCallback: Connection successful');
             setStatus('success');
             setMessage('Outlook connected successfully! Your emails are being fetched...');
-            setTimeout(() => navigate("/"), 1500); // Always redirect to dashboard after successful connection
+            setTimeout(() => navigate("/"), 1500); // Only redirect to dashboard on SUCCESS
           } else {
             console.error('Connection failed:', data);
             setStatus('error');
             setMessage(`Failed to connect: ${data?.error || 'Unknown error'}. Please try again.`);
-            setTimeout(() => navigate("/"), 3000); // Redirect to dashboard instead of settings
+            setTimeout(() => navigate("/settings"), 3000); // Back to settings to retry
           }
         } catch (error) {
           console.error('Error handling OAuth callback:', error);
           setStatus('error');
           setMessage('An unexpected error occurred. Please try again.');
-          setTimeout(() => navigate("/"), 3000); // Redirect to dashboard
+          setTimeout(() => navigate("/settings"), 3000); // Back to settings to retry
         }
       }
     };
