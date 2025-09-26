@@ -29,30 +29,21 @@ class RobustEmailClassifier {
     // Constructor will trigger dataset loading
   }
 
-  // Load and parse the training dataset
+  // Load and parse the training dataset from multiple sources
   async loadTrainingData(): Promise<void> {
     if (this.isInitialized) return;
     
     try {
-      console.log('Loading training dataset...');
+      console.log('Loading comprehensive training datasets...');
       
-      // Read the email dataset
-      const datasetPath = '../_shared/datasets/email.csv';
-      const csvContent = await Deno.readTextFile(datasetPath);
-      const lines = csvContent.split('\n').slice(1); // Skip header
+      // Import the dataset processor
+      const { DatasetProcessor } = await import('../_shared/datasets/dataset-processor.ts');
       
-      // Parse CSV data
-      for (const line of lines) {
-        if (!line.trim()) continue;
-        
-        const match = line.match(/^(ham|spam),"?(.*?)"?$/);
-        if (match) {
-          const [, label, text] = match;
-          this.trainingData.push({ label, text: text.replace(/"/g, '') });
-        }
-      }
+      // Load all datasets
+      this.trainingData = await DatasetProcessor.loadAllDatasets();
       
-      console.log(`Loaded ${this.trainingData.length} training samples`);
+      console.log(`Successfully loaded ${this.trainingData.length} training samples`);
+      console.log(`Ham: ${this.trainingData.filter(d => d.label === 'ham').length}, Spam: ${this.trainingData.filter(d => d.label === 'spam').length}`);
       
       // Train the Naive Bayes model
       this.trainModel();
@@ -60,8 +51,31 @@ class RobustEmailClassifier {
       
     } catch (error) {
       console.error('Error loading training data:', error);
-      // Fallback to basic classification
-      this.isInitialized = true;
+      
+      // Fallback: try to load simple email.csv if it exists
+      try {
+        const datasetPath = '../_shared/datasets/email.csv';
+        const csvContent = await Deno.readTextFile(datasetPath);
+        const lines = csvContent.split('\n').slice(1); // Skip header
+        
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          
+          const match = line.match(/^(ham|spam),"?(.*?)"?$/);
+          if (match) {
+            const [, label, text] = match;
+            this.trainingData.push({ label, text: text.replace(/"/g, '') });
+          }
+        }
+        
+        console.log(`Fallback: loaded ${this.trainingData.length} training samples from email.csv`);
+        this.trainModel();
+        this.isInitialized = true;
+        
+      } catch (fallbackError) {
+        console.error('Fallback loading failed:', fallbackError);
+        this.isInitialized = true; // Use hardcoded fallback
+      }
     }
   }
 
