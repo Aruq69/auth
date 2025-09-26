@@ -13,54 +13,96 @@ const hfToken = Deno.env.get('HUGGING_FACE_ACCESS_TOKEN');
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-// Enhanced email classifier combining traditional ML with modern approaches
+// Dataset-based ML email classifier using real training data
 class RobustEmailClassifier {
-  private spamKeywords: string[];
-  private legitimateIndicators: string[];
-  private phishingDomains: string[];
+  private trainingData: Array<{label: string, text: string}> = [];
+  private vocabulary: Map<string, number> = new Map();
+  private spamWordCounts: Map<string, number> = new Map();
+  private hamWordCounts: Map<string, number> = new Map();
+  private totalSpamWords = 0;
+  private totalHamWords = 0;
+  private spamCount = 0;
+  private hamCount = 0;
+  private isInitialized = false;
 
   constructor() {
-    this.spamKeywords = [
-      // Financial spam - HIGH RISK
-      'free', 'winner', 'congratulations', 'prize', 'cash', 'money', '$', 'million', 'inheritance',
-      'lottery', 'sweepstakes', 'jackpot', 'investment', 'profit', 'earn', 'income', 'reward',
-      'selected', 'chosen', 'exclusive', 'special offer', 'limited offer', 'gift card', 'gift',
-      
-      // Urgency indicators - HIGH RISK
-      'urgent', 'immediate', 'act now', 'limited time', 'expires', 'deadline', 'hurry',
-      'quick', 'instant', 'asap', 'rush', 'emergency', '24 hours', 'today only', 'last chance',
-      
-      // Phishing indicators - HIGH RISK
-      'verify', 'confirm', 'update', 'suspended', 'compromised', 'security alert',
-      'unusual activity', 'click here', 'login', 'password', 'account', 'click the link',
-      'claim now', 'claim your', 'verify account', 'update payment',
-      
-      // Medical/pharmaceutical spam
-      'viagra', 'cialis', 'pharmacy', 'prescription', 'pills', 'medication',
-      'weight loss', 'diet', 'supplement',
-      
-      // Nigerian prince style
-      'nigeria', 'prince', 'beneficiary', 'transfer', 'fund', 'diplomat'
-    ];
+    // Constructor will trigger dataset loading
+  }
+
+  // Load and parse the training dataset
+  async loadTrainingData(): Promise<void> {
+    if (this.isInitialized) return;
     
-    this.legitimateIndicators = [
-      // Business terms
-      'meeting', 'conference', 'schedule', 'agenda', 'team', 'project', 'report',
-      'presentation', 'deadline', 'client', 'customer', 'colleague', 'manager',
+    try {
+      console.log('Loading training dataset...');
       
-      // Personal communication
-      'thanks', 'please', 'regards', 'sincerely', 'hello', 'hi', 'dear',
-      'family', 'friend', 'weekend', 'vacation', 'birthday',
+      // Read the email dataset
+      const datasetPath = '../_shared/datasets/email.csv';
+      const csvContent = await Deno.readTextFile(datasetPath);
+      const lines = csvContent.split('\n').slice(1); // Skip header
       
-      // Professional context
-      'company', 'department', 'office', 'work', 'business', 'professional',
-      'contract', 'agreement', 'proposal', 'invoice'
-    ];
+      // Parse CSV data
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        
+        const match = line.match(/^(ham|spam),"?(.*?)"?$/);
+        if (match) {
+          const [, label, text] = match;
+          this.trainingData.push({ label, text: text.replace(/"/g, '') });
+        }
+      }
+      
+      console.log(`Loaded ${this.trainingData.length} training samples`);
+      
+      // Train the Naive Bayes model
+      this.trainModel();
+      this.isInitialized = true;
+      
+    } catch (error) {
+      console.error('Error loading training data:', error);
+      // Fallback to basic classification
+      this.isInitialized = true;
+    }
+  }
+
+  // Train Naive Bayes classifier on the dataset
+  trainModel(): void {
+    console.log('Training Naive Bayes classifier...');
     
-    this.phishingDomains = [
-      'paypal', 'amazon', 'microsoft', 'apple', 'google', 'facebook', 'twitter',
-      'netflix', 'spotify', 'dropbox', 'adobe', 'instagram'
-    ];
+    // Count spam and ham emails
+    this.spamCount = this.trainingData.filter(item => item.label === 'spam').length;
+    this.hamCount = this.trainingData.filter(item => item.label === 'ham').length;
+    
+    // Build vocabulary and word counts
+    for (const item of this.trainingData) {
+      const words = this.tokenize(item.text);
+      
+      for (const word of words) {
+        // Add to vocabulary
+        this.vocabulary.set(word, (this.vocabulary.get(word) || 0) + 1);
+        
+        if (item.label === 'spam') {
+          this.spamWordCounts.set(word, (this.spamWordCounts.get(word) || 0) + 1);
+          this.totalSpamWords++;
+        } else {
+          this.hamWordCounts.set(word, (this.hamWordCounts.get(word) || 0) + 1);
+          this.totalHamWords++;
+        }
+      }
+    }
+    
+    console.log(`Model trained: ${this.spamCount} spam, ${this.hamCount} ham, ${this.vocabulary.size} unique words`);
+  }
+
+  // Tokenize text into words
+  tokenize(text: string): string[] {
+    if (!text) return [];
+    
+    return text.toLowerCase()
+      .replace(/[^\w\s]/g, ' ')
+      .split(/\s+/)
+      .filter(word => word.length > 2 && word.length < 20)
+      .filter(word => !/^\d+$/.test(word)); // Remove pure numbers
   }
 
   // Advanced text preprocessing
@@ -92,49 +134,70 @@ class RobustEmailClassifier {
     return text;
   }
 
-  // Calculate TF-IDF like scoring manually
-  calculateFeatureScore(text: string): { spamScore: number; features: string[] } {
-    const words = text.split(/\s+/);
+  // Calculate Naive Bayes probability scores
+  calculateNaiveBayesScore(text: string): { spamScore: number; features: string[] } {
+    const words = this.tokenize(text);
+    const features = [];
+    
+    if (!this.isInitialized || this.vocabulary.size === 0) {
+      // Fallback to simple keyword detection
+      return this.calculateFallbackScore(text);
+    }
+    
+    // Calculate log probabilities to avoid underflow
+    let logSpamProb = Math.log(this.spamCount / (this.spamCount + this.hamCount));
+    let logHamProb = Math.log(this.hamCount / (this.spamCount + this.hamCount));
+    
+    const vocabularySize = this.vocabulary.size;
+    
+    for (const word of words) {
+      // Laplace smoothing
+      const spamWordCount = this.spamWordCounts.get(word) || 0;
+      const hamWordCount = this.hamWordCounts.get(word) || 0;
+      
+      const spamWordProb = (spamWordCount + 1) / (this.totalSpamWords + vocabularySize);
+      const hamWordProb = (hamWordCount + 1) / (this.totalHamWords + vocabularySize);
+      
+      logSpamProb += Math.log(spamWordProb);
+      logHamProb += Math.log(hamWordProb);
+      
+      // Track significant features
+      if (spamWordCount > 0 && spamWordProb > hamWordProb * 2) {
+        features.push(`${word}(${spamWordCount})`);
+      }
+    }
+    
+    // Convert back from log space and normalize
+    const spamProb = Math.exp(logSpamProb);
+    const hamProb = Math.exp(logHamProb);
+    const totalProb = spamProb + hamProb;
+    
+    const spamScore = totalProb > 0 ? spamProb / totalProb : 0;
+    
+    return { spamScore, features };
+  }
+
+  // Fallback scoring when dataset isn't available
+  calculateFallbackScore(text: string): { spamScore: number; features: string[] } {
+    const spamKeywords = [
+      'free', 'winner', 'congratulations', 'prize', 'cash', 'money', 'urgent', 'click here',
+      'verify', 'selected', 'exclusive', 'limited time', 'act now', 'claim now'
+    ];
+    
+    const words = text.toLowerCase().split(/\s+/);
     const totalWords = words.length;
     let spamScore = 0;
     const features = [];
     
-    // Keyword frequency scoring
-    for (const keyword of this.spamKeywords) {
-      const occurrences = (text.match(new RegExp(keyword, 'gi')) || []).length;
+    for (const keyword of spamKeywords) {
+      const occurrences = (text.toLowerCase().match(new RegExp(keyword, 'g')) || []).length;
       if (occurrences > 0) {
-        const tf = occurrences / totalWords; // Term frequency
-        const weight = this.getKeywordWeight(keyword);
-        spamScore += tf * weight;
+        spamScore += (occurrences / totalWords) * 0.3;
         features.push(`${keyword}(${occurrences})`);
       }
     }
     
-    // Legitimate keyword scoring (reduces spam score)
-    for (const keyword of this.legitimateIndicators) {
-      const occurrences = (text.match(new RegExp(keyword, 'gi')) || []).length;
-      if (occurrences > 0) {
-        const tf = occurrences / totalWords;
-        spamScore -= tf * 0.1; // Reduce spam score for legitimate terms
-      }
-    }
-    
-    return { spamScore: Math.max(0, spamScore), features };
-  }
-
-  // Assign weights to different types of spam keywords
-  getKeywordWeight(keyword: string): number {
-    const ultraHighRiskKeywords = [
-      'congratulations', 'winner', 'selected', 'chosen', 'free', 'prize', 'reward',
-      'click here', 'click the link', 'claim now', 'claim your', 'exclusive', 'special offer'
-    ];
-    const highRiskKeywords = ['urgent', 'verify', 'limited time', 'expires', 'act now', 'million', '$'];
-    const mediumRiskKeywords = ['money', 'cash', 'lottery', 'investment', 'immediate'];
-    
-    if (ultraHighRiskKeywords.some(k => keyword.includes(k) || k.includes(keyword))) return 1.0;
-    if (highRiskKeywords.includes(keyword)) return 0.7;
-    if (mediumRiskKeywords.includes(keyword)) return 0.4;
-    return 0.2;
+    return { spamScore: Math.min(spamScore, 1.0), features };
   }
 
   // Analyze email structure and patterns
@@ -163,9 +226,10 @@ class RobustEmailClassifier {
     analysis.urlCount = (fullText.match(/https?:\/\/[^\s]+/g) || []).length;
     analysis.emailCount = (fullText.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g) || []).length;
     
-    // Check for suspicious domains
-    for (const domain of this.phishingDomains) {
-      if (fullText.includes(domain)) {
+    // Check for common phishing domains (simplified check)
+    const phishingDomains = ['paypal', 'amazon', 'microsoft', 'apple', 'google', 'facebook'];
+    for (const domain of phishingDomains) {
+      if (fullText.toLowerCase().includes(domain)) {
         analysis.hasPhishingDomain = true;
         break;
       }
@@ -178,15 +242,18 @@ class RobustEmailClassifier {
     return analysis;
   }
 
-  // Enhanced classification with multiple scoring methods
-  classifyEmail(subject: string, sender: string, content: string): any {
+  // Enhanced classification with dataset-based ML
+  async classifyEmail(subject: string, sender: string, content: string): Promise<any> {
     const startTime = performance.now();
+    
+    // Ensure model is loaded
+    await this.loadTrainingData();
     
     // Preprocess text
     const fullText = this.preprocessText(`${subject} ${content}`);
     
-    // Calculate feature-based score
-    const { spamScore, features } = this.calculateFeatureScore(fullText);
+    // Calculate ML-based score using Naive Bayes
+    const { spamScore, features } = this.calculateNaiveBayesScore(fullText);
     
     // Analyze email structure
     const structureAnalysis = this.analyzeEmailStructure(subject, sender, content);
@@ -295,10 +362,10 @@ serve(async (req) => {
   try {
     const { subject, sender, content, user_id } = await req.json();
     
-    console.log('Starting robust ML email classification');
+    console.log('Starting dataset-based ML email classification');
     
-    // Use the robust classifier
-    const result = robustClassifier.classifyEmail(subject || '', sender || '', content || '');
+    // Use the robust classifier with dataset training
+    const result = await robustClassifier.classifyEmail(subject || '', sender || '', content || '');
     
     // Store classification result if user_id provided
     if (user_id) {
