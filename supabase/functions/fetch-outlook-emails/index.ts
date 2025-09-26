@@ -237,10 +237,13 @@ serve(async (req) => {
           keywords: classificationData?.detailed_analysis?.detected_features || null,
         };
 
-        // Insert email into database
+        // Upsert email into database (insert or update if exists)
         const { data: insertedEmail, error: insertError } = await supabase
           .from('emails')
-          .insert(emailData)
+          .upsert(emailData, { 
+            onConflict: 'message_id',
+            ignoreDuplicates: false 
+          })
           .select()
           .single();
 
