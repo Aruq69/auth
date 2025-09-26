@@ -298,63 +298,9 @@ class EmailClassifier {
     const classificationStartTime = performance.now();
     const fullText = `${subject} ${content}`;
     
-    // Try Python ML API first, fallback to local ML if unavailable
-    let mlResult: { probability: number; confidence: number; features: string[]; processingTime: number; };
-    let mlSource = 'Local Naive Bayes';
-    
-    try {
-      const pythonApiUrl = Deno.env.get('PYTHON_ML_API_URL');
-      
-      if (pythonApiUrl) {
-        console.log('Using Python ML API for classification');
-        console.log('Python API URL:', pythonApiUrl);
-        
-        // Add timeout and better error handling
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-        
-        const response = await fetch(`${pythonApiUrl}/classify`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            subject,
-            sender,
-            content: content || ''
-          }),
-          signal: controller.signal
-        });
-        
-        clearTimeout(timeoutId);
-
-        console.log('Python API response status:', response.status);
-        
-        if (response.ok) {
-          const pythonResult = await response.json();
-          console.log('Python ML result:', pythonResult);
-          
-          mlResult = {
-            probability: pythonResult.classification === 'spam' ? pythonResult.confidence : 1 - pythonResult.confidence,
-            confidence: pythonResult.confidence,
-            features: pythonResult.keywords || [],
-            processingTime: 0
-          };
-          mlSource = 'Python ML API';
-        } else {
-          const errorText = await response.text();
-          console.warn('Python ML API failed with status:', response.status, 'Error:', errorText);
-          mlResult = await this.calculateNaiveBayesProbability(fullText);
-          mlSource = 'Local Naive Bayes (API error)';
-        }
-      } else {
-        console.log('Python ML API not configured, using local classification');
-        mlResult = await this.calculateNaiveBayesProbability(fullText);
-        mlSource = 'Local Naive Bayes';
-      }
-    } catch (error) {
-      console.error('Error with Python ML API:', error instanceof Error ? error.message : String(error));
-      mlResult = await this.calculateNaiveBayesProbability(fullText);
-      mlSource = 'Local Naive Bayes (error fallback)';
-    }
+    // Use local Naive Bayes classification
+    const mlResult = await this.calculateNaiveBayesProbability(fullText);
+    const mlSource = 'Local Naive Bayes';
     
     // Validate sender
     const senderValidation = this.validateSender(sender);
