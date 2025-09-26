@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { supabase } from "@/integrations/supabase/client";
@@ -538,29 +538,40 @@ const Index = () => {
 
   // Always display session emails first (for both privacy mode and regular mode)
   // This ensures we show the latest fetched emails immediately
-  const emailsToDisplay = sessionEmails.length > 0 ? sessionEmails : emails;
+  const emailsToDisplay = React.useMemo(() => {
+    const displayEmails = sessionEmails.length > 0 ? sessionEmails : emails;
+    console.log('📧 Emails to display:', {
+      sessionCount: sessionEmails.length,
+      storedCount: emails.length,
+      displayCount: displayEmails.length,
+      firstEmail: displayEmails[0]?.id
+    });
+    return displayEmails;
+  }, [sessionEmails, emails]);
   
-  const filteredEmails = emailsToDisplay.filter(email => {
-    // Apply search filter
-    const matchesSearch = email.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      email.sender.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    // Apply threat level filter
-    const matchesThreatFilter = !threatFilter || 
-      (threatFilter === 'all') ||
-      (threatFilter === 'high' && email.threat_level === 'high') ||
-      (threatFilter === 'medium' && email.threat_level === 'medium') ||
-      (threatFilter === 'low' && email.threat_level === 'low');
-    
-    return matchesSearch && matchesThreatFilter;
-  });
+  const filteredEmails = React.useMemo(() => {
+    return emailsToDisplay.filter(email => {
+      // Apply search filter
+      const matchesSearch = email.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        email.sender.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      // Apply threat level filter
+      const matchesThreatFilter = !threatFilter || 
+        (threatFilter === 'all') ||
+        (threatFilter === 'high' && email.threat_level === 'high') ||
+        (threatFilter === 'medium' && email.threat_level === 'medium') ||
+        (threatFilter === 'low' && email.threat_level === 'low');
+      
+      return matchesSearch && matchesThreatFilter;
+    });
+  }, [emailsToDisplay, searchTerm, threatFilter]);
   
   console.log('📧 Filter debug:', {
     searchTerm,
     threatFilter,
     totalEmails: emailsToDisplay.length,
     filteredCount: filteredEmails.length,
-    firstEmail: emailsToDisplay[0]
+    firstEmailId: filteredEmails[0]?.id
   });
 
   const threatStats = emailsToDisplay.reduce((acc, email) => {
