@@ -21,17 +21,19 @@ class RobustEmailClassifier {
 
   constructor() {
     this.spamKeywords = [
-      // Financial spam
+      // Financial spam - HIGH RISK
       'free', 'winner', 'congratulations', 'prize', 'cash', 'money', '$', 'million', 'inheritance',
-      'lottery', 'sweepstakes', 'jackpot', 'investment', 'profit', 'earn', 'income',
+      'lottery', 'sweepstakes', 'jackpot', 'investment', 'profit', 'earn', 'income', 'reward',
+      'selected', 'chosen', 'exclusive', 'special offer', 'limited offer', 'gift card', 'gift',
       
-      // Urgency indicators
+      // Urgency indicators - HIGH RISK
       'urgent', 'immediate', 'act now', 'limited time', 'expires', 'deadline', 'hurry',
-      'quick', 'instant', 'asap', 'rush', 'emergency',
+      'quick', 'instant', 'asap', 'rush', 'emergency', '24 hours', 'today only', 'last chance',
       
-      // Phishing indicators  
+      // Phishing indicators - HIGH RISK
       'verify', 'confirm', 'update', 'suspended', 'compromised', 'security alert',
-      'unusual activity', 'click here', 'login', 'password', 'account',
+      'unusual activity', 'click here', 'login', 'password', 'account', 'click the link',
+      'claim now', 'claim your', 'verify account', 'update payment',
       
       // Medical/pharmaceutical spam
       'viagra', 'cialis', 'pharmacy', 'prescription', 'pills', 'medication',
@@ -122,11 +124,16 @@ class RobustEmailClassifier {
 
   // Assign weights to different types of spam keywords
   getKeywordWeight(keyword: string): number {
-    const highRiskKeywords = ['free', 'winner', 'urgent', 'verify', 'click here', 'million'];
-    const mediumRiskKeywords = ['money', 'cash', 'prize', 'limited time', 'act now'];
+    const ultraHighRiskKeywords = [
+      'congratulations', 'winner', 'selected', 'chosen', 'free', 'prize', 'reward',
+      'click here', 'click the link', 'claim now', 'claim your', 'exclusive', 'special offer'
+    ];
+    const highRiskKeywords = ['urgent', 'verify', 'limited time', 'expires', 'act now', 'million', '$'];
+    const mediumRiskKeywords = ['money', 'cash', 'lottery', 'investment', 'immediate'];
     
-    if (highRiskKeywords.includes(keyword)) return 0.5;
-    if (mediumRiskKeywords.includes(keyword)) return 0.3;
+    if (ultraHighRiskKeywords.some(k => keyword.includes(k) || k.includes(keyword))) return 1.0;
+    if (highRiskKeywords.includes(keyword)) return 0.7;
+    if (mediumRiskKeywords.includes(keyword)) return 0.4;
     return 0.2;
   }
 
@@ -196,29 +203,47 @@ class RobustEmailClassifier {
     
     // Apply sender reputation (simplified)
     if (sender.includes('@gmail.com') || sender.includes('@outlook.com')) {
-      finalScore *= 0.8; // Reduce score for common email providers
+      finalScore *= 0.9; // Small reduction for common email providers
+    }
+    
+    // Check for specific scam patterns that should trigger immediate high scores
+    const scamPatterns = [
+      'congratulations.*selected.*free',
+      'winner.*prize.*claim',
+      'exclusive.*reward.*click',
+      'selected.*receive.*gift',
+      'urgent.*verify.*account',
+      'limited time.*expires.*hurry'
+    ];
+    
+    for (const pattern of scamPatterns) {
+      if (new RegExp(pattern, 'i').test(fullText)) {
+        finalScore = Math.max(finalScore, 0.8); // Force high score for obvious scams
+        console.log('SCAM PATTERN DETECTED:', pattern);
+        break;
+      }
     }
     
     // Normalize score
     finalScore = Math.min(finalScore, 1.0);
     
-    // Classification with conservative thresholds
+    // Classification with REALISTIC thresholds
     let classification = 'legitimate';
     let threat_level = 'safe';
     let threat_type = null;
     let confidence = 0.3;
     
-    if (finalScore > 0.7) {
+    if (finalScore > 0.5) { // Much lower threshold for spam
       classification = 'spam';
       threat_level = 'high';
       threat_type = 'spam';
-      confidence = Math.min(0.95, 0.6 + finalScore * 0.4);
-    } else if (finalScore > 0.5) {
+      confidence = Math.min(0.95, 0.7 + finalScore * 0.25);
+    } else if (finalScore > 0.3) { // Lower threshold for suspicious
       classification = 'suspicious';
       threat_level = 'medium';
       threat_type = 'suspicious';
-      confidence = Math.min(0.8, 0.4 + finalScore * 0.4);
-    } else if (finalScore > 0.3) {
+      confidence = Math.min(0.8, 0.5 + finalScore * 0.3);
+    } else if (finalScore > 0.15) { // Lower threshold for questionable
       classification = 'questionable';
       threat_level = 'low';
       threat_type = 'questionable';
