@@ -293,13 +293,56 @@ class EmailClassifier {
     };
   }
 
-  // Main classification method
+  // Main classification method with Python ML API integration
   async classifyEmail(subject: string, sender: string, content: string) {
     const classificationStartTime = performance.now();
     const fullText = `${subject} ${content}`;
     
-    // Get ML-based probability using real training data
-    const mlResult = await this.calculateNaiveBayesProbability(fullText);
+    // Try Python ML API first, fallback to local ML if unavailable
+    let mlResult: { probability: number; confidence: number; features: string[]; processingTime: number; };
+    let mlSource = 'Local Naive Bayes';
+    
+    try {
+      const pythonApiUrl = Deno.env.get('PYTHON_ML_API_URL');
+      
+      if (pythonApiUrl) {
+        console.log('Using Python ML API for classification');
+        const response = await fetch(`${pythonApiUrl}/classify`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            subject,
+            sender,
+            content: content || ''
+          })
+        });
+
+        if (response.ok) {
+          const pythonResult = await response.json();
+          console.log('Python ML result:', pythonResult);
+          
+          mlResult = {
+            probability: pythonResult.classification === 'spam' ? pythonResult.confidence : 1 - pythonResult.confidence,
+            confidence: pythonResult.confidence,
+            features: pythonResult.keywords || [],
+            processingTime: 0
+          };
+          mlSource = 'Python ML API';
+        } else {
+          console.warn('Python ML API failed, using local classification');
+          mlResult = await this.calculateNaiveBayesProbability(fullText);
+          mlSource = 'Local Naive Bayes (fallback)';
+        }
+      } else {
+        console.log('Python ML API not configured, using local classification');
+        mlResult = await this.calculateNaiveBayesProbability(fullText);
+        mlSource = 'Local Naive Bayes';
+      }
+    } catch (error) {
+      console.error('Error with Python ML API:', error);
+      mlResult = await this.calculateNaiveBayesProbability(fullText);
+      mlSource = 'Local Naive Bayes (error fallback)';
+    }
     
     // Validate sender
     const senderValidation = this.validateSender(sender);
@@ -339,13 +382,13 @@ class EmailClassifier {
     if (classification === 'spam') {
       const features = mlResult.features;
       
-      if (features.some(f => ['verify', 'confirm', 'suspended', 'security', 'breach'].includes(f))) {
+      if (features.some((f: string) => ['verify', 'confirm', 'suspended', 'security', 'breach'].includes(f))) {
         threatType = 'phishing';
-      } else if (features.some(f => ['lottery', 'winner', 'prize', 'million', 'cash'].includes(f))) {
+      } else if (features.some((f: string) => ['lottery', 'winner', 'prize', 'million', 'cash'].includes(f))) {
         threatType = 'financial_scam';
-      } else if (features.some(f => ['download', 'attachment', 'install', 'click', 'link'].includes(f))) {
+      } else if (features.some((f: string) => ['download', 'attachment', 'install', 'click', 'link'].includes(f))) {
         threatType = 'malware';
-      } else if (features.some(f => ['free', 'offer', 'deal', 'discount', 'sale'].includes(f))) {
+      } else if (features.some((f: string) => ['free', 'offer', 'deal', 'discount', 'sale'].includes(f))) {
         threatType = 'promotional_spam';
       } else {
         threatType = 'spam';
