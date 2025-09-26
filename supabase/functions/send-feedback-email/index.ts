@@ -168,11 +168,24 @@ const handler = async (req: Request): Promise<Response> => {
     console.log('Subject:', subject);
     console.log('Resend API Key present:', !!Deno.env.get("RESEND_API_KEY"));
 
+    // For testing, use verified email address to avoid Resend domain restrictions
+    const testRecipient = "arfalqtan@gmail.com"; // Your verified Resend email
+    const actualRecipient = feedback.email;
+    
+    console.log(`=== EMAIL SEND (TEST MODE) ===`);
+    console.log(`Original recipient: ${actualRecipient}`);
+    console.log(`Test recipient: ${testRecipient}`);
+
     const emailResponse = await resend.emails.send({
       from: "Mail Guard <onboarding@resend.dev>",
-      to: [feedback.email],
-      subject: subject,
-      html: emailHtml,
+      to: [testRecipient], // Using verified email for testing
+      subject: `${subject} (Originally for: ${actualRecipient})`,
+      html: `
+        <div style="background-color: #f0f0f0; padding: 10px; margin-bottom: 20px; border-left: 4px solid #007bff;">
+          <strong>Test Mode:</strong> This email was originally intended for: ${actualRecipient}
+        </div>
+        ${emailHtml}
+      `,
     });
 
     console.log("=== EMAIL SEND RESULT ===");
