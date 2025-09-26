@@ -98,7 +98,7 @@ serve(async (req) => {
 
 async function classifySpam(text: string) {
   const response = await fetch(
-    "https://api-inference.huggingface.co/models/unitary/toxic-bert",
+    "https://api-inference.huggingface.co/models/martin-ha/toxic-comment-model",
     {
       headers: { Authorization: `Bearer ${hfToken}` },
       method: "POST",
@@ -106,7 +106,10 @@ async function classifySpam(text: string) {
     }
   );
   
-  if (!response.ok) throw new Error(`Spam classification failed: ${response.status}`);
+  if (!response.ok) {
+    console.error(`Spam classification failed: ${response.status} - ${await response.text()}`);
+    throw new Error(`Spam classification failed: ${response.status}`);
+  }
   return await response.json();
 }
 
@@ -120,31 +123,18 @@ async function analyzeSentiment(text: string) {
     }
   );
   
-  if (!response.ok) throw new Error(`Sentiment analysis failed: ${response.status}`);
+  if (!response.ok) {
+    console.error(`Sentiment analysis failed: ${response.status} - ${await response.text()}`);
+    throw new Error(`Sentiment analysis failed: ${response.status}`);
+  }
   const result = await response.json();
-  return Array.isArray(result) ? result[0] : result;
+  return Array.isArray(result) && result.length > 0 ? result[0] : result;
 }
 
 async function detectPhishing(text: string) {
-  // Use a general classification model for phishing detection
+  // Use a simple spam detection model instead of trying to use an inappropriate model
   const response = await fetch(
-    "https://api-inference.huggingface.co/models/microsoft/DialoGPT-medium",
-    {
-      headers: { Authorization: `Bearer ${hfToken}` },
-      method: "POST",
-      body: JSON.stringify({ 
-        inputs: `Analyze this email for phishing indicators: ${text.substring(0, 500)}` 
-      }),
-    }
-  );
-  
-  if (!response.ok) throw new Error(`Phishing detection failed: ${response.status}`);
-  return await response.json();
-}
-
-async function extractEntities(text: string) {
-  const response = await fetch(
-    "https://api-inference.huggingface.co/models/dbmdz/bert-large-cased-finetuned-conll03-english",
+    "https://api-inference.huggingface.co/models/mshenoda/roberta-spam",
     {
       headers: { Authorization: `Bearer ${hfToken}` },
       method: "POST",
@@ -152,7 +142,27 @@ async function extractEntities(text: string) {
     }
   );
   
-  if (!response.ok) throw new Error(`Entity extraction failed: ${response.status}`);
+  if (!response.ok) {
+    console.error(`Phishing detection failed: ${response.status} - ${await response.text()}`);
+    throw new Error(`Phishing detection failed: ${response.status}`);
+  }
+  return await response.json();
+}
+
+async function extractEntities(text: string) {
+  const response = await fetch(
+    "https://api-inference.huggingface.co/models/Babelscape/wikineural-multilingual-ner",
+    {
+      headers: { Authorization: `Bearer ${hfToken}` },
+      method: "POST",
+      body: JSON.stringify({ inputs: text.substring(0, 500) }),
+    }
+  );
+  
+  if (!response.ok) {
+    console.error(`Entity extraction failed: ${response.status} - ${await response.text()}`);
+    throw new Error(`Entity extraction failed: ${response.status}`);
+  }
   return await response.json();
 }
 
@@ -169,53 +179,79 @@ function calculateThreatLevel(results: any) {
   let totalScore = 0;
   let factors = 0;
   
-  // Spam score
+  console.log('Calculating threat level with results:', results);
+  
+  // If all models failed, use enhanced fallback scoring
+  if (!results.spam && !results.sentiment && !results.phishing && !results.entities) {
+    console.log('All models failed, using fallback threat assessment');
+    return {
+      classification: 'legitimate',
+      threat_level: 'safe',
+      threat_type: null,
+      confidence: 0.3 // Low confidence since models failed
+    };
+  }
+  
+  // Spam/Toxicity score - handle different response formats
   if (results.spam && Array.isArray(results.spam)) {
-    const toxicScore = results.spam.find((item: any) => item.label === 'TOXIC')?.score || 0;
-    totalScore += toxicScore * 0.4;
-    factors++;
+    const toxicItem = results.spam.find((item: any) => 
+      item.label === 'TOXIC' || item.label === 'SPAM' || item.label === '1'
+    );
+    if (toxicItem) {
+      totalScore += toxicItem.score * 0.4;
+      factors++;
+      console.log('Spam score:', toxicItem.score);
+    }
   }
   
   // Sentiment score (negative sentiment increases threat)
-  if (results.sentiment) {
-    const negativeScore = results.sentiment.label === 'LABEL_0' ? results.sentiment.score : 0;
-    totalScore += negativeScore * 0.3;
-    factors++;
+  if (results.sentiment && results.sentiment.label) {
+    const isNegative = results.sentiment.label === 'LABEL_0' || results.sentiment.label === 'NEGATIVE';
+    if (isNegative) {
+      totalScore += results.sentiment.score * 0.3;
+      factors++;
+      console.log('Negative sentiment score:', results.sentiment.score);
+    }
   }
   
-  // Entity-based scoring (looking for suspicious patterns)
-  if (results.entities && Array.isArray(results.entities)) {
-    const suspiciousEntities = results.entities.filter((entity: any) => 
-      entity.entity_group === 'ORG' || entity.entity_group === 'MISC'
-    ).length;
-    totalScore += Math.min(suspiciousEntities * 0.1, 0.3);
-    factors++;
+  // Phishing score
+  if (results.phishing && Array.isArray(results.phishing)) {
+    const spamItem = results.phishing.find((item: any) => 
+      item.label === 'SPAM' || item.label === '1'
+    );
+    if (spamItem) {
+      totalScore += spamItem.score * 0.3;
+      factors++;
+      console.log('Phishing score:', spamItem.score);
+    }
   }
   
   const avgScore = factors > 0 ? totalScore / factors : 0;
+  console.log('Average threat score:', avgScore, 'from', factors, 'factors');
   
   let classification = 'legitimate';
   let threat_level = 'safe';
   let threat_type = null;
-  let confidence = Math.min(avgScore * 2, 1); // Normalize confidence
+  let confidence = Math.min(avgScore * 1.5, 0.95); // Increase confidence scaling
   
-  if (avgScore > 0.7) {
+  if (avgScore > 0.6) {
     classification = 'spam';
     threat_level = 'high';
     threat_type = 'spam';
-    confidence = Math.max(confidence, 0.8);
-  } else if (avgScore > 0.5) {
+    confidence = Math.max(confidence, 0.7);
+  } else if (avgScore > 0.4) {
     classification = 'suspicious';
     threat_level = 'medium';
     threat_type = 'suspicious';
-    confidence = Math.max(confidence, 0.6);
-  } else if (avgScore > 0.3) {
+    confidence = Math.max(confidence, 0.5);
+  } else if (avgScore > 0.2) {
     classification = 'questionable';
     threat_level = 'low';
     threat_type = 'questionable';
-    confidence = Math.max(confidence, 0.4);
+    confidence = Math.max(confidence, 0.3);
   }
   
+  console.log('Final classification:', { classification, threat_level, threat_type, confidence });
   return { classification, threat_level, threat_type, confidence };
 }
 
@@ -283,39 +319,70 @@ async function storeClassificationResult(
 }
 
 async function fallbackClassification(subject: string, sender: string, content: string, user_id?: string) {
-  console.log('Using fallback classification');
+  console.log('Using enhanced fallback classification');
   
-  // Simple rule-based classification
   const text = `${subject} ${sender} ${content || ''}`.toLowerCase();
-  const spamKeywords = ['free', 'winner', 'urgent', 'claim', 'prize', 'nigeria', 'bank', 'lottery'];
-  const suspiciousPatterns = ['click here', 'act now', 'limited time', 'verify account'];
+  const spamKeywords = ['free', 'winner', 'urgent', 'claim', 'prize', 'nigeria', 'bank', 'lottery', 'congratulations', 'million', 'inheritance'];
+  const suspiciousPatterns = ['click here', 'act now', 'limited time', 'verify account', 'suspend', 'confirm identity', 'update payment'];
+  const phishingIndicators = ['paypal', 'amazon', 'microsoft', 'apple', 'verify', 'suspended', 'unusual activity'];
   
   let score = 0;
-  spamKeywords.forEach(keyword => {
-    if (text.includes(keyword)) score += 0.3;
-  });
+  let detectedPatterns = [];
   
-  suspiciousPatterns.forEach(pattern => {
-    if (text.includes(pattern)) score += 0.4;
-  });
+  // Check spam keywords
+  for (const keyword of spamKeywords) {
+    if (text.includes(keyword)) {
+      score += 0.25;
+      detectedPatterns.push(`Spam keyword: ${keyword}`);
+    }
+  }
   
-  const classification = score > 0.6 ? 'spam' : score > 0.3 ? 'suspicious' : 'legitimate';
-  const threat_level = score > 0.6 ? 'high' : score > 0.3 ? 'medium' : 'safe';
+  // Check suspicious patterns  
+  for (const pattern of suspiciousPatterns) {
+    if (text.includes(pattern)) {
+      score += 0.3;
+      detectedPatterns.push(`Suspicious pattern: ${pattern}`);
+    }
+  }
+  
+  // Check phishing indicators
+  for (const indicator of phishingIndicators) {
+    if (text.includes(indicator)) {
+      score += 0.2;
+      detectedPatterns.push(`Phishing indicator: ${indicator}`);
+    }
+  }
+  
+  // Check for domain spoofing patterns
+  if (text.includes('.com') && (text.includes('secure') || text.includes('verify'))) {
+    score += 0.3;
+    detectedPatterns.push('Potential domain spoofing');
+  }
+  
+  const classification = score > 0.7 ? 'spam' : score > 0.4 ? 'suspicious' : 'legitimate';
+  const threat_level = score > 0.7 ? 'high' : score > 0.4 ? 'medium' : 'safe';
+  const threat_type = score > 0.7 ? 'spam' : score > 0.4 ? 'suspicious' : null;
+  
+  console.log('Fallback classification result:', { classification, threat_level, score, detectedPatterns });
   
   return new Response(
     JSON.stringify({
       classification,
-      confidence: Math.min(score, 1),
+      confidence: Math.min(score, 0.9),
       threat_level,
-      threat_type: classification === 'spam' ? 'spam' : null,
+      threat_type,
       processing_time: 50,
       detailed_analysis: {
-        ml_source: 'Fallback Rule-based Classifier',
+        ml_source: 'Enhanced Fallback Classifier',
         spam_probability: score,
-        detected_keywords: spamKeywords.filter(k => text.includes(k))
+        detected_patterns: detectedPatterns,
+        sentiment: 'NEUTRAL',
+        sentiment_confidence: 0
       },
-      recommendations: score > 0.6 ? 
-        ['⚠️ High risk detected - avoid interaction'] : 
+      recommendations: score > 0.7 ? 
+        ['⚠️ High risk detected - avoid interaction', '🔒 Do not click any links or download attachments'] : 
+        score > 0.4 ?
+        ['⚡ Proceed with caution - verify sender before taking action'] :
         ['✅ Basic analysis complete - exercise normal caution']
     }),
     { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
