@@ -173,6 +173,20 @@ const Index = () => {
         });
         return;
       }
+      
+      // Auto-reclassify emails that don't have robust ML classification or have old classifications
+      const emailsNeedingUpdate = (data || []).filter(email => 
+        !email.processed_at || 
+        !email.classification || 
+        email.threat_level === 'medium' // Update medium threat emails as they might be misclassified
+      );
+      
+      if (emailsNeedingUpdate.length > 0) {
+        console.log(`🔄 Auto-updating ${emailsNeedingUpdate.length} emails with robust ML classifier`);
+        // Update emails in background without blocking UI
+        updateEmailsWithRobustClassifier(emailsNeedingUpdate);
+      }
+      
       setEmails(data || []);
     } catch (error) {
       console.error('Error fetching emails:', error);
@@ -184,6 +198,43 @@ const Index = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Background function to update emails with robust classifier
+  const updateEmailsWithRobustClassifier = async (emailsToUpdate: Email[]) => {
+    for (const email of emailsToUpdate) {
+      try {
+        const { data: classificationData, error } = await supabase.functions.invoke('robust-email-classifier', {
+          body: {
+            subject: email.subject,
+            sender: email.sender,
+            content: email.content,
+            user_id: user?.id
+          }
+        });
+
+        if (!error && classificationData) {
+          await supabase
+            .from('emails')
+            .update({
+              classification: classificationData.classification,
+              threat_level: classificationData.threat_level,
+              threat_type: classificationData.threat_type,
+              confidence: classificationData.confidence,
+              keywords: classificationData.detailed_analysis?.detected_features || null,
+              processed_at: new Date().toISOString()
+            })
+            .eq('id', email.id);
+          
+          console.log(`✅ Updated email ${email.id} with robust classification: ${classificationData.classification} (${classificationData.threat_level})`);
+        }
+      } catch (error) {
+        console.error(`Failed to update email ${email.id}:`, error);
+      }
+    }
+    
+    // Refresh emails after updates
+    setTimeout(() => fetchEmails(), 1000);
   };
 
   const addRecentActivity = (action: string, details?: string) => {
