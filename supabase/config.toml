@@ -1,4 +1,7 @@
 project_id = "ntqeccpwqtjmxlqjfcdb"
 
+[functions.chat-assistant]
+verify_jwt = false
+
 [functions.fetch-outlook-emails]
 verify_jwt = false
