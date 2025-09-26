@@ -108,8 +108,7 @@ export default function AdminEmails() {
           sender, 
           subject, 
           outlook_id, 
-          user_id,
-          profiles(username)
+          user_id
         `)
         .eq('id', emailId)
         .single();
