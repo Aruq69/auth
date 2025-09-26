@@ -541,13 +541,23 @@ const Index = () => {
   // This ensures we show the latest fetched emails immediately
   const emailsToDisplay = React.useMemo(() => {
     const displayEmails = sessionEmails.length > 0 ? sessionEmails : emails;
+    
+    // DEDUPLICATE emails by ID to prevent any UI duplicates
+    const uniqueEmails = displayEmails.reduce((acc, email) => {
+      if (!acc.some(existing => existing.id === email.id)) {
+        acc.push(email);
+      }
+      return acc;
+    }, [] as Email[]);
+    
     console.log('📧 Emails to display:', {
       sessionCount: sessionEmails.length,
       storedCount: emails.length,
-      displayCount: displayEmails.length,
-      firstEmail: displayEmails[0]?.id
+      beforeDedup: displayEmails.length,
+      afterDedup: uniqueEmails.length,
+      firstEmailId: uniqueEmails[0]?.id
     });
-    return displayEmails;
+    return uniqueEmails;
   }, [sessionEmails, emails]);
   
   const filteredEmails = React.useMemo(() => {
@@ -572,7 +582,8 @@ const Index = () => {
     threatFilter,
     totalEmails: emailsToDisplay.length,
     filteredCount: filteredEmails.length,
-    firstEmailId: filteredEmails[0]?.id
+    firstEmailId: filteredEmails[0]?.id,
+    allEmailIds: filteredEmails.map(e => e.id).slice(0, 5) // Show first 5 IDs
   });
 
   const threatStats = emailsToDisplay.reduce((acc, email) => {
