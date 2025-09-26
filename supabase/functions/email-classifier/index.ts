@@ -298,14 +298,14 @@ class EmailClassifier {
     const classificationStartTime = performance.now();
     const fullText = `${subject} ${content}`;
     
-    // Use advanced ML classification
-    console.log('Calling advanced email classifier');
+    // Use robust traditional ML classifier
+    console.log('Calling robust email classifier');
     
     let mlResult: { probability: number; confidence: number; features: string[]; processingTime: number; };
-    let mlSource = 'HuggingFace Advanced ML';
+    let mlSource = 'Robust Traditional ML';
     
     try {
-      const advancedResponse = await fetch(`${supabaseUrl}/functions/v1/advanced-email-classifier`, {
+      const robustResponse = await fetch(`${supabaseUrl}/functions/v1/robust-email-classifier`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${supabaseServiceKey}`,
@@ -314,23 +314,23 @@ class EmailClassifier {
         body: JSON.stringify({ subject, sender, content, user_id: null })
       });
       
-      if (advancedResponse.ok) {
-        const advancedResult = await advancedResponse.json();
-        console.log('Advanced ML result:', advancedResult);
+      if (robustResponse.ok) {
+        const robustResult = await robustResponse.json();
+        console.log('Robust ML result:', robustResult);
         
         mlResult = {
-          probability: advancedResult.classification === 'spam' ? advancedResult.confidence : 1 - advancedResult.confidence,
-          confidence: advancedResult.confidence,
-          features: advancedResult.detailed_analysis?.extracted_entities?.map((e: any) => e.word) || [],
-          processingTime: advancedResult.processing_time || 0
+          probability: robustResult.classification === 'spam' ? robustResult.confidence : 1 - robustResult.confidence,
+          confidence: robustResult.confidence,
+          features: robustResult.detailed_analysis?.detected_features || [],
+          processingTime: robustResult.processing_time || 0
         };
       } else {
-        console.error('Advanced ML failed with status:', advancedResponse.status);
+        console.error('Robust ML failed with status:', robustResponse.status);
         mlResult = await this.calculateNaiveBayesProbability(fullText);
         mlSource = 'Local Naive Bayes (fallback)';
       }
     } catch (error) {
-      console.error('Advanced ML error:', error);
+      console.error('Robust ML error:', error);
       mlResult = await this.calculateNaiveBayesProbability(fullText);
       mlSource = 'Local Naive Bayes (error fallback)';
     }
