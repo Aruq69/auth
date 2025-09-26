@@ -171,11 +171,11 @@ serve(async (req) => {
     console.error('Error in outlook-auth function:', error);
     return new Response(
       JSON.stringify({ 
-        error: error.message,
+        error: (error as Error).message,
         details: 'Check function logs for more information'
       }),
       { 
-        status: 500, 
+        status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
       }
     );

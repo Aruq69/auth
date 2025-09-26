@@ -138,19 +138,19 @@ When explaining email classifications, focus on:
     
     // Check for specific OpenAI API errors
     let errorResponse = {
-      error: error.message,
+      error: (error as Error).message,
       details: 'Check the function logs for more information'
     };
     
     let statusCode = 500;
     
-    if (error.message.includes('429') || error.message.includes('exceeded your current quota')) {
+    if ((error as Error).message?.includes('429') || (error as Error).message?.includes('exceeded your current quota')) {
       errorResponse = {
         error: 'AI service quota exceeded. Please try again later.',
         details: 'The Groq API quota has been exceeded. This typically resets quickly.'
       };
       statusCode = 429;
-    } else if (error.message.includes('insufficient_quota')) {
+    } else if ((error as Error).message?.includes('insufficient_quota')) {
       errorResponse = {
         error: 'AI service temporarily unavailable due to quota limits.',
         details: 'Please try again later or contact support.'

@@ -172,7 +172,7 @@ class EmailClassifier {
     // Prior probabilities
     const totalEmails = this.spamEmailCount + this.hamEmailCount;
     if (totalEmails === 0) {
-      return { probability: 0.5, confidence: 0.5, features: [] };
+      return { probability: 0.5, confidence: 0.5, features: [], processingTime: 0 };
     }
     
     let spamScore = Math.log(this.spamEmailCount / totalEmails);
@@ -508,10 +508,10 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in email classifier:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: (error as Error).message }),
       { 
         status: 500, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );
   }

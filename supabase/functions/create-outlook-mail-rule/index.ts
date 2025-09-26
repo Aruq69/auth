@@ -223,16 +223,16 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('=== CREATE OUTLOOK MAIL RULE ERROR ===');
-    console.error('Error message:', error.message);
-    console.error('Error stack:', error.stack);
+    console.error('Error message:', (error as Error).message);
+    console.error('Error stack:', (error as Error).stack);
     
     return new Response(
       JSON.stringify({ 
-        error: error.message,
+        error: (error as Error).message,
         success: false
       }),
       { 
-        status: 500, 
+        status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
       }
     );

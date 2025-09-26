@@ -143,13 +143,13 @@ Provide specific advice for this email including immediate actions, risk assessm
 
   } catch (error) {
     console.error('Error in email-security-advisor function:', error);
-    console.error('Error details:', error.message);
-    console.error('Error stack:', error.stack);
+    console.error('Error details:', (error as Error).message);
+    console.error('Error stack:', (error as Error).stack);
     
     return new Response(
       JSON.stringify({ 
         error: 'Internal server error', 
-        details: error.message,
+        details: (error as Error).message,
         advice: 'Unable to generate personalized advice at this time. Please ensure you have proper email security practices in place and try again later.'
       }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
