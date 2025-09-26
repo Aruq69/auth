@@ -497,6 +497,14 @@ const Index = () => {
                 >
                   <Settings className="h-3 w-3" />
                 </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigate('/alerts')}
+                  className="ml-2 border-border/20 hover:border-primary/50"
+                >
+                  <AlertTriangle className="h-3 w-3" />
+                </Button>
               </div>
             )}
           </div>

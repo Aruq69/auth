@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import Index from "./pages/Index";
+import UserAlerts from "./pages/UserAlerts";
 import Auth from "./pages/Auth";
 import OutlookCallback from "./pages/OutlookCallback";
 import Settings from "./pages/Settings";
@@ -35,6 +36,7 @@ const App = () => (
               <Route path="/auth" element={<Auth />} />
               <Route path="/outlook-callback" element={<OutlookCallback />} />
               <Route path="/settings" element={<Settings />} />
+              <Route path="/alerts" element={<UserAlerts />} />
               <Route path="/ml-analytics" element={<MLAnalytics />} />
               
               {/* Admin Routes */}

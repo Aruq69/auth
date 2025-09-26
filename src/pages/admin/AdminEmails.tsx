@@ -148,7 +148,20 @@ export default function AdminEmails() {
           action_details: { block_reason: blockReason, sender: emailData.sender }
         });
       
-      // Send security alert email using the feedback email function
+      // Create an alert in the database for the user
+      await supabase
+        .from('email_alerts')
+        .insert({
+          user_id: emailData.user_id,
+          email_id: emailId,
+          alert_type: 'suspicious',
+          alert_message: `Suspicious email from ${emailData.sender} has been blocked by admin. Reason: ${blockReason}. A mail rule has been created to automatically block future emails from this sender.`,
+          status: 'resolved',
+          admin_notes: `Blocked by admin: ${blockReason}`,
+          admin_action: 'Email blocked and Outlook rule created'
+        });
+
+      // Send security alert email using the dedicated function
       try {
         const { data: profileData } = await supabase
           .from('profiles')
@@ -157,14 +170,12 @@ export default function AdminEmails() {
           .single();
 
         if (profileData?.username) {
-          await supabase.functions.invoke('send-feedback-email', {
+          await supabase.functions.invoke('send-security-alert', {
             body: {
-              feedback_type: 'security',
-              category: 'Security Alert',
-              feedback_text: `Security Alert: Suspicious email blocked from ${emailData.sender}. Block reason: ${blockReason}. A mail rule has been created to automatically block future emails from this sender.`,
-              email: profileData.username,
-              page_url: window.location.href,
-              user_agent: navigator.userAgent
+              userEmail: profileData.username,
+              senderEmail: emailData.sender,
+              blockType: 'sender',
+              blockReason: blockReason
             }
           });
         }
