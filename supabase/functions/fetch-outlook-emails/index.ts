@@ -178,8 +178,9 @@ serve(async (req) => {
       // Continue anyway - this is not a critical error
     }
     
-    // Process emails
+    // Process emails with ML analysis
     const processedEmails = [];
+    console.log(`Processing ${emails.length} emails with ML analysis...`);
     
     for (const email of emails) {
       try {
@@ -193,30 +194,29 @@ serve(async (req) => {
             .trim();
         }
 
-        // Call email classifier to analyze the email
-        const classificationResult = await fetch(`${supabaseUrl}/functions/v1/email-classifier`, {
+        // Call robust email classifier to analyze the email with ML
+        const classificationResult = await fetch(`${supabaseUrl}/functions/v1/robust-email-classifier`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${supabaseServiceKey}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            emails: [{
-              subject: email.subject || 'No Subject',
-              sender: email.from?.emailAddress?.address || 'Unknown Sender',
-              content: textContent,
-              userId: user.id,
-              message_id: email.id
-            }]
+            subject: email.subject || 'No Subject',
+            sender: email.from?.emailAddress?.address || 'Unknown Sender',
+            content: textContent,
+            user_id: user.id
           })
         });
 
         let classificationData = null;
         if (classificationResult.ok) {
           const classificationResponse = await classificationResult.json();
-          if (classificationResponse.success && classificationResponse.results && classificationResponse.results.length > 0) {
-            classificationData = classificationResponse.results[0];
-          }
+          classificationData = classificationResponse;
+          console.log(`ML Classification for "${email.subject}":`, classificationData?.classification, 
+                     `(${(classificationData?.confidence * 100).toFixed(1)}% confidence)`);
+        } else {
+          console.error('Classification failed for email:', email.subject);
         }
 
         const emailData = {
@@ -229,12 +229,12 @@ serve(async (req) => {
           raw_content: email.body?.content || '',
           received_date: email.receivedDateTime,
           processed_at: new Date().toISOString(),
-          // Add classification data if available
+          // Add ML classification data
           classification: classificationData?.classification || null,
           threat_level: classificationData?.threat_level || null,
           threat_type: classificationData?.threat_type || null,
           confidence: classificationData?.confidence || null,
-          keywords: classificationData?.keywords || null,
+          keywords: classificationData?.detailed_analysis?.detected_features || null,
         };
 
         // Insert email into database
@@ -246,6 +246,39 @@ serve(async (req) => {
 
         if (!insertError && insertedEmail) {
           processedEmails.push(insertedEmail);
+          
+          // Update email statistics
+          if (classificationData) {
+            try {
+              await supabase.rpc('increment_email_statistics', {
+                p_user_id: user.id,
+                p_threat_level: classificationData.threat_level || 'safe',
+                p_threat_type: classificationData.threat_type
+              });
+            } catch (statsError) {
+              console.error('Failed to update email statistics:', statsError);
+            }
+            
+            // Create alert for high-risk emails
+            if (classificationData.threat_level === 'high' || 
+                classificationData.classification === 'spam' ||
+                classificationData.classification === 'suspicious') {
+              try {
+                await supabase
+                  .from('email_alerts')
+                  .insert({
+                    user_id: user.id,
+                    email_id: insertedEmail.id,
+                    alert_type: classificationData.threat_level || 'suspicious',
+                    alert_message: `${classificationData.classification} email detected: "${email.subject}" from ${email.from?.emailAddress?.address}`,
+                    status: 'pending'
+                  });
+                console.log(`Alert created for high-risk email: ${email.subject}`);
+              } catch (alertError) {
+                console.error('Failed to create email alert:', alertError);
+              }
+            }
+          }
         }
 
         } catch (error) {
@@ -253,6 +286,9 @@ serve(async (req) => {
         }
     }
 
+    console.log(`=== ML ANALYSIS COMPLETE ===`);
+    console.log(`Processed ${processedEmails.length}/${emails.length} emails successfully`);
+    
     return new Response(
       JSON.stringify({
         success: true,
