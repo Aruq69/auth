@@ -1,7 +1,12 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 
 const groqApiKey = Deno.env.get('GROQ_API_KEY');
+const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -28,6 +33,35 @@ serve(async (req) => {
       hasEmailData: !!emailData,
       historyLength: conversationHistory?.length || 0
     });
+
+    // If emailData is provided, perform real-time classification using the same ML classifier
+    let classificationResult = null;
+    if (emailData && emailData.content) {
+      console.log('Performing real-time ML classification for chat context...');
+      try {
+        const { data: mlResult, error: mlError } = await supabase.functions.invoke('robust-email-classifier', {
+          body: {
+            subject: emailData.subject || 'No Subject',
+            sender: emailData.sender || 'unknown@sender.com',
+            content: emailData.content,
+            user_id: null // Chat context doesn't require user association
+          }
+        });
+
+        if (mlError) {
+          console.error('ML classification error:', mlError);
+        } else {
+          classificationResult = mlResult;
+          console.log('Real-time classification completed:', {
+            classification: mlResult?.classification,
+            threat_level: mlResult?.threat_level,
+            confidence: mlResult?.confidence
+          });
+        }
+      } catch (mlError) {
+        console.error('Failed to classify email in chat context:', mlError);
+      }
+    }
 
     let systemPrompt = `You are MAIL GUARD AI, an advanced cybersecurity expert assistant specializing in email threat analysis and security. You are part of an elite email security system that protects users from sophisticated threats.
 
@@ -66,15 +100,20 @@ When explaining email classifications, focus on:
 3. **User Impact** - What this means for them personally
 4. **Recommended Action** - What they should do next`;
 
-    if (emailData) {
-      systemPrompt += `\n\nCURRENT EMAIL ANALYSIS:
-      📧 Subject: "${emailData.subject}"
-      👤 Sender: ${emailData.sender}
-      🚨 Classification: ${emailData.classification || 'Unknown'}
-      ⚠️ Threat Level: ${emailData.threat_level || 'Unknown'}
-      🎯 Threat Type: ${emailData.threat_type || 'None detected'}
-      📊 Confidence: ${Math.round((emailData.confidence || 0) * 100)}%
-      🔍 Keywords: ${emailData.keywords?.join(', ') || 'None detected'}
+    // Use real-time classification results if available, otherwise fall back to provided data
+    const analysisData = classificationResult || emailData;
+    
+    if (analysisData) {
+      systemPrompt += `\n\nCURRENT EMAIL ANALYSIS (Dataset-Based ML Classification):
+      📧 Subject: "${analysisData.subject}"
+      👤 Sender: ${analysisData.sender}
+      🚨 Classification: ${analysisData.classification || 'Unknown'}
+      ⚠️ Threat Level: ${analysisData.threat_level || 'Unknown'}
+      🎯 Threat Type: ${analysisData.threat_type || 'None detected'}
+      📊 Confidence: ${Math.round((analysisData.confidence || 0) * 100)}%
+      🔍 Keywords: ${analysisData.keywords?.join(', ') || 'None detected'}
+      
+      ${classificationResult ? '✅ LIVE ANALYSIS: This email was just analyzed using the same Dataset-Based ML Email Classifier as used in the ML Analytics dashboard.' : ''}
       
       Use this context to provide specific, personalized analysis of THIS email. Answer based on what the user is actually asking about this specific email.`;
     }
