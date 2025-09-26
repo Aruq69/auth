@@ -78,6 +78,10 @@ export default function AdminEmails() {
   });
 
   const handleBlockEmail = async (emailId: string, blockReason: string) => {
+    console.log('=== STARTING EMAIL BLOCK PROCESS ===');
+    console.log('Email ID:', emailId);
+    console.log('Block Reason:', blockReason);
+    
     // Add email to blocking set
     setBlockingEmails(prev => new Set(prev).add(emailId));
     
@@ -95,9 +99,15 @@ export default function AdminEmails() {
         .eq('id', emailId)
         .single();
 
-      if (emailError) throw emailError;
+      if (emailError) {
+        console.error('Error fetching email data:', emailError);
+        throw emailError;
+      }
+      
+      console.log('Email data retrieved:', emailData);
 
       // Block in app database
+      console.log('=== BLOCKING IN APP DATABASE ===');
       const { error } = await supabase
         .from('email_blocks')
         .insert({
@@ -106,11 +116,17 @@ export default function AdminEmails() {
           block_reason: blockReason,
           block_type: 'admin_action',
           is_active: true
-        });
+         });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error inserting email block:', error);
+        throw error;
+      }
+      
+      console.log('Email blocked in app database successfully');
 
       // Create actual Outlook mail rule to block future emails from this sender
+      console.log('=== CREATING OUTLOOK MAIL RULE ===');
       try {
         const { data: ruleResult, error: ruleError } = await supabase.functions.invoke('create-outlook-mail-rule', {
           body: {
@@ -119,7 +135,10 @@ export default function AdminEmails() {
             blockType: 'sender',
             emailId: emailData.outlook_id // Pass the Outlook ID to delete the email
           }
-        });
+         });
+
+        console.log('Outlook rule result:', ruleResult);
+        console.log('Outlook rule error:', ruleError);
 
         if (ruleError) {
           console.warn('Failed to create Outlook rule:', ruleError);
@@ -142,17 +161,18 @@ export default function AdminEmails() {
             title: 'Email Blocked',
             description,
           });
-        }
+         }
       } catch (ruleError) {
-        console.warn('Failed to create Outlook rule:', ruleError);
+        console.error('Exception creating Outlook rule:', ruleError);
         toast({
           title: 'Partial Success',
           description: 'Email blocked in app but failed to create Outlook rule. The email is only blocked within the app.',
           variant: 'default',
         });
-      }
+       }
 
       // Log admin action
+      console.log('=== LOGGING ADMIN ACTION ===');
       await supabase
         .from('admin_audit_log')
         .insert({
@@ -161,9 +181,12 @@ export default function AdminEmails() {
           target_type: 'email',
           target_id: emailId,
           action_details: { block_reason: blockReason, sender: emailData.sender }
-        });
+         });
+      
+      console.log('Admin action logged successfully');
       
       // Create an alert in the database for the user
+      console.log('=== CREATING USER ALERT ===');
       await supabase
         .from('email_alerts')
         .insert({
@@ -174,12 +197,17 @@ export default function AdminEmails() {
           status: 'resolved',
           admin_notes: `Blocked by admin: ${blockReason}`,
           admin_action: 'Email blocked and Outlook rule created'
-        });
+         });
+
+      console.log('User alert created successfully');
 
       // Send security alert email using the dedicated function
+      console.log('=== SENDING SECURITY ALERT EMAIL ===');
       try {
         // Get the user's actual email address from auth.users via Supabase Admin API
         const { data: userData, error: userError } = await supabase.auth.admin.getUserById(emailData.user_id);
+         
+        console.log('User data retrieved:', userData?.user?.email);
         
         if (userData?.user?.email) {
           await supabase.functions.invoke('send-feedback-email', {
@@ -189,18 +217,24 @@ export default function AdminEmails() {
               feedback_text: `Suspicious email blocked from ${emailData.sender}. Reason: ${blockReason}. A mail rule has been created to automatically block future emails from this sender.`,
               email: userData.user.email
             }
-          });
+           });
+          console.log('Security alert email sent successfully');
+        } else {
+          console.log('No user email found, skipping security alert');
         }
       } catch (emailError) {
         console.error('Failed to send security alert:', emailError);
-      }
+       }
       
+      console.log('=== EMAIL BLOCK PROCESS COMPLETED SUCCESSFULLY ===');
       refetch();
     } catch (error) {
-      console.error('Error blocking email:', error);
+      console.error('=== ERROR BLOCKING EMAIL ===');
+      console.error('Error details:', error);
+      console.error('Error stack:', (error as Error).stack);
       toast({
         title: 'Error',
-        description: 'Failed to block email',
+        description: `Failed to block email: ${(error as Error).message}`,
         variant: 'destructive',
       });
     } finally {
