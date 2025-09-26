@@ -59,13 +59,27 @@ serve(async (req) => {
     console.log('User authenticated:', user.id);
 
     // Get the user's Outlook tokens
+    console.log('🔍 Fetching Outlook tokens for user...');
     const { data: tokenData, error: tokenError } = await supabase
       .from('outlook_tokens')
       .select('*')
       .eq('user_id', user.id)
       .single();
 
-    if (tokenError || !tokenData) {
+    if (tokenError) {
+      console.error('❌ Token fetch error:', tokenError);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Error fetching Outlook tokens. Please reconnect your account.',
+          success: false,
+          debug: tokenError.message 
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (!tokenData) {
+      console.log('❌ No Outlook token found for user');
       return new Response(
         JSON.stringify({ 
           error: 'No Outlook token found. Please connect your Outlook account first.',
@@ -74,6 +88,8 @@ serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    console.log('✅ Outlook tokens found, checking expiration...');
 
     // Check if token is expired and attempt refresh if needed
     const now = new Date();
@@ -147,6 +163,7 @@ serve(async (req) => {
     }
 
     // Fetch emails from Microsoft Graph API
+    console.log('📧 Fetching emails from Microsoft Graph API...');
     const graphResponse = await fetch('https://graph.microsoft.com/v1.0/me/messages?$top=10&$orderby=receivedDateTime desc', {
       headers: {
         'Authorization': `Bearer ${tokenData.access_token}`,
@@ -156,14 +173,18 @@ serve(async (req) => {
 
     if (!graphResponse.ok) {
       const errorText = await graphResponse.text();
+      console.error('❌ Graph API Error:', graphResponse.status, errorText);
       return new Response(
         JSON.stringify({ 
           error: `Failed to fetch emails: ${graphResponse.status} - ${errorText}`,
-          success: false 
+          success: false,
+          debug: `HTTP ${graphResponse.status}: ${errorText}`
         }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    console.log('✅ Successfully connected to Microsoft Graph API');
 
     const graphData = await graphResponse.json();
     const emails = graphData.value || [];
@@ -210,7 +231,8 @@ serve(async (req) => {
             .trim();
         }
 
-        // Call robust email classifier to analyze the email with ML
+        // Call HuggingFace-powered ML classifier to analyze the email
+        console.log(`🤖 Analyzing email "${email.subject}" with HuggingFace ML Classifier...`);
         const classificationResult = await fetch(`${supabaseUrl}/functions/v1/robust-email-classifier`, {
           method: 'POST',
           headers: {
@@ -229,10 +251,13 @@ serve(async (req) => {
         if (classificationResult.ok) {
           const classificationResponse = await classificationResult.json();
           classificationData = classificationResponse;
-          console.log(`ML Classification for "${email.subject}":`, classificationData?.classification, 
-                     `(${(classificationData?.confidence * 100).toFixed(1)}% confidence)`);
+          console.log(`✅ HuggingFace ML Analysis Complete:`, 
+                     `"${email.subject}" -> ${classificationData?.classification}`, 
+                     `(${(classificationData?.confidence * 100).toFixed(1)}% confidence,`,
+                     `${classificationData?.threat_level} threat)`);
         } else {
-          console.error('Classification failed for email:', email.subject);
+          const errorText = await classificationResult.text();
+          console.error('❌ HuggingFace ML Classification failed for email:', email.subject, errorText);
         }
 
         const emailData = {
