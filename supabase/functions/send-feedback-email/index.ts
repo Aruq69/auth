@@ -51,6 +51,21 @@ async function refreshMicrosoftToken(refreshToken: string) {
 async function sendEmailViaGraph(accessToken: string, emailData: any) {
   const graphUrl = 'https://graph.microsoft.com/v1.0/me/sendMail';
   
+  // First, let's check what scopes the current token has
+  const profileResponse = await fetch('https://graph.microsoft.com/v1.0/me', {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+    },
+  });
+  
+  console.log('Token validation response status:', profileResponse.status);
+  if (!profileResponse.ok) {
+    const errorText = await profileResponse.text();
+    console.log('Token validation error:', errorText);
+    throw new Error(`Token validation failed: ${profileResponse.status} ${errorText}`);
+  }
+  
   const response = await fetch(graphUrl, {
     method: 'POST',
     headers: {
@@ -297,6 +312,23 @@ const handler = async (req: Request): Promise<Response> => {
         console.log('Response:', emailResponse);
       } catch (graphError: any) {
         console.error('Microsoft Graph send failed:', graphError);
+        
+        // If it's a 403 error (access denied), delete the tokens to force re-authentication
+        if (graphError.message && graphError.message.includes('403')) {
+          console.log('=== 403 ERROR - DELETING TOKENS TO FORCE RE-AUTH ===');
+          try {
+            await supabase
+              .from('outlook_tokens')
+              .delete()
+              .eq('user_id', feedback.user_id);
+            console.log('Tokens deleted successfully');
+          } catch (deleteError) {
+            console.error('Failed to delete tokens:', deleteError);
+          }
+          
+          throw new Error(`Access denied. Please disconnect and reconnect your Outlook account to update permissions. Original error: ${graphError.message || graphError}`);
+        }
+        
         throw new Error(`Failed to send email via Microsoft Graph: ${graphError.message || graphError}`);
       }
     } else {
