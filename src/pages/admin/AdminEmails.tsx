@@ -7,6 +7,9 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import { Mail, Search, Shield, AlertTriangle, Clock, CheckCircle, Ban, FileText, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { AlertEmailButton } from '@/components/AlertEmailButton';
@@ -16,6 +19,9 @@ export default function AdminEmails() {
   const [threatFilter, setThreatFilter] = useState<string>('all');
   const [userFilter, setUserFilter] = useState<string>('all');
   const [blockingEmails, setBlockingEmails] = useState<Set<string>>(new Set());
+  const [blockDialogOpen, setBlockDialogOpen] = useState(false);
+  const [selectedEmailId, setSelectedEmailId] = useState<string>('');
+  const [blockReason, setBlockReason] = useState('');
   const { toast } = useToast();
 
   const { data: emails, isLoading, refetch } = useQuery({
@@ -73,10 +79,16 @@ export default function AdminEmails() {
     setBlockingEmails(prev => new Set(prev).add(emailId));
     
     try {
-      // Get the email details first
+      // Get the email details and user's actual email first
       const { data: emailData, error: emailError } = await supabase
         .from('emails')
-        .select('sender, subject, outlook_id, user_id')
+        .select(`
+          sender, 
+          subject, 
+          outlook_id, 
+          user_id,
+          profiles(username)
+        `)
         .eq('id', emailId)
         .single();
 
@@ -163,19 +175,16 @@ export default function AdminEmails() {
 
       // Send security alert email using the dedicated function
       try {
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('username')
-          .eq('user_id', emailData.user_id)
-          .single();
-
-        if (profileData?.username) {
+        // Get the user's actual email address from auth.users via Supabase Admin API
+        const { data: userData, error: userError } = await supabase.auth.admin.getUserById(emailData.user_id);
+        
+        if (userData?.user?.email) {
           await supabase.functions.invoke('send-feedback-email', {
             body: {
               feedback_type: 'security',
               category: 'Security Alert',
               feedback_text: `🛡️ SECURITY ALERT: Suspicious email blocked from ${emailData.sender}. Reason: ${blockReason}. A mail rule has been created to automatically block future emails from this sender.`,
-              email: profileData.username,
+              email: userData.user.email, // Use actual email instead of username
               page_url: window.location.href,
               user_agent: navigator.userAgent
             }
@@ -201,6 +210,26 @@ export default function AdminEmails() {
         return newSet;
       });
     }
+  };
+
+  const openBlockDialog = (emailId: string) => {
+    setSelectedEmailId(emailId);
+    setBlockReason('');
+    setBlockDialogOpen(true);
+  };
+
+  const confirmBlockEmail = async () => {
+    if (!blockReason.trim()) {
+      toast({
+        title: 'Error',
+        description: 'Please provide a reason for blocking this email',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    setBlockDialogOpen(false);
+    await handleBlockEmail(selectedEmailId, blockReason);
   };
 
   const getThreatBadgeVariant = (threatLevel: string | null) => {
@@ -338,7 +367,7 @@ export default function AdminEmails() {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => handleBlockEmail(email.id, 'Admin blocked - suspicious content')}
+                            onClick={() => openBlockDialog(email.id)}
                             disabled={blockingEmails.has(email.id)}
                             className="animate-scale-in hover-scale"
                           >
@@ -364,6 +393,38 @@ export default function AdminEmails() {
           )}
         </CardContent>
       </Card>
+
+      {/* Block Email Dialog */}
+      <Dialog open={blockDialogOpen} onOpenChange={setBlockDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Block Email</DialogTitle>
+            <DialogDescription>
+              Please provide a reason for blocking this email. This reason will be included in the security alert sent to the user.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="block-reason">Reason for blocking</Label>
+              <Textarea
+                id="block-reason"
+                placeholder="e.g., Phishing attempt, Malicious content, Spam, etc."
+                value={blockReason}
+                onChange={(e) => setBlockReason(e.target.value)}
+                rows={3}
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setBlockDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={confirmBlockEmail} disabled={!blockReason.trim()}>
+                Block Email
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
