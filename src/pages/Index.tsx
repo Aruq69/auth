@@ -73,13 +73,13 @@ const Index = () => {
       return;
     }
     
-    // User is authenticated, load data
-    console.log('Index: user authenticated, loading data');
-    checkEmailConnection();
+    // User is authenticated, load data (DISABLED AUTO-PROCESSES TO PREVENT DUPLICATES)
+    console.log('Index: user authenticated, loading MINIMAL data only');
     fetchUserProfile();
     fetchUserPreferences();
-    fetchEmailStats();
-    fetchEmails();
+    // DISABLED: checkEmailConnection();
+    // DISABLED: fetchEmailStats();
+    // DISABLED: fetchEmails();
   }, [user, authLoading, navigate]);
 
   // Listen for sign out to clear session data in privacy mode
@@ -174,16 +174,17 @@ const Index = () => {
         return;
       }
       
-      // Only auto-reclassify emails that don't have any classification yet
-      const emailsNeedingUpdate = (data || []).filter(email => 
-        !email.processed_at || !email.classification
-      );
+      // DISABLED ALL AUTO-CLASSIFICATION TO PREVENT DUPLICATES
+      console.log('📧 Auto-classification DISABLED to prevent duplicate emails');
       
-      if (emailsNeedingUpdate.length > 0) {
-        console.log(`🔄 Auto-updating ${emailsNeedingUpdate.length} emails with robust ML classifier (one-time only)`);
-        // Update emails in background without blocking UI or triggering refresh
-        updateEmailsWithRobustClassifier(emailsNeedingUpdate);
-      }
+      // const emailsNeedingUpdate = (data || []).filter(email => 
+      //   !email.processed_at || !email.classification
+      // );
+      
+      // if (emailsNeedingUpdate.length > 0) {
+      //   console.log(`🔄 Auto-updating ${emailsNeedingUpdate.length} emails with robust ML classifier (one-time only)`);
+      //   updateEmailsWithRobustClassifier(emailsNeedingUpdate);
+      // }
       
       setEmails(data || []);
     } catch (error) {
