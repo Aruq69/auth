@@ -232,8 +232,8 @@ serve(async (req) => {
             .trim();
         }
 
-        // Call HuggingFace-Powered Dataset-Based ML Classifier
-        console.log(`🤖 Analyzing with HuggingFace Dataset-Based ML Engine...`);
+        // Call Dataset-Based ML Email Classifier (same as ML Analytics real-time testing)
+        console.log(`🤖 Analyzing with Dataset-Based ML Email Classifier...`);
         const classificationResult = await fetch(`${supabaseUrl}/functions/v1/robust-email-classifier`, {
           method: 'POST',
           headers: {
@@ -260,7 +260,7 @@ serve(async (req) => {
                      `🏷️ Features: ${JSON.stringify(classificationData?.detailed_analysis?.detected_features || [])}`);
         } else {
           const errorText = await classificationResult.text();
-          console.error('❌ HuggingFace ML Classification FAILED:', email.subject, errorText);
+          console.error('❌ Dataset-Based ML Classification FAILED:', email.subject, errorText);
           // Continue processing other emails even if one fails
         }
 
@@ -334,10 +334,10 @@ serve(async (req) => {
         }
     }
 
-    console.log(`🎯 === HUGGINGFACE DATASET-BASED ML ANALYSIS COMPLETE ===`);
-    console.log(`📊 Processed ${processedEmails.length}/${newEmails.length} emails with ML classification`);
-    console.log(`🤖 All emails analyzed with HuggingFace-powered comprehensive dataset training`);
-    console.log(`📈 Results stored with threat levels, confidence scores, and detected features`);
+    console.log(`🎯 === DATASET-BASED ML ANALYSIS COMPLETE ===`);
+    console.log(`📊 Processed ${processedEmails.length}/${newEmails.length} emails with Dataset-Based ML`);
+    console.log(`🤖 All emails analyzed with same classifier as ML Analytics real-time testing`);
+    console.log(`📈 Results: classification, threat levels, confidence scores, and detected features`);
     
     return new Response(
       JSON.stringify({
