@@ -298,9 +298,42 @@ class EmailClassifier {
     const classificationStartTime = performance.now();
     const fullText = `${subject} ${content}`;
     
-    // Use local Naive Bayes classification
-    const mlResult = await this.calculateNaiveBayesProbability(fullText);
-    const mlSource = 'Local Naive Bayes';
+    // Use advanced ML classification
+    console.log('Calling advanced email classifier');
+    
+    let mlResult: { probability: number; confidence: number; features: string[]; processingTime: number; };
+    let mlSource = 'HuggingFace Advanced ML';
+    
+    try {
+      const advancedResponse = await fetch(`${supabaseUrl}/functions/v1/advanced-email-classifier`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${supabaseServiceKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ subject, sender, content, user_id: null })
+      });
+      
+      if (advancedResponse.ok) {
+        const advancedResult = await advancedResponse.json();
+        console.log('Advanced ML result:', advancedResult);
+        
+        mlResult = {
+          probability: advancedResult.classification === 'spam' ? advancedResult.confidence : 1 - advancedResult.confidence,
+          confidence: advancedResult.confidence,
+          features: advancedResult.detailed_analysis?.extracted_entities?.map((e: any) => e.word) || [],
+          processingTime: advancedResult.processing_time || 0
+        };
+      } else {
+        console.error('Advanced ML failed with status:', advancedResponse.status);
+        mlResult = await this.calculateNaiveBayesProbability(fullText);
+        mlSource = 'Local Naive Bayes (fallback)';
+      }
+    } catch (error) {
+      console.error('Advanced ML error:', error);
+      mlResult = await this.calculateNaiveBayesProbability(fullText);
+      mlSource = 'Local Naive Bayes (error fallback)';
+    }
     
     // Validate sender
     const senderValidation = this.validateSender(sender);

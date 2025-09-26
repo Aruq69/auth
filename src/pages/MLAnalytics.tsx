@@ -1,4 +1,4 @@
-import { MLAnalyticsReport } from "@/components/MLAnalyticsReport";
+import { MLDashboard } from "@/components/MLDashboard";
 import { AccuracyDashboard } from "@/components/AccuracyDashboard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Brain, Target } from "lucide-react";
@@ -20,7 +20,7 @@ const MLAnalytics = () => {
           </TabsList>
           
           <TabsContent value="analytics">
-            <MLAnalyticsReport />
+            <MLDashboard />
           </TabsContent>
           
           <TabsContent value="accuracy">
