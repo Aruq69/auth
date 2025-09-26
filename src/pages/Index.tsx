@@ -73,11 +73,11 @@ const Index = () => {
       return;
     }
     
-    // User is authenticated, load data (DISABLED AUTO-PROCESSES TO PREVENT DUPLICATES)
-    console.log('Index: user authenticated, loading MINIMAL data only');
+    // User is authenticated, load data 
+    console.log('Index: user authenticated, loading data');
+    checkEmailConnection(); // Re-enabled to detect Outlook connection
     fetchUserProfile();
     fetchUserPreferences();
-    // DISABLED: checkEmailConnection();
     // DISABLED: fetchEmailStats();
     // DISABLED: fetchEmails();
   }, [user, authLoading, navigate]);
@@ -91,6 +91,19 @@ const Index = () => {
     window.addEventListener('clearSessionData', handleClearSessionData);
     return () => window.removeEventListener('clearSessionData', handleClearSessionData);
   }, []);
+
+  // Check Outlook connection when window regains focus (after OAuth redirect)
+  useEffect(() => {
+    const handleFocus = () => {
+      if (user) {
+        console.log('Window focused, checking Outlook connection status...');
+        checkEmailConnection();
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [user]);
 
   // Fetch email statistics for insights
   const fetchEmailStats = async () => {
