@@ -225,7 +225,7 @@ serve(async (req) => {
         console.log('Sending alert email to:', userEmail);
         
         const emailResponse = await resend.emails.send({
-          from: "MailGuard Security <security@yourdomain.com>",
+          from: "MailGuard Security <onboarding@resend.dev>",
           to: [userEmail],
           subject: "🛡️ Security Alert: Suspicious Email Blocked",
           html: `
