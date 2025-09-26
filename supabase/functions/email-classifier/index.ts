@@ -307,6 +307,12 @@ class EmailClassifier {
       
       if (pythonApiUrl) {
         console.log('Using Python ML API for classification');
+        console.log('Python API URL:', pythonApiUrl);
+        
+        // Add timeout and better error handling
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+        
         const response = await fetch(`${pythonApiUrl}/classify`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -314,9 +320,14 @@ class EmailClassifier {
             subject,
             sender,
             content: content || ''
-          })
+          }),
+          signal: controller.signal
         });
+        
+        clearTimeout(timeoutId);
 
+        console.log('Python API response status:', response.status);
+        
         if (response.ok) {
           const pythonResult = await response.json();
           console.log('Python ML result:', pythonResult);
@@ -329,9 +340,10 @@ class EmailClassifier {
           };
           mlSource = 'Python ML API';
         } else {
-          console.warn('Python ML API failed, using local classification');
+          const errorText = await response.text();
+          console.warn('Python ML API failed with status:', response.status, 'Error:', errorText);
           mlResult = await this.calculateNaiveBayesProbability(fullText);
-          mlSource = 'Local Naive Bayes (fallback)';
+          mlSource = 'Local Naive Bayes (API error)';
         }
       } else {
         console.log('Python ML API not configured, using local classification');
@@ -339,7 +351,7 @@ class EmailClassifier {
         mlSource = 'Local Naive Bayes';
       }
     } catch (error) {
-      console.error('Error with Python ML API:', error);
+      console.error('Error with Python ML API:', error instanceof Error ? error.message : String(error));
       mlResult = await this.calculateNaiveBayesProbability(fullText);
       mlSource = 'Local Naive Bayes (error fallback)';
     }
