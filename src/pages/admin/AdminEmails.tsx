@@ -163,8 +163,9 @@ export default function AdminEmails() {
 
       // Create actual Outlook mail rule to block future emails from this sender
       console.log('=== CREATING OUTLOOK MAIL RULE ===');
+      let ruleError = null;
       try {
-        const { data: ruleResult, error: ruleError } = await supabase.functions.invoke('create-outlook-mail-rule', {
+        const { data: ruleResult, error: outlookError } = await supabase.functions.invoke('create-outlook-mail-rule', {
           body: {
             senderEmail: emailData.sender,
             ruleName: `Block ${emailData.sender} - ${blockReason}`,
@@ -174,41 +175,21 @@ export default function AdminEmails() {
          });
 
         console.log('Outlook rule result:', ruleResult);
-        console.log('Outlook rule error:', ruleError);
+        console.log('Outlook rule error:', outlookError);
+        
+        ruleError = outlookError;
 
         if (ruleError) {
           console.warn('Failed to create Outlook rule:', ruleError);
-          toast({
-            title: 'Partial Success',
-            description: 'Email blocked in app but failed to create Outlook rule. The email is only blocked within the app.',
-            variant: 'default',
-          });
         } else {
-          const alertEmailSent = ruleResult?.alertEmailSent;
-          
-          let description;
-          if (alertEmailSent) {
-            description = 'Email blocked in app, Outlook rule created for future emails, and security alert sent to user.';
-          } else {
-            description = 'Email blocked in app and Outlook rule created for future emails. Could not send alert email.';
-          }
-          
-          toast({
-            title: 'Email Blocked',
-            description,
-          });
-         }
-      } catch (ruleError) {
-        console.error('Exception creating Outlook rule:', ruleError);
-        toast({
-          title: 'Partial Success',
-          description: 'Email blocked in app but failed to create Outlook rule. The email is only blocked within the app.',
-          variant: 'default',
-        });
-       }
+          console.log('Outlook rule created successfully');
+        }
+      } catch (outlookRuleError) {
+        console.error('Exception creating Outlook rule:', outlookRuleError);
+        ruleError = outlookRuleError; // Store error for later toast
+      }
 
       // Log admin action
-      console.log('=== LOGGING ADMIN ACTION ===');
       await supabase
         .from('admin_audit_log')
         .insert({
@@ -297,34 +278,34 @@ export default function AdminEmails() {
           console.log('=== EMAIL FUNCTION RESPONSE ===');
           console.log('Email send result:', emailResult);
           console.log('Email send error:', emailSendError);
-          
-          if (emailSendError) {
-            console.error('Error sending security alert email:', emailSendError);
-            toast({
-              title: 'Partial Success',
-              description: `Email blocked successfully, but could not send alert email: ${emailSendError.message}`,
-              variant: 'default',
-            });
+            
+            if (emailSendError) {
+              console.error('Error sending security alert email:', emailSendError);
+            } else {
+              console.log('Security alert email sent successfully');
+            }
           } else {
-            console.log('Security alert email sent successfully');
-            toast({
-              title: 'Email Blocked',
-              description: 'Email blocked and security alert sent to user successfully.',
-            });
+            console.log('No user email found, skipping security alert');
+            console.log('Profile username:', profileData?.username);
+            console.log('Could not retrieve user email address');
           }
-        } else {
-          console.log('No user email found, skipping security alert');
-          console.log('Profile username:', profileData?.username);
-          console.log('Could not retrieve user email address');
+        } catch (emailError) {
+          console.error('Failed to send security alert:', emailError);
+        }
+
+        // Show final toast based on what actually happened
+        if (!ruleError) {
           toast({
-            title: 'Partial Success', 
-            description: 'Email blocked successfully, but could not send alert email (no email address found).',
+            title: 'Email Blocked',
+            description: 'Email blocked in app and Outlook rule created for future emails.',
+          });
+        } else {
+          toast({
+            title: 'Partial Success',
+            description: 'Email blocked in app but failed to create Outlook rule. The email is only blocked within the app.',
             variant: 'default',
           });
         }
-      } catch (emailError) {
-        console.error('Failed to send security alert:', emailError);
-      }
       
       console.log('=== EMAIL BLOCK PROCESS COMPLETED SUCCESSFULLY ===');
       refetch();
