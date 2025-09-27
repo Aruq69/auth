@@ -332,21 +332,88 @@ const handler = async (req: Request): Promise<Response> => {
         throw new Error(`Failed to send email via Microsoft Graph: ${graphError.message || graphError}`);
       }
     } else {
-      // Fallback: Send notification that email couldn't be sent
-      console.log('=== NO OUTLOOK TOKEN AVAILABLE ===');
-      console.log('Cannot send email - user needs to connect Outlook account');
+      // Fallback: Try to send via Resend if available
+      console.log('=== NO OUTLOOK TOKEN AVAILABLE - TRYING RESEND FALLBACK ===');
+      const resendApiKey = Deno.env.get('RESEND_API_KEY');
       
-      return new Response(JSON.stringify({ 
-        success: false, 
-        error: 'User needs to connect Outlook account to send emails',
-        requiresOutlookAuth: true 
-      }), {
-        status: 400,
-        headers: {
-          "Content-Type": "application/json",
-          ...corsHeaders,
-        },
-      });
+      if (resendApiKey) {
+        console.log('Resend API key found, attempting to send via Resend...');
+        
+        try {
+          const resendResponse = await fetch('https://api.resend.com/emails', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${resendApiKey}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              from: "Mail Guard Security <security@mailguard.dev>",
+              to: [feedback.email],
+              subject: subject,
+              html: emailHtml
+            })
+          });
+          
+          if (!resendResponse.ok) {
+            const errorText = await resendResponse.text();
+            throw new Error(`Resend API error: ${resendResponse.status} ${errorText}`);
+          }
+          
+          emailResponse = await resendResponse.json();
+          console.log('=== EMAIL SENT VIA RESEND ===');
+          console.log('Response:', emailResponse);
+        } catch (resendError: any) {
+          console.error('Resend send failed:', resendError);
+          
+          // If both Outlook and Resend fail, return graceful error for security alerts
+          if (feedback.feedback_type === 'security') {
+            console.log('Security alert email failed - returning success to prevent blocking action failure');
+            return new Response(JSON.stringify({ 
+              success: true, 
+              warning: 'Security action completed but alert email could not be sent',
+              emailSent: false 
+            }), {
+              status: 200,
+              headers: {
+                "Content-Type": "application/json",
+                ...corsHeaders,
+              },
+            });
+          }
+          
+          throw new Error(`Failed to send email via Resend: ${resendError.message || resendError}`);
+        }
+      } else {
+        console.log('No Resend API key available');
+        
+        // For security alerts, don't fail the entire action if email can't be sent
+        if (feedback.feedback_type === 'security') {
+          console.log('Security alert email failed - returning success to prevent blocking action failure');
+          return new Response(JSON.stringify({ 
+            success: true, 
+            warning: 'Security action completed but alert email could not be sent',
+            emailSent: false 
+          }), {
+            status: 200,
+            headers: {
+              "Content-Type": "application/json",
+              ...corsHeaders,
+            },
+          });
+        }
+        
+        return new Response(JSON.stringify({ 
+          success: false, 
+          error: 'No email service available - need Outlook connection or Resend API key',
+          requiresEmailService: true 
+        }), {
+          status: 400,
+          headers: {
+            "Content-Type": "application/json",
+            ...corsHeaders,
+          },
+        });
+      }
     }
 
     return new Response(JSON.stringify({ success: true, emailResponse }), {
