@@ -37,6 +37,9 @@ class RobustEmailClassifier {
   async loadTrainingData(): Promise<void> {
     if (this.isInitialized) return;
     
+    console.log('Loading training dataset...');
+    console.log('Starting dataset-based ML email classification');
+    
     try {
       console.log('🔄 Loading HuggingFace Powered Comprehensive Dataset...');
       
