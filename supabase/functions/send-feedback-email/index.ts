@@ -313,21 +313,8 @@ const handler = async (req: Request): Promise<Response> => {
       } catch (graphError: any) {
         console.error('Microsoft Graph send failed:', graphError);
         
-        // If it's a 403 error (access denied), delete the tokens to force re-authentication
-        if (graphError.message && graphError.message.includes('403')) {
-          console.log('=== 403 ERROR - DELETING TOKENS TO FORCE RE-AUTH ===');
-          try {
-            await supabase
-              .from('outlook_tokens')
-              .delete()
-              .eq('user_id', feedback.user_id);
-            console.log('Tokens deleted successfully');
-          } catch (deleteError) {
-            console.error('Failed to delete tokens:', deleteError);
-          }
-          
-          throw new Error(`Access denied. Please disconnect and reconnect your Outlook account to update permissions. Original error: ${graphError.message || graphError}`);
-        }
+        // Don't delete tokens - just log the error and continue with fallback
+        console.log('Graph API failed, trying fallback email service...');
         
         throw new Error(`Failed to send email via Microsoft Graph: ${graphError.message || graphError}`);
       }
