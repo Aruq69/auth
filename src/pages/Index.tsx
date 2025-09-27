@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Shield, Mail, AlertTriangle, CheckCircle, Clock, Search, User, Zap, Activity, Eye, Lock, LogOut, Plus, Brain, Bot, Cpu, Target, Radar, ScanLine, Database, ShieldX, Trash2, AlertCircle, Settings, RefreshCw } from "lucide-react";
+import { Shield, Mail, AlertTriangle, CheckCircle, Clock, Search, User, Zap, Activity, Eye, Lock, LogOut, Plus, Brain, Bot, Cpu, Target, Radar, ScanLine, Database, ShieldX, Trash2, AlertCircle, Settings } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -278,27 +278,15 @@ const Index = () => {
     setIsProcessing(true);
     addRecentActivity("Outlook sync initiated", "Checking for new emails...");
     
-    // Add timeout to prevent getting stuck
-    const timeout = 180000; // 3 minutes timeout
-    const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Sync timeout - operation took too long')), timeout)
-    );
-    
     try {
       console.log('🔄 Invoking Outlook email fetch...');
       
-      const fetchPromise = supabase.functions.invoke('fetch-outlook-emails', {
+      const { data, error } = await supabase.functions.invoke('fetch-outlook-emails', {
         body: { user_id: user.id },
         headers: {
           'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
         }
       });
-
-      // Race between the actual fetch and timeout
-      const { data, error } = await Promise.race([
-        fetchPromise,
-        timeoutPromise
-      ]) as any;
 
       console.log('🔄 Fetch response received:', { data, error, hasData: !!data, hasError: !!error });
 
@@ -317,14 +305,8 @@ const Index = () => {
         
         const processedCount = data.emails_processed || 0;
         const totalFetched = data.total_emails_fetched || 0;
-        const remainingEmails = data.remaining_emails || 0;
         
-        let activityMessage = `Processed ${processedCount} emails`;
-        if (remainingEmails > 0) {
-          activityMessage += ` (${remainingEmails} queued for next sync)`;
-        }
-        
-        addRecentActivity(activityMessage, 
+        addRecentActivity(`Processed ${processedCount} emails`, 
           userPreferences?.never_store_data ? "Analyzed without storing (Privacy Mode)" : "Analyzed and stored");
         
         // Always store emails in session state for display, regardless of privacy mode
@@ -332,14 +314,9 @@ const Index = () => {
           setSessionEmails(data.emails);
         }
         
-        let toastMessage = `Successfully processed ${processedCount} out of ${totalFetched} emails`;
-        if (remainingEmails > 0) {
-          toastMessage += `. ${remainingEmails} emails will be processed in the next sync to prevent timeouts.`;
-        }
-        
         toast({
           title: "Outlook sync completed",
-          description: toastMessage,
+          description: `Successfully fetched ${totalFetched} emails`,
         });
         
         // Only refresh database emails if not in privacy mode
@@ -356,18 +333,11 @@ const Index = () => {
         }
       }
       
-    } catch (error: any) {
+    } catch (error) {
       console.error('Outlook sync error:', error);
-      addRecentActivity("Sync failed", error.message || "Unknown error");
-      
-      let errorMessage = "Failed to fetch emails from Outlook. Please try again.";
-      if (error.message?.includes('timeout')) {
-        errorMessage = "Sync timed out. Your inbox might be large - try again or contact support.";
-      }
-      
       toast({
         title: "Outlook sync failed",
-        description: errorMessage,
+        description: error.message || "Failed to fetch emails from Outlook. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -708,53 +678,23 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Enhanced Action Buttons */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
+        {/* Mobile-optimized Action Buttons */}
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:space-x-2">
             {outlookConnected && (
-              <div className="relative group">
-                <Button 
-                  onClick={fetchOutlookEmails} 
-                  disabled={loading || isProcessing} 
-                  variant="outline" 
-                  className={`w-full sm:w-auto min-w-[140px] h-11 bg-gradient-to-r from-background to-background/90 border-2 border-primary/20 hover:border-primary/50 text-sm font-medium transition-all duration-300 shadow-sm hover:shadow-lg hover:shadow-primary/20 ${isProcessing ? 'animate-pulse border-primary/60' : 'hover:scale-105'} backdrop-blur-sm`}
-                  size="default"
-                >
-                  {isProcessing ? (
-                    <div className="h-4 w-4 mr-2 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    <Activity className="h-4 w-4 mr-2 text-primary" />
-                  )}
-                  <span className="bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
-                    {isProcessing ? 'Processing...' : 'Sync Outlook'}
-                  </span>
-                </Button>
-                {!isProcessing && (
-                  <div className="absolute inset-0 rounded-md bg-gradient-to-r from-primary/10 to-primary-glow/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+              <Button 
+                onClick={fetchOutlookEmails} 
+                disabled={loading} 
+                variant="outline" 
+                className={`w-full sm:w-auto border-primary/30 hover:border-primary/50 hover-button text-xs sm:text-sm ${isProcessing ? 'animate-pulse' : ''}`}
+                size="sm"
+              >
+                {isProcessing ? (
+                  <div className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 border border-primary border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <Activity className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                 )}
-              </div>
-            )}
-            {outlookConnected && (
-              <div className="relative group">
-                <Button 
-                  onClick={() => {
-                    // Reset stuck processing states
-                    setLoading(false);
-                    setIsProcessing(false);
-                    toast({
-                      title: "States Reset",
-                      description: "Processing states have been reset. You can now sync again.",
-                      variant: "default",
-                    });
-                  }}
-                  variant="ghost"
-                  size="sm"
-                  className="relative overflow-hidden bg-muted/30 hover:bg-muted/60 text-xs text-muted-foreground hover:text-foreground transition-all duration-300 border border-border/20 hover:border-border/40 backdrop-blur-sm hover:scale-105 hover:shadow-md"
-                >
-                  <RefreshCw className="h-3 w-3 mr-1.5 transition-transform duration-300 group-hover:rotate-180" />
-                  Reset if Stuck
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-500" />
-                </Button>
-              </div>
+                {isProcessing ? 'Processing...' : 'Sync Outlook'}
+              </Button>
             )}
             {outlookConnected && (
               <AlertDialog open={showClearEmailsDialog} onOpenChange={setShowClearEmailsDialog}>
@@ -890,43 +830,94 @@ const Index = () => {
           </Card>
         </div>
 
-        {/* Connection Status */}
+        {/* Outlook Connection */}
         {!outlookConnected && (
           <Card className="border-border/20 bg-card/50 backdrop-blur-sm hover-card">
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
                 <Mail className="h-5 w-5 text-primary" />
-                <span>Outlook Connection Required</span>
+                <span>Connect Outlook Account</span>
               </CardTitle>
               <CardDescription>
-                Please refresh to reconnect your Outlook account or manage connections in Settings
+                Connect your Microsoft Outlook account to start analyzing emails for threats
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="text-center p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <div className="flex items-center justify-center space-x-2 mb-2">
-                  <Mail className="h-6 w-6 text-blue-600" />
-                  <span className="font-medium text-blue-800">Connection Status</span>
+            <CardContent className="space-y-6">
+              {/* Feature Cards Section */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-center mb-6">
+                {/* Universal */}
+                <div className="border border-border/20 bg-gradient-to-br from-orange-500/10 via-orange-500/5 to-transparent backdrop-blur-sm rounded-lg p-4 text-center hover:scale-105 transition-all duration-300">
+                  <div className="relative mb-3">
+                    <div className="p-3 rounded-full bg-orange-500/20 w-fit mx-auto">
+                      <Shield className="h-6 w-6 text-orange-500" />
+                    </div>
+                    <div className="absolute -top-1 -right-1 h-3 w-3 bg-orange-500 rounded-full animate-pulse" />
+                  </div>
+                  <h3 className="text-sm font-semibold text-foreground mb-1">Universal</h3>
+                  <p className="text-xs text-muted-foreground">Works with Outlook</p>
                 </div>
-                <p className="text-sm text-blue-700">
-                  Your Outlook account needs to be connected to analyze emails. Go to Settings to manage your connection.
-                </p>
+                
+                {/* AI Analysis */}
+                <div className="border border-border/20 bg-gradient-to-br from-cyan-500/10 via-cyan-500/5 to-transparent backdrop-blur-sm rounded-lg p-4 text-center hover:scale-105 transition-all duration-300">
+                  <div className="relative mb-3">
+                    <div className="p-3 rounded-full bg-cyan-500/20 w-fit mx-auto">
+                      <Eye className="h-6 w-6 text-cyan-500" />
+                    </div>
+                    <div className="absolute -top-1 -right-1 h-3 w-3 bg-cyan-500 rounded-full animate-pulse" />
+                  </div>
+                  <h3 className="text-sm font-semibold text-foreground mb-1">AI Analysis</h3>
+                  <p className="text-xs text-muted-foreground">Real-time detection</p>
+                </div>
+                
+                {/* Secure */}
+                <div className="border border-border/20 bg-gradient-to-br from-pink-500/10 via-pink-500/5 to-transparent backdrop-blur-sm rounded-lg p-4 text-center hover:scale-105 transition-all duration-300">
+                  <div className="relative mb-3">
+                    <div className="p-3 rounded-full bg-pink-500/20 w-fit mx-auto">
+                      <Database className="h-6 w-6 text-pink-500" />
+                    </div>
+                    <div className="absolute -top-1 -right-1 h-3 w-3 bg-pink-500 rounded-full animate-pulse" />
+                  </div>
+                  <h3 className="text-sm font-semibold text-foreground mb-1">Secure</h3>
+                  <p className="text-xs text-muted-foreground">OAuth 2.0</p>
+                </div>
+                
+                {/* ML Engine */}
+                <div className="border border-border/20 bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-transparent backdrop-blur-sm rounded-lg p-4 text-center hover:scale-105 transition-all duration-300">
+                  <div className="relative mb-3">
+                    <div className="p-3 rounded-full bg-emerald-500/20 w-fit mx-auto">
+                      <Database className="h-6 w-6 text-emerald-500" />
+                    </div>
+                    <div className="absolute -top-1 -right-1 h-3 w-3 bg-emerald-500 rounded-full animate-pulse" />
+                  </div>
+                  <h3 className="text-sm font-semibold text-foreground mb-1">ML Engine</h3>
+                  <p className="text-xs text-muted-foreground">Adaptive learning</p>
+                </div>
               </div>
-              
-              <div className="flex space-x-3">
-                <Button 
-                  onClick={() => window.location.reload()} 
-                  variant="outline" 
-                  className="flex-1"
-                >
-                  Refresh Page
-                </Button>
-                <Button 
-                  onClick={() => navigate("/settings")} 
-                  className="flex-1"
-                >
-                  Go to Settings
-                </Button>
+
+              {/* Outlook Connection Button */}
+              <div className="text-center space-y-4">
+                <div className="relative p-6 rounded-lg bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/20 backdrop-blur-sm">
+                  <div className="flex items-center justify-center space-x-4 mb-4">
+                    <div className="p-3 rounded-full bg-primary/20">
+                      <Mail className="h-8 w-8 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-foreground">Microsoft Outlook Integration</h3>
+                      <p className="text-sm text-muted-foreground">Secure OAuth 2.0 connection to your Microsoft account</p>
+                    </div>
+                  </div>
+                  <Button onClick={connectOutlook} className="w-full gradient-button" size="lg">
+                    <Mail className="h-5 w-5 mr-2" />
+                    Connect Outlook Account
+                  </Button>
+                </div>
+                
+                <div className="text-xs text-muted-foreground bg-muted/20 p-3 rounded border border-border/20">
+                  <div className="flex items-center space-x-2">
+                    <Shield className="h-4 w-4 text-primary" />
+                    <span>Secure OAuth 2.0 authentication • Read-only access • No passwords stored</span>
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>

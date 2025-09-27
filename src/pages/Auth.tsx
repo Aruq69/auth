@@ -9,7 +9,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Shield } from "lucide-react";
 import UserOnboarding from "@/components/UserOnboarding";
 import MFAChallenge from "@/components/MFAChallenge";
-import { InfoCard } from "@/components/ui/info-card";
 
 const Auth = () => {
   const [submitLoading, setSubmitLoading] = useState(false);
@@ -51,14 +50,14 @@ const Auth = () => {
   const handleOutlookSignIn = async () => {
     try {
       setSubmitLoading(true);
-      console.log('Starting unified Outlook sign-in and connection flow...');
+      console.log('Starting Outlook OAuth flow...');
       
-      // Use Supabase Azure OAuth with expanded scopes for both auth AND mail access
+      // Use Supabase's built-in Azure OAuth for SIGN-IN only
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'azure',
         options: {
-          redirectTo: `${window.location.origin}/outlook-callback`,
-          scopes: 'openid email profile offline_access https://graph.microsoft.com/Mail.Read https://graph.microsoft.com/Mail.ReadWrite https://graph.microsoft.com/MailboxSettings.Read https://graph.microsoft.com/User.Read'
+          redirectTo: `${window.location.origin}/`,
+          scopes: 'openid email profile' // Only basic profile info, no mail access
         }
       });
       
@@ -66,12 +65,12 @@ const Auth = () => {
       
       if (error) {
         console.error('Azure OAuth error:', error);
-        setError(error.message || "Failed to sign in with Outlook. Please try again.");
+        setError(error.message || "Failed to connect to Outlook. Please try again.");
       } else {
-        console.log('Unified OAuth flow initiated - this will both authenticate and connect Outlook');
+        console.log('OAuth initiated successfully');
       }
     } catch (err) {
-      console.error('Outlook sign-in error:', err);
+      console.error('Outlook connection error:', err);
       setError("Failed to sign in with Outlook. Please try again.");
     } finally {
       setSubmitLoading(false);
@@ -103,7 +102,7 @@ const Auth = () => {
               Sign In to Mail Guard
             </CardTitle>
             <CardDescription className="text-muted-foreground">
-              One-click sign-in and Outlook connection
+              Access your email security dashboard
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -134,7 +133,7 @@ const Auth = () => {
                 </div>
                 
                 <span className="font-medium text-foreground group-hover:text-blue-600 transition-colors duration-300">
-                  Sign in with Outlook
+                  Continue with Outlook
                 </span>
               </div>
               
@@ -142,14 +141,6 @@ const Auth = () => {
             </Button>
           </CardContent>
         </Card>
-
-        <InfoCard className="text-center">
-          <p className="font-medium">One-Click Experience</p>
-          <p className="text-xs mt-1">
-            This will sign you in and connect your Outlook account automatically. 
-            You can disconnect anytime from settings.
-          </p>
-        </InfoCard>
 
         <UserOnboarding />
       </div>

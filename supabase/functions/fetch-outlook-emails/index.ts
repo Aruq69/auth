@@ -219,18 +219,9 @@ serve(async (req) => {
     const processedEmails = [];
     console.log(`🤖 Processing ${newEmails.length} emails with HuggingFace Dataset-Based ML Classifier...`);
     
-    // Limit processing to prevent timeouts (process max 50 emails per request)
-    const maxEmailsToProcess = Math.min(newEmails.length, 50);
-    const emailsToProcess = newEmails.slice(0, maxEmailsToProcess);
-    
-    console.log(`📊 Processing ${emailsToProcess.length} out of ${newEmails.length} emails to prevent timeouts`);
-    
-    // Process emails in parallel with timeout protection
-    const emailProcessingPromises = emailsToProcess.map(async (email: any, index: number) => {
-      const timeoutDuration = 15000; // 15 seconds per email
-      
+    for (const email of newEmails) {
       try {
-        console.log(`📧 [${index + 1}/${emailsToProcess.length}] Processing: "${email.subject}" from ${email.from?.emailAddress?.address}`);
+        console.log(`📧 Processing: "${email.subject}" from ${email.from?.emailAddress?.address}`);
 
         // Extract text content
         let textContent = email.bodyPreview || '';
@@ -238,14 +229,13 @@ serve(async (req) => {
           textContent = email.body.content
             .replace(/<[^>]*>/g, ' ')
             .replace(/\s+/g, ' ')
-            .trim()
-            .substring(0, 5000); // Limit content length to prevent processing delays
+            .trim();
         }
 
-        // Call Dataset-Based ML Email Classifier with timeout protection
-        console.log(`🤖 [${index + 1}] Analyzing with Dataset-Based ML...`);
+        // Call Dataset-Based ML Email Classifier (same as ML Analytics real-time testing)
+        console.log(`🤖 Analyzing with Dataset-Based ML Email Classifier...`);
         
-        const classificationPromise = supabase.functions.invoke('robust-email-classifier', {
+        const { data: classificationData, error: classificationError } = await supabase.functions.invoke('robust-email-classifier', {
           body: {
             subject: email.subject || 'No Subject',
             sender: email.from?.emailAddress?.address || 'Unknown Sender',
@@ -254,35 +244,16 @@ serve(async (req) => {
           }
         });
 
-        // Add timeout to classification
-        const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Classification timeout')), timeoutDuration)
-        );
-
-        const { data: classificationData, error: classificationError } = await Promise.race([
-          classificationPromise,
-          timeoutPromise
-        ]) as any;
-
-        let finalClassificationData = null;
-        
         if (classificationError) {
-          console.error(`❌ [${index + 1}] Classification FAILED:`, email.subject, classificationError);
-          // Use safe defaults for failed classifications
-          finalClassificationData = {
-            classification: 'unknown',
-            threat_level: 'low',
-            threat_type: null,
-            confidence: 0.5,
-            detailed_analysis: { detected_features: [] }
-          };
+          console.error('❌ Dataset-Based ML Classification FAILED:', email.subject, classificationError);
+          // Continue processing other emails even if one fails
         } else if (classificationData) {
-          console.log(`✅ [${index + 1}] ML RESULT:`, 
+          console.log(`✅ HuggingFace ML RESULT:`, 
                      `📧 "${email.subject}"`,
                      `🎯 Classification: ${classificationData?.classification?.toUpperCase()}`, 
                      `🔥 Confidence: ${(classificationData?.confidence * 100).toFixed(1)}%`,
-                     `⚠️ Threat Level: ${classificationData?.threat_level?.toUpperCase()}`);
-          finalClassificationData = classificationData;
+                     `⚠️ Threat Level: ${classificationData?.threat_level?.toUpperCase()}`,
+                     `🏷️ Features: ${JSON.stringify(classificationData?.detailed_analysis?.detected_features || [])}`);
         }
 
         const emailData = {
@@ -296,14 +267,14 @@ serve(async (req) => {
           received_date: email.receivedDateTime,
           processed_at: new Date().toISOString(),
           // Add ML classification data
-          classification: finalClassificationData?.classification || 'unknown',
-          threat_level: finalClassificationData?.threat_level || 'low',
-          threat_type: finalClassificationData?.threat_type || null,
-          confidence: finalClassificationData?.confidence || 0.5,
-          keywords: finalClassificationData?.detailed_analysis?.detected_features || null,
+          classification: classificationData?.classification || null,
+          threat_level: classificationData?.threat_level || null,
+          threat_type: classificationData?.threat_type || null,
+          confidence: classificationData?.confidence || null,
+          keywords: classificationData?.detailed_analysis?.detected_features || null,
         };
 
-        // Upsert email into database
+        // Upsert email into database (insert or update if exists)
         const { data: insertedEmail, error: insertError } = await supabase
           .from('emails')
           .upsert(emailData, { 
@@ -314,94 +285,59 @@ serve(async (req) => {
           .single();
 
         if (!insertError && insertedEmail) {
+          processedEmails.push(insertedEmail);
+          
           // Update email statistics
-          if (finalClassificationData) {
+          if (classificationData) {
             try {
               await supabase.rpc('increment_email_statistics', {
                 p_user_id: user.id,
-                p_threat_level: finalClassificationData.threat_level || 'safe',
-                p_threat_type: finalClassificationData.threat_type
+                p_threat_level: classificationData.threat_level || 'safe',
+                p_threat_type: classificationData.threat_type
               });
             } catch (statsError) {
               console.error('Failed to update email statistics:', statsError);
             }
             
             // Create alert for high-risk emails
-            if (finalClassificationData.threat_level === 'high' || 
-                finalClassificationData.classification === 'spam' ||
-                finalClassificationData.classification === 'suspicious') {
+            if (classificationData.threat_level === 'high' || 
+                classificationData.classification === 'spam' ||
+                classificationData.classification === 'suspicious') {
               try {
                 await supabase
                   .from('email_alerts')
                   .insert({
                     user_id: user.id,
                     email_id: insertedEmail.id,
-                    alert_type: finalClassificationData.threat_level || 'suspicious',
-                    alert_message: `${finalClassificationData.classification} email detected: "${email.subject}" from ${email.from?.emailAddress?.address}`,
+                    alert_type: classificationData.threat_level || 'suspicious',
+                    alert_message: `${classificationData.classification} email detected: "${email.subject}" from ${email.from?.emailAddress?.address}`,
                     status: 'pending'
                   });
-                console.log(`🚨 [${index + 1}] Alert created for high-risk email: ${email.subject}`);
+                console.log(`Alert created for high-risk email: ${email.subject}`);
               } catch (alertError) {
                 console.error('Failed to create email alert:', alertError);
               }
             }
           }
-          
-          return insertedEmail;
-        } else {
-          console.error(`❌ [${index + 1}] Failed to store email:`, insertError);
-          return null;
         }
 
-      } catch (error) {
-        console.error(`❌ [${index + 1}] Email processing failed:`, error);
-        return null;
-      }
-    });
-
-    // Wait for all emails to be processed (with overall timeout protection)
-    const overallTimeout = 120000; // 2 minutes total
-    const overallTimeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Overall processing timeout')), overallTimeout)
-    );
-
-    try {
-      const results = await Promise.race([
-        Promise.allSettled(emailProcessingPromises),
-        overallTimeoutPromise
-      ]) as PromiseSettledResult<any>[];
-
-      // Filter successful results
-      for (const result of results) {
-        if (result.status === 'fulfilled' && result.value) {
-          processedEmails.push(result.value);
+        } catch (error) {
+          continue;
         }
-      }
-
-    } catch (timeoutError) {
-      console.error('⏰ Overall processing timeout reached, returning partial results');
     }
 
     console.log(`🎯 === DATASET-BASED ML ANALYSIS COMPLETE ===`);
-    console.log(`📊 Processed ${processedEmails.length}/${emailsToProcess.length} emails with Dataset-Based ML`);
+    console.log(`📊 Processed ${processedEmails.length}/${newEmails.length} emails with Dataset-Based ML`);
     console.log(`🤖 All emails analyzed with same classifier as ML Analytics real-time testing`);
     console.log(`📈 Results: classification, threat levels, confidence scores, and detected features`);
-    
-    // If there are remaining emails to process, inform the user
-    const remainingEmails = newEmails.length - emailsToProcess.length;
-    let message = `Successfully processed ${processedEmails.length} new emails out of ${emails.length} total`;
-    if (remainingEmails > 0) {
-      message += `. ${remainingEmails} emails queued for next sync to prevent timeouts.`;
-    }
     
     return new Response(
       JSON.stringify({
         success: true,
-        message,
+        message: `Successfully processed ${processedEmails.length} new emails out of ${emails.length} total`,
         emails_processed: processedEmails.length,
         total_emails_fetched: emails.length,
         new_emails_found: newEmails.length,
-        remaining_emails: remainingEmails,
         emails: processedEmails, // Return processed emails for display
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
