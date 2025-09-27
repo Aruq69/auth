@@ -121,72 +121,131 @@ const handler = async (req: Request): Promise<Response> => {
     let subject = '';
 
     if (feedback.feedback_type === 'security') {
-      // Security Alert Email Template
+      // Parse the feedback text to extract admin name, subject, and reason
+      const feedbackLines = feedback.feedback_text.split('. ');
+      const adminMatch = feedbackLines.find(line => line.includes('Admin:'))?.replace('Admin:', '').trim() || 'System Administrator';
+      const subjectMatch = feedbackLines.find(line => line.includes('Subject:'))?.replace('Subject:', '').trim() || 'Unknown Subject';
+      const reasonMatch = feedbackLines.find(line => line.includes('Reason:'))?.replace('Reason:', '').trim() || 'Security Policy Violation';
+      
+      // Security Alert Email Template with modern design
       emailHtml = `
         <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
           <!-- Header -->
-          <div style="background: linear-gradient(135deg, #dc2626, #991b1b); padding: 30px 20px; text-align: center;">
-            <div style="display: inline-block; background: rgba(255,255,255,0.1); padding: 15px; border-radius: 50%; margin-bottom: 15px;">
-              <span style="font-size: 40px;">🛡️</span>
+          <div style="background: linear-gradient(135deg, #dc2626, #ef4444); padding: 30px; text-align: center; position: relative;">
+            <div style="background: rgba(255,255,255,0.1); border-radius: 50%; width: 80px; height: 80px; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center;">
+              <span style="font-size: 36px;">🛡️</span>
             </div>
-            <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 600;">SECURITY ALERT</h1>
-            <p style="color: rgba(255,255,255,0.9); margin: 5px 0 0 0; font-size: 16px;">Mail Guard - ML&AI-powered email security system</p>
+            <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">
+              Security Alert
+            </h1>
+            <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0; font-size: 16px; font-weight: 500;">
+              Email Blocked by Mail Guard Security System
+            </p>
           </div>
           
-          <!-- Alert Content -->
-          <div style="padding: 40px 30px; background: #fff;">
-            <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; padding: 25px; margin-bottom: 30px;">
-              <div style="display: flex; align-items: flex-start; gap: 15px;">
-                <div style="background: #dc2626; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; margin-top: 2px;">!</div>
-                <div style="flex: 1;">
-                  <h2 style="color: #dc2626; margin: 0 0 15px 0; font-size: 20px; font-weight: 600;">Suspicious Email Blocked</h2>
-                  <div style="color: #374151; line-height: 1.6; font-size: 16px;">
-                    ${feedback.feedback_text.replace(/🛡️\s*SECURITY ALERT:\s*/i, '').replace(/\n/g, '<br>')}
-                  </div>
+          <!-- Main Content -->
+          <div style="padding: 40px 30px; background: #ffffff;">
+            <!-- Alert Message -->
+            <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; padding: 25px; margin-bottom: 30px; border-left: 6px solid #dc2626;">
+              <h2 style="color: #991b1b; margin: 0 0 15px 0; font-size: 20px; font-weight: 600; display: flex; align-items: center; gap: 10px;">
+                <span style="background: #dc2626; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px;">⚠</span>
+                Threat Detected & Neutralized
+              </h2>
+              <p style="color: #374151; margin: 0; font-size: 16px; line-height: 1.6;">
+                Our advanced AI system detected and blocked a suspicious email sent to your account. 
+                <strong>The email has been quarantined and will not appear in your inbox.</strong>
+              </p>
+            </div>
+            
+            <!-- Blocked Email Details -->
+            <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; padding: 25px; margin-bottom: 30px;">
+              <h3 style="color: #374151; margin: 0 0 20px 0; font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                <span style="background: #6b7280; color: white; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px;">📧</span>
+                Blocked Email Details
+              </h3>
+              <div style="display: grid; gap: 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: white; border-radius: 8px; border-left: 3px solid #ef4444;">
+                  <span style="font-weight: 600; color: #374151;">Subject:</span>
+                  <span style="color: #374151; max-width: 60%; text-align: right; word-break: break-word;">${subjectMatch}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: white; border-radius: 8px; border-left: 3px solid #f59e0b;">
+                  <span style="font-weight: 600; color: #374151;">Threat Type:</span>
+                  <span style="color: #dc2626; font-weight: 600; background: #fef2f2; padding: 4px 12px; border-radius: 20px; font-size: 12px; text-transform: uppercase;">${reasonMatch}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: white; border-radius: 8px; border-left: 3px solid #8b5cf6;">
+                  <span style="font-weight: 600; color: #374151;">Blocked By:</span>
+                  <span style="color: #374151;">${adminMatch}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: white; border-radius: 8px; border-left: 3px solid #06b6d4;">
+                  <span style="font-weight: 600; color: #374151;">Blocked At:</span>
+                  <span style="color: #374151;">${new Date().toLocaleString()}</span>
                 </div>
               </div>
             </div>
             
-            <!-- What We Did -->
+            <!-- Security Actions Taken -->
             <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 25px; margin-bottom: 30px;">
               <h3 style="color: #166534; margin: 0 0 15px 0; font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
                 <span style="background: #22c55e; color: white; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px;">✓</span>
-                Actions Taken
+                Protective Actions Taken
               </h3>
               <ul style="color: #374151; margin: 0; padding-left: 20px; line-height: 1.8;">
-                <li>Email has been blocked and moved to quarantine</li>
+                <li>Email quarantined and blocked from reaching your inbox</li>
                 <li>Automatic mail rule created to block future emails from this sender</li>
-                <li>Threat intelligence database updated</li>
-                <li>Your email security settings remain active</li>
+                <li>Threat intelligence database updated with new indicators</li>
+                <li>Security team notified for further analysis</li>
+                <li>Your email security profile remains fully active</li>
               </ul>
             </div>
             
-            <!-- Next Steps -->
-            <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 12px; padding: 25px;">
+            <!-- Security Tips -->
+            <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 12px; padding: 25px; margin-bottom: 30px;">
               <h3 style="color: #1d4ed8; margin: 0 0 15px 0; font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
-                <span style="background: #3b82f6; color: white; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px;">i</span>
-                Stay Protected
+                <span style="background: #3b82f6; color: white; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px;">💡</span>
+                Security Awareness Tips
               </h3>
-              <p style="color: #374151; margin: 0; line-height: 1.6;">
-                No action required from you. Our AI-powered system continues to monitor your emails 24/7. 
-                If you have any concerns, please contact your system administrator.
+              <div style="color: #374151; line-height: 1.6;">
+                <p style="margin: 0 0 12px 0; font-weight: 600;">Always be cautious of:</p>
+                <ul style="margin: 0; padding-left: 20px;">
+                  <li>Unexpected emails requesting personal information</li>
+                  <li>Urgent messages asking you to click links or download files</li>
+                  <li>Emails from unknown senders with suspicious attachments</li>
+                  <li>Messages with poor grammar or unusual formatting</li>
+                </ul>
+              </div>
+            </div>
+            
+            <!-- Next Steps -->
+            <div style="background: #fef3c7; border: 1px solid #fcd34d; border-radius: 12px; padding: 25px;">
+              <h3 style="color: #92400e; margin: 0 0 15px 0; font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                <span style="background: #f59e0b; color: white; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px;">📝</span>
+                What Should You Do?
+              </h3>
+              <p style="color: #374151; margin: 0; line-height: 1.6; font-weight: 500;">
+                <strong>No action required from you.</strong> Our AI-powered system continues to monitor your emails 24/7. 
+                If you have questions about this security alert, please contact ${adminMatch} or your IT department.
               </p>
             </div>
           </div>
           
           <!-- Footer -->
           <div style="background: #1f2937; padding: 25px; text-align: center;">
+            <div style="margin-bottom: 15px;">
+              <span style="background: #374151; color: #9ca3af; padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+                🤖 AI-Powered Protection
+              </span>
+            </div>
             <p style="color: #9ca3af; margin: 0 0 10px 0; font-size: 14px; font-weight: 500;">
-              Mail Guard - ML&AI-powered email security system
+              Mail Guard - Advanced Email Security System
             </p>
             <p style="color: #6b7280; margin: 0; font-size: 12px;">
-              Protecting your organization with advanced machine learning and artificial intelligence
+              Protecting your organization with machine learning and artificial intelligence
             </p>
           </div>
         </div>
       `;
       
-      subject = `🛡️ Security Alert: Suspicious Email Blocked - Mail Guard`;
+      subject = `🛡️ Security Alert: Email Blocked by ${adminMatch} - Mail Guard`;
     } else {
       // Standard Feedback Email Template
       emailHtml = `
