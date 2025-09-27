@@ -48,50 +48,38 @@ async function refreshMicrosoftToken(refreshToken: string) {
 }
 
 // Function to send email via Microsoft Graph
-async function sendEmailViaGraph(accessToken: string, emailData: any) {
+async function sendEmailViaGraph(accessToken: string, to: string, subject: string, htmlContent: string) {
   const graphUrl = 'https://graph.microsoft.com/v1.0/me/sendMail';
   
-  // First, let's check what scopes the current token has
-  const profileResponse = await fetch('https://graph.microsoft.com/v1.0/me', {
-    method: 'GET',
-    headers: {
-      'Authorization': `Bearer ${accessToken}`,
-    },
-  });
-  
-  console.log('Token validation response status:', profileResponse.status);
-  if (!profileResponse.ok) {
-    const errorText = await profileResponse.text();
-    console.log('Token validation error:', errorText);
-    throw new Error(`Token validation failed: ${profileResponse.status} ${errorText}`);
-  }
-  
+  const message = {
+    message: {
+      subject: subject,
+      body: {
+        contentType: 'HTML',
+        content: htmlContent
+      },
+      toRecipients: [
+        {
+          emailAddress: {
+            address: to
+          }
+        }
+      ]
+    }
+  };
+
   const response = await fetch(graphUrl, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${accessToken}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({
-      message: {
-        subject: emailData.subject,
-        body: {
-          contentType: 'HTML',
-          content: emailData.html
-        },
-        toRecipients: [
-          {
-            emailAddress: {
-              address: emailData.to
-            }
-          }
-        ]
-      }
-    }),
+    body: JSON.stringify(message),
   });
 
   if (!response.ok) {
     const errorText = await response.text();
+    console.error('Microsoft Graph API Error:', errorText);
     throw new Error(`Failed to send email via Graph: ${response.status} ${errorText}`);
   }
 
@@ -183,60 +171,39 @@ const handler = async (req: Request): Promise<Response> => {
               </div>
             </div>
             
-            <!-- Security Actions Taken -->
-            <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 25px; margin-bottom: 30px;">
-              <h3 style="color: #166534; margin: 0 0 15px 0; font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
-                <span style="background: #22c55e; color: white; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px;">✓</span>
-                Protective Actions Taken
+            <!-- What Happens Next -->
+            <div style="background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 12px; padding: 25px; margin-bottom: 30px; border-left: 6px solid #0ea5e9;">
+              <h3 style="color: #0c4a6e; margin: 0 0 15px 0; font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                <span style="background: #0ea5e9; color: white; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px;">🛡️</span>
+                What We've Done
               </h3>
-              <ul style="color: #374151; margin: 0; padding-left: 20px; line-height: 1.8;">
-                <li>Email quarantined and blocked from reaching your inbox</li>
-                <li>Automatic mail rule created to block future emails from this sender</li>
-                <li>Threat intelligence database updated with new indicators</li>
-                <li>Security team notified for further analysis</li>
-                <li>Your email security profile remains fully active</li>
+              <ul style="color: #374151; margin: 0; padding-left: 20px; line-height: 1.6;">
+                <li>Created a mail rule to automatically block future emails from this sender</li>
+                <li>Logged the security incident for analysis</li>
+                <li>Enhanced our AI models with this threat pattern</li>
+                <li>Notified system administrators of the incident</li>
               </ul>
             </div>
             
             <!-- Security Tips -->
-            <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 12px; padding: 25px; margin-bottom: 30px;">
-              <h3 style="color: #1d4ed8; margin: 0 0 15px 0; font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
-                <span style="background: #3b82f6; color: white; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px;">💡</span>
+            <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 25px; border-left: 6px solid #16a34a;">
+              <h3 style="color: #15803d; margin: 0 0 15px 0; font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                <span style="background: #16a34a; color: white; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px;">💡</span>
                 Security Awareness Tips
               </h3>
-              <div style="color: #374151; line-height: 1.6;">
-                <p style="margin: 0 0 12px 0; font-weight: 600;">Always be cautious of:</p>
-                <ul style="margin: 0; padding-left: 20px;">
-                  <li>Unexpected emails requesting personal information</li>
-                  <li>Urgent messages asking you to click links or download files</li>
-                  <li>Emails from unknown senders with suspicious attachments</li>
-                  <li>Messages with poor grammar or unusual formatting</li>
-                </ul>
-              </div>
-            </div>
-            
-            <!-- Next Steps -->
-            <div style="background: #fef3c7; border: 1px solid #fcd34d; border-radius: 12px; padding: 25px;">
-              <h3 style="color: #92400e; margin: 0 0 15px 0; font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
-                <span style="background: #f59e0b; color: white; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px;">📝</span>
-                What Should You Do?
-              </h3>
-              <p style="color: #374151; margin: 0; line-height: 1.6; font-weight: 500;">
-                <strong>No action required from you.</strong> Our AI-powered system continues to monitor your emails 24/7. 
-                If you have questions about this security alert, please contact ${adminMatch} or your IT department.
-              </p>
+              <ul style="color: #374151; margin: 0; padding-left: 20px; line-height: 1.6;">
+                <li><strong>Verify sender identity:</strong> Always double-check sender addresses, especially for urgent requests</li>
+                <li><strong>Hover before clicking:</strong> Hover over links to see where they really lead</li>
+                <li><strong>Trust your instincts:</strong> If something feels suspicious, report it to your IT team</li>
+                <li><strong>Keep systems updated:</strong> Regular updates help protect against new threats</li>
+              </ul>
             </div>
           </div>
           
           <!-- Footer -->
-          <div style="background: #1f2937; padding: 25px; text-align: center;">
-            <div style="margin-bottom: 15px;">
-              <span style="background: #374151; color: #9ca3af; padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
-                🤖 AI-Powered Protection
-              </span>
-            </div>
-            <p style="color: #9ca3af; margin: 0 0 10px 0; font-size: 14px; font-weight: 500;">
-              Mail Guard - Advanced Email Security System
+          <div style="background: #374151; padding: 20px; text-align: center; color: #d1d5db;">
+            <p style="margin: 0; font-size: 14px; font-weight: 500;">
+              🤖 Mail Guard - AI-Powered Email Security
             </p>
             <p style="color: #6b7280; margin: 0; font-size: 12px;">
               Protecting your organization with machine learning and artificial intelligence
@@ -290,154 +257,135 @@ const handler = async (req: Request): Promise<Response> => {
           </div>
         </div>
       `;
-
-      // Create subject line based on feedback type
-      const getSubject = () => {
-        const emoji = {
-          bug: '🐛',
-          feature: '💡',
-          ux: '⭐',
-          general: '💬'
-        }[feedback.feedback_type] || '📧';
-        
-        return `${emoji} Mail Guard ${feedback.feedback_type.charAt(0).toUpperCase() + feedback.feedback_type.slice(1)} Feedback - ${feedback.category}`;
+      
+      // Set appropriate emoji for different feedback types
+      const typeEmojis: { [key: string]: string } = {
+        'bug': '🐛',
+        'feature': '✨',
+        'improvement': '📈',
+        'complaint': '😞',
+        'praise': '👏',
+        'question': '❓',
+        'security': '🛡️'
       };
       
-      subject = getSubject();
+      const emoji = typeEmojis[feedback.feedback_type] || '📧';
+      subject = `${emoji} New ${feedback.feedback_type.charAt(0).toUpperCase() + feedback.feedback_type.slice(1)} Feedback from ${feedback.email}`;
     }
 
-    // Get user's Outlook tokens if user_id is provided
-    let accessToken = null;
+    console.log('Subject:', subject);
+
+    // Check if user has Microsoft Graph token for more reliable email sending
     if (feedback.user_id) {
       console.log('=== FETCHING OUTLOOK TOKENS ===');
-      const { data: tokenData, error: tokenError } = await supabase
+      const { data: tokens } = await supabase
         .from('outlook_tokens')
-        .select('access_token, refresh_token, expires_at, email_address')
+        .select('*')
         .eq('user_id', feedback.user_id)
         .single();
 
-      if (tokenError) {
-        console.error('Error fetching tokens:', tokenError);
-      } else if (tokenData) {
-        console.log('Token found for email:', tokenData.email_address);
+      if (tokens) {
+        console.log('Token found for email:', tokens.email_address);
         
-        // Check if token needs refresh
-        const now = new Date();
-        const expiresAt = new Date(tokenData.expires_at);
-        
-        if (now >= expiresAt) {
-          console.log('Token expired, refreshing...');
-          try {
-            const refreshedTokens = await refreshMicrosoftToken(tokenData.refresh_token);
+        try {
+          // Check if token is expired
+          const now = new Date();
+          const expiresAt = new Date(tokens.expires_at);
+          
+          let accessToken = tokens.access_token;
+          
+          if (now >= expiresAt) {
+            console.log('Token expired, refreshing...');
+            const refreshedTokens = await refreshMicrosoftToken(tokens.refresh_token);
             
             // Update tokens in database
-            const newExpiresAt = new Date(Date.now() + (refreshedTokens.expires_in * 1000));
             await supabase
               .from('outlook_tokens')
               .update({
                 access_token: refreshedTokens.access_token,
-                expires_at: newExpiresAt.toISOString(),
+                expires_at: new Date(Date.now() + refreshedTokens.expires_in * 1000).toISOString(),
               })
               .eq('user_id', feedback.user_id);
-            
+              
             accessToken = refreshedTokens.access_token;
             console.log('Token refreshed successfully');
-          } catch (refreshError) {
-            console.error('Failed to refresh token:', refreshError);
+          } else {
+            console.log('Using existing valid token');
           }
-        } else {
-          accessToken = tokenData.access_token;
-          console.log('Using existing valid token');
+
+          // Validate token by making a test call
+          const testResponse = await fetch('https://graph.microsoft.com/v1.0/me', {
+            headers: { 'Authorization': `Bearer ${accessToken}` }
+          });
+          
+          console.log('Token validation response status:', testResponse.status);
+          
+          if (testResponse.ok) {
+            console.log('=== ATTEMPTING TO SEND EMAIL ===');
+            console.log('To:', feedback.email);
+            console.log('Using Microsoft Graph:', true);
+            
+            try {
+              await sendEmailViaGraph(accessToken, feedback.email, subject, emailHtml);
+              console.log('Email sent successfully via Microsoft Graph');
+              
+              return new Response(JSON.stringify({ 
+                success: true, 
+                message: 'Email sent successfully',
+                emailSent: true,
+                method: 'microsoft-graph'
+              }), {
+                status: 200,
+                headers: { "Content-Type": "application/json", ...corsHeaders },
+              });
+            } catch (graphError: any) {
+              console.error('Microsoft Graph send failed:', graphError);
+              console.log('Graph API failed, trying fallback email service...');
+              
+              // Continue to fallback method below
+            }
+          }
+        } catch (tokenError: any) {
+          console.error('Token handling failed:', tokenError);
+          console.log('Token handling failed, trying fallback email service...');
+          // Continue to fallback method below
         }
       }
     }
 
-    console.log('=== ATTEMPTING TO SEND EMAIL ===');
-    console.log('Using Microsoft Graph:', !!accessToken);
-    console.log('To:', feedback.email);
-    console.log('Subject:', subject);
-
-    let emailResponse;
+    // Fallback to Resend if Microsoft Graph fails or is not available
+    console.log('Using Resend as fallback email service');
+    const resendApiKey = Deno.env.get('RESEND_API_KEY');
     
-    if (accessToken) {
-      // Send via Microsoft Graph
-      try {
-        emailResponse = await sendEmailViaGraph(accessToken, {
-          to: feedback.email,
+    if (!resendApiKey) {
+      throw new Error('No email service available - both Microsoft Graph and Resend are unavailable');
+    }
+
+    try {
+      const resendResponse = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${resendApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          from: 'onboarding@resend.dev',
+          to: [feedback.email],
           subject: subject,
-          html: emailHtml
-        });
-        console.log('=== EMAIL SENT VIA MICROSOFT GRAPH ===');
-        console.log('Response:', emailResponse);
-      } catch (graphError: any) {
-        console.error('Microsoft Graph send failed:', graphError);
+          html: emailHtml,
+        }),
+      });
+
+      if (!resendResponse.ok) {
+        const resendError = await resendResponse.text();
+        console.error('Resend API Error:', resendError);
         
-        // Don't delete tokens - just log the error and continue with fallback
-        console.log('Graph API failed, trying fallback email service...');
-        
-        throw new Error(`Failed to send email via Microsoft Graph: ${graphError.message || graphError}`);
-      }
-    } else {
-      // Fallback: Try to send via Resend if available
-      console.log('=== NO OUTLOOK TOKEN AVAILABLE - TRYING RESEND FALLBACK ===');
-      const resendApiKey = Deno.env.get('RESEND_API_KEY');
-      
-      if (resendApiKey) {
-        console.log('Resend API key found, attempting to send via Resend...');
-        
-        try {
-          const resendResponse = await fetch('https://api.resend.com/emails', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${resendApiKey}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              from: "Mail Guard Security <onboarding@resend.dev>", // Use Resend's default verified domain
-              to: [feedback.email],
-              subject: subject,
-              html: emailHtml
-            })
-          });
-          
-          if (!resendResponse.ok) {
-            const errorText = await resendResponse.text();
-            throw new Error(`Resend API error: ${resendResponse.status} ${errorText}`);
-          }
-          
-          emailResponse = await resendResponse.json();
-          console.log('=== EMAIL SENT VIA RESEND ===');
-          console.log('Response:', emailResponse);
-        } catch (resendError: any) {
-          console.error('Resend send failed:', resendError);
-          
-          // If both Outlook and Resend fail, return graceful error for security alerts
-          if (feedback.feedback_type === 'security') {
-            console.log('Security alert email failed - returning success to prevent blocking action failure');
-            return new Response(JSON.stringify({ 
-              success: true, 
-              warning: 'Security action completed but alert email could not be sent',
-              emailSent: false 
-            }), {
-              status: 200,
-              headers: {
-                "Content-Type": "application/json",
-                ...corsHeaders,
-              },
-            });
-          }
-          
-          throw new Error(`Failed to send email via Resend: ${resendError.message || resendError}`);
-        }
-      } else {
-        console.log('No Resend API key available');
-        
-        // For security alerts, don't fail the entire action if email can't be sent
+        // For security alerts, still return success to not block the email blocking action
         if (feedback.feedback_type === 'security') {
-          console.log('Security alert email failed - returning success to prevent blocking action failure');
+          console.log('Security alert failed via Resend but returning success to not block email blocking');
           return new Response(JSON.stringify({ 
             success: true, 
-            warning: 'Security action completed but alert email could not be sent',
+            warning: 'Security action completed but alert email failed',
             emailSent: false 
           }), {
             status: 200,
@@ -448,27 +396,47 @@ const handler = async (req: Request): Promise<Response> => {
           });
         }
         
+        throw new Error(`Failed to send email via Resend: ${resendError}`);
+      }
+
+      const resendResult = await resendResponse.json();
+      console.log('Email sent successfully via Resend:', resendResult);
+      
+      return new Response(JSON.stringify({ 
+        success: true, 
+        message: 'Email sent successfully',
+        emailSent: true,
+        method: 'resend',
+        result: resendResult
+      }), {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+          ...corsHeaders,
+        },
+      });
+      
+    } catch (resendError: any) {
+      console.error('Resend send failed:', resendError);
+      
+      // For security alerts, still return success to not block the email blocking action
+      if (feedback.feedback_type === 'security') {
+        console.log('Security alert failed via Resend but returning success to not block email blocking');
         return new Response(JSON.stringify({ 
-          success: false, 
-          error: 'No email service available - need Outlook connection or Resend API key',
-          requiresEmailService: true 
+          success: true, 
+          warning: 'Security action completed but alert email failed',
+          emailSent: false 
         }), {
-          status: 400,
+          status: 200,
           headers: {
             "Content-Type": "application/json",
             ...corsHeaders,
           },
         });
       }
+      
+      throw new Error(`Failed to send email via Resend: ${resendError.message || resendError}`);
     }
-
-    return new Response(JSON.stringify({ success: true, emailResponse }), {
-      status: 200,
-      headers: {
-        "Content-Type": "application/json",
-        ...corsHeaders,
-      },
-    });
 
   } catch (error: any) {
     console.error("=== ERROR IN SEND-FEEDBACK-EMAIL FUNCTION ===");
@@ -477,8 +445,12 @@ const handler = async (req: Request): Promise<Response> => {
     console.error("Full error object:", error);
     
     // For security alerts, still return success to not block the email blocking action
-    const requestBody = await req.clone().json();
-    if (requestBody.feedback_type === 'security') {
+    // Check if this is a security alert by trying to parse the error context
+    const errorMessage = error.message || '';
+    const isSecurityAlert = errorMessage.includes('security') || 
+                           error.context?.feedback_type === 'security';
+    
+    if (isSecurityAlert) {
       console.log('Security alert failed but returning success to not block email blocking');
       return new Response(JSON.stringify({ 
         success: true, 
