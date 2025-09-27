@@ -369,7 +369,7 @@ const handler = async (req: Request): Promise<Response> => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          from: 'onboarding@resend.dev',
+          from: 'MailGuard <arfalqtan@gmail.com>', // Use verified sender email for now
           to: [feedback.email],
           subject: subject,
           html: emailHtml,
