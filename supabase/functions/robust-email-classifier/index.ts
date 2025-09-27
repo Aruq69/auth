@@ -690,33 +690,38 @@ class RobustEmailClassifier {
     const spamRatio = this.spamCount / (this.spamCount + this.hamCount);
     const hamRatio = this.hamCount / (this.spamCount + this.hamCount);
     
-    // Adaptive thresholds based on dataset balance
-    const highThreshold = 0.6 + (spamRatio * 0.1);  // Adjust based on spam ratio in dataset
-    const mediumThreshold = 0.3 + (spamRatio * 0.15);
-    const lowThreshold = 0.15;
+    // More realistic thresholds for better classification balance
+    const highThreshold = 0.75;  // Higher bar for spam classification
+    const mediumThreshold = 0.45;  // Balanced threshold for suspicious
+    const lowThreshold = 0.25;  // Lower threshold for questionable
     
-    // Dataset-driven classification with CONSISTENT threat levels
+    // Realistic classification that matches user expectations
     let classification = 'legitimate';
     let threatLevel = 'safe';
     let threatType = null;
     
-    if (finalScore >= highThreshold) {
+    // Check HuggingFace analysis for enhanced classification
+    if (hfAnalysis.toxicity > 0.7 || detectedScamPatterns.length >= 2) {
       classification = 'spam';
-      threatLevel = 'high';  // ALL SPAM = HIGH THREAT (consistent)
+      threatLevel = 'high';
       threatType = 'spam';
-    } else if (finalScore >= mediumThreshold) {
+    } else if (finalScore >= highThreshold) {
+      classification = 'spam';
+      threatLevel = 'high';
+      threatType = 'spam';
+    } else if (finalScore >= mediumThreshold || senderSecurity.suspiciousScore > 0.6) {
       classification = 'suspicious';
-      threatLevel = 'high';  // Suspicious content = HIGH THREAT
+      threatLevel = 'high';
       threatType = 'suspicious';
-    } else if (finalScore >= lowThreshold || structureAnalysis.hasPhishingDomain) {
+    } else if (finalScore >= lowThreshold || structureAnalysis.hasPhishingDomain || misspellingAnalysis.suspiciousScore > 0.3) {
       classification = 'questionable';
-      threatLevel = 'medium';  // Questionable content = MEDIUM THREAT
+      threatLevel = 'medium';
       threatType = 'questionable';
-    }
-    
-    // CRITICAL FIX: Ensure spam classification always gets HIGH threat level
-    if (classification === 'spam') {
-      threatLevel = 'high';  // Force high threat for all spam - no exceptions
+    } else {
+      // Most emails should be classified as legitimate with enhanced analysis
+      classification = 'legitimate';
+      threatLevel = 'safe';
+      threatType = null;
     }
     
     console.log(`Classification: ${classification}`);
