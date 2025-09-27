@@ -806,9 +806,21 @@ class RobustEmailClassifier {
     
     const processingTime = performance.now() - startTime;
     
+    // Calculate confidence more intuitively - higher confidence for clear classifications
+    let confidence;
+    if (classification === 'spam' && finalScore >= 0.75) {
+      confidence = Math.min(0.85 + (finalScore - 0.75) * 0.6, 0.98); // High confidence for clear spam
+    } else if (classification === 'legitimate' && finalScore <= 0.25) {
+      confidence = Math.min(0.85 + (0.25 - finalScore) * 3, 0.98); // High confidence for clear legitimate
+    } else if (classification === 'suspicious') {
+      confidence = 0.6 + (finalScore - 0.45) * 0.5; // Medium confidence for suspicious
+    } else {
+      confidence = Math.max(0.5, 1 - finalScore); // Default calculation with minimum 50%
+    }
+    
     const result = {
       classification,
-      confidence: 1 - finalScore,
+      confidence: Math.round(confidence * 100) / 100, // Round to 2 decimal places
       threat_level: threatLevel,
       threat_type: threatType,
       processing_time: processingTime,
