@@ -73,18 +73,16 @@ const Index = () => {
       return;
     }
     
-    // User is authenticated, load data ONLY ONCE
-    console.log('Index: user authenticated, loading data');
+    // User is authenticated, load user data only (no auto sync)
+    console.log('Index: user authenticated, loading user data');
     const loadUserData = async () => {
-      await checkEmailConnection();
       await fetchUserProfile();
       await fetchUserPreferences();
+      setLoading(false); // Set loading to false after user data is loaded
     };
     
     loadUserData();
-    // DISABLED: fetchEmailStats();
-    // DISABLED: fetchEmails();
-  }, [user?.id, authLoading]); // Only depend on user.id and authLoading to prevent loops
+  }, [user?.id, authLoading]);
 
   // Listen for sign out to clear session data in privacy mode
   useEffect(() => {
@@ -96,18 +94,7 @@ const Index = () => {
     return () => window.removeEventListener('clearSessionData', handleClearSessionData);
   }, []);
 
-  // Check Outlook connection when window regains focus (after OAuth redirect)
-  useEffect(() => {
-    const handleFocus = () => {
-      if (user?.id) {
-        console.log('Window focused, checking Outlook connection status...');
-        checkEmailConnection();
-      }
-    };
-
-    window.addEventListener('focus', handleFocus);
-    return () => window.removeEventListener('focus', handleFocus);
-  }, [user?.id]); // Only depend on user.id to prevent loops
+  // REMOVED: Auto-check Outlook connection on window focus to prevent auto-sync
 
   // Fetch email statistics for insights
   const fetchEmailStats = async () => {
