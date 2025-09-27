@@ -30,6 +30,7 @@ class RobustEmailClassifier {
   private hamCount = 0;
   private isInitialized = false;
   private suspiciousDomains: Set<string> = new Set();
+  private legitimateDomains: Set<string> = new Set();
   private scamPatterns: Array<{pattern: RegExp, weight: number, description: string}> = [];
 
   constructor() {
@@ -38,11 +39,58 @@ class RobustEmailClassifier {
 
   // Initialize advanced security patterns and indicators
   private initializeSecurityPatterns(): void {
+    // Known legitimate domains (major companies, services, institutions)
+    this.legitimateDomains = new Set([
+      // Microsoft domains
+      'microsoft.com', 'outlook.com', 'hotmail.com', 'live.com',
+      'accountprotection.microsoft.com', 'account.microsoft.com',
+      'microsoftonline.com', 'office365.com', 'office.com',
+      
+      // Google domains
+      'google.com', 'gmail.com', 'googlemail.com', 'accounts.google.com',
+      'google-analytics.com', 'gstatic.com', 'googleadservices.com',
+      
+      // Apple domains
+      'apple.com', 'icloud.com', 'me.com', 'mac.com', 'appleid.apple.com',
+      
+      // Amazon domains
+      'amazon.com', 'amazon.co.uk', 'amazonses.com', 'aws.amazon.com',
+      'amazoncognito.com', 'marketplace.amazon.com',
+      
+      // PayPal & Financial
+      'paypal.com', 'paypal-communication.com', 'paypal.co.uk',
+      'stripe.com', 'square.com', 'venmo.com',
+      
+      // Social Media & Communication
+      'facebook.com', 'twitter.com', 'x.com', 'linkedin.com',
+      'instagram.com', 'whatsapp.com', 'telegram.org',
+      'discord.com', 'slack.com', 'zoom.us',
+      
+      // Banking & Financial Institutions
+      'bankofamerica.com', 'chase.com', 'wellsfargo.com', 'citibank.com',
+      'usbank.com', 'capitalone.com', 'americanexpress.com',
+      
+      // E-commerce & Services
+      'ebay.com', 'etsy.com', 'shopify.com', 'squarespace.com',
+      'mailchimp.com', 'sendgrid.net', 'constantcontact.com',
+      
+      // Educational & Government
+      'edu', 'gov', 'ac.uk', 'university.edu', 'mit.edu', 'harvard.edu',
+      
+      // Tech & Software
+      'github.com', 'gitlab.com', 'atlassian.com', 'salesforce.com',
+      'dropbox.com', 'box.com', 'adobe.com', 'autodesk.com',
+      
+      // News & Media
+      'nytimes.com', 'cnn.com', 'bbc.com', 'reuters.com', 'wsj.com'
+    ]);
+    
     // Known suspicious domain patterns
     this.suspiciousDomains = new Set([
       'tempmail.org', '10minutemail.com', 'guerrillamail.com',
       'securepaypal-verification.com', 'amazon-security.net',
-      'microsoft-security.org', 'apple-id-verification.com'
+      'microsoft-security.org', 'apple-id-verification.com',
+      'paypal-security.com', 'account-verification.net'
     ]);
 
     // Advanced scam patterns with weights
@@ -525,17 +573,33 @@ class RobustEmailClassifier {
   // Comprehensive sender security analysis
   async analyzeSenderSecurity(sender: string): Promise<{
     suspiciousScore: number,
-    detectedPatterns: string[]
+    detectedPatterns: string[],
+    isLegitimate: boolean
   }> {
-    if (!sender) return { suspiciousScore: 0, detectedPatterns: [] };
+    if (!sender) return { suspiciousScore: 0, detectedPatterns: [], isLegitimate: false };
     
     const senderLower = sender.toLowerCase();
     const detectedPatterns: string[] = [];
     let suspiciousScore = 0;
+    let isLegitimate = false;
+    
+    // Extract domain from sender
+    const domain = senderLower.split('@')[1];
+    if (!domain) return { suspiciousScore: 0.5, detectedPatterns: ['Invalid email format'], isLegitimate: false };
+    
+    // First check if sender is from a known legitimate domain
+    const isWhitelistedDomain = this.legitimateDomains.has(domain) || 
+                               [...this.legitimateDomains].some(legitDomain => domain.endsWith(legitDomain));
+    
+    if (isWhitelistedDomain) {
+      isLegitimate = true;
+      suspiciousScore = 0; // Override any suspicious patterns for legitimate domains
+      detectedPatterns.push(`Verified legitimate domain: ${domain}`);
+      return { suspiciousScore, detectedPatterns, isLegitimate };
+    }
     
     // Check against known suspicious domains
-    const domain = senderLower.split('@')[1];
-    if (domain && this.suspiciousDomains.has(domain)) {
+    if (this.suspiciousDomains.has(domain)) {
       suspiciousScore += 0.8;
       detectedPatterns.push(`Known suspicious domain: ${domain}`);
     }
@@ -548,7 +612,7 @@ class RobustEmailClassifier {
       }
     }
     
-    return { suspiciousScore: Math.min(suspiciousScore, 1.0), detectedPatterns };
+    return { suspiciousScore: Math.min(suspiciousScore, 1.0), detectedPatterns, isLegitimate };
   }
 
 
@@ -700,8 +764,13 @@ class RobustEmailClassifier {
     let threatLevel = 'safe';
     let threatType = null;
     
-    // Check HuggingFace analysis for enhanced classification
-    if (hfAnalysis.toxicity > 0.7 || detectedScamPatterns.length >= 2) {
+    // Check if sender is from a legitimate domain first
+    if (senderSecurity.isLegitimate) {
+      classification = 'legitimate';
+      threatLevel = 'safe';
+      threatType = null;
+      console.log(`✅ Legitimate sender detected: ${sender} - Overriding other classification`);
+    } else if (hfAnalysis.toxicity > 0.7 || detectedScamPatterns.length >= 2) {
       classification = 'spam';
       threatLevel = 'high';
       threatType = 'spam';
