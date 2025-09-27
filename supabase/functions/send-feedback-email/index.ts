@@ -334,7 +334,7 @@ const handler = async (req: Request): Promise<Response> => {
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              from: "Mail Guard Security <security@mailguard.dev>",
+              from: "Mail Guard Security <onboarding@resend.dev>", // Use Resend's default verified domain
               to: [feedback.email],
               subject: subject,
               html: emailHtml
@@ -416,6 +416,22 @@ const handler = async (req: Request): Promise<Response> => {
     console.error("Error message:", error.message);
     console.error("Error stack:", error.stack);
     console.error("Full error object:", error);
+    
+    // For security alerts, still return success to not block the email blocking action
+    const requestBody = await req.clone().json();
+    if (requestBody.feedback_type === 'security') {
+      console.log('Security alert failed but returning success to not block email blocking');
+      return new Response(JSON.stringify({ 
+        success: true, 
+        warning: 'Security action completed but alert email failed',
+        emailSent: false,
+        error: error.message 
+      }), {
+        status: 200,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+    
     return new Response(
       JSON.stringify({ error: error.message, details: error }),
       {
