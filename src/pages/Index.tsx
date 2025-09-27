@@ -445,10 +445,13 @@ const Index = () => {
         description: "All email data has been cleared. Outlook connection remains active.",
       });
       
-      // Clear the local state immediately to show empty state
+      // Clear all local state immediately to show empty state
       setEmails([]);
       setSessionEmails([]);
       setShowClearEmailsDialog(false);
+      
+      // Force refresh React Query to reflect empty state
+      await refetchEmails();
       
     } catch (error) {
       console.error('Error clearing emails:', error);

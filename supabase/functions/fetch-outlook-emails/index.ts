@@ -216,22 +216,22 @@ serve(async (req) => {
     
     for (const email of emails) {
       // Create multiple unique identifiers to catch all types of duplicates
-      const identifiers = [
-        email.id, // Outlook ID
-        `${email.subject}|${email.from?.emailAddress?.address}|${email.receivedDateTime}`, // Subject + Sender + Date
-        `${email.subject}|${email.from?.emailAddress?.address}`, // Subject + Sender (for same emails with slight time differences)
-      ];
+      const subjectSender = `${email.subject?.trim().toLowerCase()}|${email.from?.emailAddress?.address?.toLowerCase()}`;
+      const outlookId = email.id;
+      const messageId = email.internetMessageId || email.id;
       
-      // Check if any identifier already exists
-      const isDuplicate = identifiers.some(id => seenIdentifiers.has(id));
-      
-      if (isDuplicate) {
+      // Check for exact duplicates and similar emails (same subject + sender)
+      if (seenIdentifiers.has(outlookId) || 
+          seenIdentifiers.has(messageId) || 
+          seenIdentifiers.has(subjectSender)) {
         console.log(`⏭️ Skipping duplicate email: "${email.subject}" from ${email.from?.emailAddress?.address}`);
         continue;
       }
       
       // Add all identifiers to the set
-      identifiers.forEach(id => seenIdentifiers.add(id));
+      seenIdentifiers.add(outlookId);
+      seenIdentifiers.add(messageId);
+      seenIdentifiers.add(subjectSender);
       uniqueEmails.push(email);
     }
     
@@ -281,7 +281,7 @@ serve(async (req) => {
         const emailData = {
           user_id: user.id,
           outlook_id: email.id,
-          message_id: email.id,
+          message_id: email.internetMessageId || email.id, // Use internetMessageId for better uniqueness
           subject: email.subject || 'No Subject',
           sender: email.from?.emailAddress?.address || 'Unknown Sender',
           content: textContent,
