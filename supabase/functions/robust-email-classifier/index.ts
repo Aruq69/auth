@@ -792,15 +792,14 @@ class RobustEmailClassifier {
     // Give extra legitimacy boost AFTER analysis if from trusted domain
     if (senderSecurity.isLegitimate && classification !== 'spam') {
       console.log(`✅ Legitimate sender detected: ${sender} - Applying domain trust bonus`);
-      // If borderline spam/suspicious from trusted domain, downgrade by one level
-      if (classification === 'suspicious') {
-        classification = 'questionable';
-        threatLevel = 'low';
-      } else if (classification === 'questionable') {
+      // If borderline questionable from trusted domain, upgrade to legitimate
+      // But keep suspicious emails as medium threat even from legitimate domains
+      if (classification === 'questionable') {
         classification = 'legitimate';
         threatLevel = 'safe';
         threatType = null;
       }
+      // Note: Suspicious emails remain medium threat even from legitimate domains
     }
     
     console.log(`Classification: ${classification}`);
