@@ -296,7 +296,7 @@ serve(async (req) => {
           keywords: classificationData?.detailed_analysis?.detected_features || null,
         };
 
-        // Insert email into database (fresh sync, no duplicates expected)
+        // Insert email into database with conflict handling for duplicates
         const { data: insertedEmail, error: insertError } = await supabase
           .from('emails')
           .insert(emailData)

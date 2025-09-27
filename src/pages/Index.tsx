@@ -642,13 +642,15 @@ const Index = () => {
         existing.id === email.id || // Same database ID
         (existing.outlook_id && email.outlook_id && existing.outlook_id === email.outlook_id) || // Same Outlook ID
         existing.message_id === email.message_id || // Same message ID
-        (existing.subject === email.subject && 
-         existing.sender === email.sender && 
-         new Date(existing.received_date).getTime() === new Date(email.received_date).getTime()) // Same content and exact timing
+        // Most important: same subject + sender (case insensitive)
+        (existing.subject?.toLowerCase().trim() === email.subject?.toLowerCase().trim() && 
+         existing.sender?.toLowerCase().trim() === email.sender?.toLowerCase().trim())
       );
       
       if (!isDuplicate) {
         acc.push(email);
+      } else {
+        console.log(`🚫 Frontend dedup: Filtered duplicate "${email.subject}" from ${email.sender}`);
       }
       return acc;
     }, [] as Email[]);
