@@ -197,6 +197,41 @@ const Index = () => {
     refetchInterval: 30000, // Refetch every 30 seconds
   });
 
+  // Query for emails with React Query for persistence across navigation
+  const { data: queryEmails = [], isLoading: emailsLoading, refetch: refetchEmails } = useQuery({
+    queryKey: ['emails', user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      
+      console.log('🔍 Fetching emails for user:', user.id);
+      
+      const { data, error } = await supabase
+        .from('emails')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('received_date', { ascending: false });
+      
+      if (error) {
+        console.error('Error fetching emails:', error);
+        throw error;
+      }
+      
+      console.log(`✅ Fetched ${data?.length || 0} emails`);
+      return data || [];
+    },
+    enabled: !!user,
+    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
+    refetchOnWindowFocus: false, // Don't refetch on window focus to prevent clearing
+    refetchOnMount: false, // Don't refetch on mount if data exists
+  });
+
+  // Use React Query emails as primary source
+  React.useEffect(() => {
+    if (queryEmails && Array.isArray(queryEmails) && queryEmails.length > 0) {
+      setEmails(queryEmails as Email[]);
+    }
+  }, [queryEmails]);
+
   const fetchEmails = async () => {
     if (!user) return;
     
@@ -353,7 +388,7 @@ const Index = () => {
         });
         
         // Always refresh database emails to show persisted data
-        fetchEmails();
+        refetchEmails();
       } else {
         // Check if it's a session timeout / reconnect required error
         if (data.reconnect_required) {
@@ -483,7 +518,7 @@ const Index = () => {
       });
 
       // Refresh emails to show updated classification
-      await fetchEmails();
+      await refetchEmails();
 
     } catch (error) {
       console.error('Re-classification error:', error);
