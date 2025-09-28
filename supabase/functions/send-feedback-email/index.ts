@@ -353,61 +353,16 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
-    // Fallback to Resend if Microsoft Graph fails or is not available
-    console.log('Using Resend as fallback email service');
-    const resendApiKey = Deno.env.get('RESEND_API_KEY');
+    // No fallback - Microsoft Graph API with mail.send permission is required
+    console.error('Microsoft Graph API not available or failed - no fallback email service');
     
-    if (!resendApiKey) {
-      throw new Error('No email service available - both Microsoft Graph and Resend are unavailable');
-    }
-
-    try {
-      const resendResponse = await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${resendApiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          from: 'onboarding@resend.dev', // Fallback sender for Resend
-          to: [feedback.email],
-          subject: subject,
-          html: emailHtml,
-        }),
-      });
-
-      if (!resendResponse.ok) {
-        const resendError = await resendResponse.text();
-        console.error('Resend API Error:', resendError);
-        
-        // For security alerts, still return success to not block the email blocking action
-        if (feedback.feedback_type === 'security') {
-          console.log('Security alert failed via Resend but returning success to not block email blocking');
-          return new Response(JSON.stringify({ 
-            success: true, 
-            warning: 'Security action completed but alert email failed',
-            emailSent: false 
-          }), {
-            status: 200,
-            headers: {
-              "Content-Type": "application/json",
-              ...corsHeaders,
-            },
-          });
-        }
-        
-        throw new Error(`Failed to send email via Resend: ${resendError}`);
-      }
-
-      const resendResult = await resendResponse.json();
-      console.log('Email sent successfully via Resend:', resendResult);
-      
+    // For security alerts, still return success to not block the email blocking action
+    if (feedback.feedback_type === 'security') {
+      console.log('Security alert failed to send but returning success to not block email blocking');
       return new Response(JSON.stringify({ 
         success: true, 
-        message: 'Email sent successfully',
-        emailSent: true,
-        method: 'resend',
-        result: resendResult
+        warning: 'Security action completed but alert email failed - Microsoft Graph API required',
+        emailSent: false 
       }), {
         status: 200,
         headers: {
@@ -415,28 +370,9 @@ const handler = async (req: Request): Promise<Response> => {
           ...corsHeaders,
         },
       });
-      
-    } catch (resendError: any) {
-      console.error('Resend send failed:', resendError);
-      
-      // For security alerts, still return success to not block the email blocking action
-      if (feedback.feedback_type === 'security') {
-        console.log('Security alert failed via Resend but returning success to not block email blocking');
-        return new Response(JSON.stringify({ 
-          success: true, 
-          warning: 'Security action completed but alert email failed',
-          emailSent: false 
-        }), {
-          status: 200,
-          headers: {
-            "Content-Type": "application/json",
-            ...corsHeaders,
-          },
-        });
-      }
-      
-      throw new Error(`Failed to send email via Resend: ${resendError.message || resendError}`);
     }
+    
+    throw new Error('Email service unavailable - Microsoft Graph API with mail.send permission is required');
 
   } catch (error: any) {
     console.error("=== ERROR IN SEND-FEEDBACK-EMAIL FUNCTION ===");
