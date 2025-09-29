@@ -210,6 +210,27 @@ serve(async (req) => {
       console.log('✅ Successfully cleared all existing emails for fresh sync');
     }
     
+    // Clear all existing email statistics for this user (fresh sync)
+    console.log('📊 Clearing all existing email statistics for fresh sync...');
+    const { error: statsDeleteError } = await supabase
+      .from('email_statistics')
+      .delete()
+      .eq('user_id', user.id);
+    
+    if (statsDeleteError) {
+      console.error('❌ Failed to clear existing email statistics:', statsDeleteError);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Failed to clear existing email statistics before sync',
+          success: false,
+          debug: statsDeleteError.message 
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    } else {
+      console.log('✅ Successfully cleared all existing email statistics for fresh sync');
+    }
+    
     // Filter out duplicate emails within the current batch before processing
     const uniqueEmails = [];
     const seenIdentifiers = new Set();
