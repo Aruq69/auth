@@ -1,0 +1,3 @@
+-- Clean up unused HuggingFace secret reference
+-- Note: The secret itself is managed by Supabase and will remain in the secrets list
+-- but is no longer used in the codebase
