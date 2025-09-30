@@ -291,7 +291,7 @@ serve(async (req) => {
           console.error('❌ Dataset-Based ML Classification FAILED:', email.subject, classificationError);
           // Continue processing other emails even if one fails
         } else if (classificationData) {
-          console.log(`✅ HuggingFace ML RESULT:`, 
+          console.log(`✅ Local ML RESULT:`, 
                      `📧 "${email.subject}"`,
                      `🎯 Classification: ${classificationData?.classification?.toUpperCase()}`, 
                      `🔥 Confidence: ${(classificationData?.confidence * 100).toFixed(1)}%`,

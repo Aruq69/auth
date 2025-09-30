@@ -70,38 +70,38 @@ export const RealTimeMLAnalysis: React.FC<MLAnalysisProps> = ({
 
   const performWebGPUAnalysis = async (text: string) => {
     try {
-      // Dynamic import to avoid build issues
-      const { pipeline } = await import('@huggingface/transformers');
+      // Use local rule-based analysis instead of HuggingFace
+      console.log('Local ML analysis starting...');
       
-      console.log('Loading sentiment analysis model...');
-      const sentiment = await pipeline(
-        'sentiment-analysis',
-        'Xenova/distilbert-base-uncased-finetuned-sst-2-english',
-        { device: 'webgpu' }
-      );
-
-      console.log('Loading text classification model...');
-      const toxicity = await pipeline(
-        'text-classification',
-        'Xenova/toxic-bert',
-        { device: 'webgpu' }
-      );
-
-      // Analyze sentiment
-      const sentimentResult = await sentiment(text.substring(0, 512));
-      const sentimentData = Array.isArray(sentimentResult) && sentimentResult.length > 0 ? sentimentResult[0] : sentimentResult;
-
-      // Analyze toxicity
-      const toxicityResult = await toxicity(text.substring(0, 512));
-      const toxicityData = Array.isArray(toxicityResult) && toxicityResult.length > 0 ? toxicityResult[0] : toxicityResult;
+      // Simple pattern-based sentiment analysis
+      const positiveWords = ['good', 'great', 'excellent', 'amazing', 'wonderful', 'fantastic', 'love', 'like'];
+      const negativeWords = ['bad', 'terrible', 'awful', 'hate', 'dislike', 'horrible', 'disgusting', 'worst'];
+      const toxicWords = ['spam', 'scam', 'fraud', 'fake', 'urgent', 'winner', 'lottery', 'congratulations'];
+      
+      const words = text.toLowerCase().split(/\s+/);
+      let positiveScore = 0;
+      let negativeScore = 0;
+      let toxicScore = 0;
+      
+      words.forEach(word => {
+        if (positiveWords.includes(word)) positiveScore++;
+        if (negativeWords.includes(word)) negativeScore++;
+        if (toxicWords.includes(word)) toxicScore++;
+      });
+      
+      const totalWords = words.length;
+      const sentiment = positiveScore > negativeScore ? 'POSITIVE' : 
+                       negativeScore > positiveScore ? 'NEGATIVE' : 'NEUTRAL';
+      const confidence = Math.max(positiveScore, negativeScore) / totalWords;
+      const toxicity = toxicScore / totalWords;
 
       // Detect threats based on content
       const threats = detectThreats(text);
 
       const result = {
-        toxicity: (toxicityData as any).label === 'TOXIC' ? (toxicityData as any).score : 1 - (toxicityData as any).score,
-        sentiment: (sentimentData as any).label,
-        confidence: Math.max((sentimentData as any).score, (toxicityData as any).score),
+        toxicity: Math.min(toxicity, 1.0),
+        sentiment,
+        confidence: Math.min(confidence, 1.0),
         threats,
         processing: false
       };
@@ -110,7 +110,7 @@ export const RealTimeMLAnalysis: React.FC<MLAnalysisProps> = ({
       onAnalysisComplete?.(result);
 
     } catch (error) {
-      console.error('WebGPU analysis failed:', error);
+      console.error('Local analysis failed:', error);
       throw error;
     }
   };

@@ -95,7 +95,7 @@ export const MLDashboard: React.FC = () => {
         <h2 className="text-2xl font-bold">ML Analytics Dashboard</h2>
         <Badge variant="outline" className="ml-auto">
           <Zap className="h-3 w-3 mr-1" />
-          HuggingFace Powered
+          AI Powered
         </Badge>
       </div>
 

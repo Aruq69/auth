@@ -107,7 +107,7 @@ class RobustEmailClassifier {
     ];
   }
 
-  // Load comprehensive training dataset with HuggingFace-style processing
+  // Load comprehensive training dataset with local ML processing
   async loadTrainingData(): Promise<void> {
     if (this.isInitialized) return;
     
@@ -115,16 +115,16 @@ class RobustEmailClassifier {
     console.log('Starting dataset-based ML email classification');
     
     try {
-      console.log('🔄 Loading HuggingFace Powered Comprehensive Dataset...');
+      console.log('🔄 Loading Local ML Powered Comprehensive Dataset...');
       
       // Use comprehensive training data with 40+ real-world examples
       this.trainingData = this.getComprehensiveTrainingData();
       
       console.log(`✅ Dataset loaded: ${this.trainingData.length} training samples`);
       console.log(`📊 Distribution -> Ham: ${this.trainingData.filter(d => d.label === 'ham').length}, Spam: ${this.trainingData.filter(d => d.label === 'spam').length}`);
-      console.log(`🎯 HuggingFace-style tokenization and feature extraction ready`);
+      console.log(`🎯 Local ML tokenization and feature extraction ready`);
       
-      // Train the model with HuggingFace-inspired techniques
+      // Train the model with local ML techniques
       this.trainModel();
       this.isInitialized = true;
       
@@ -194,9 +194,9 @@ class RobustEmailClassifier {
     ];
   }
 
-  // Enhanced training with HuggingFace-style feature extraction
+  // Enhanced training with local ML feature extraction
   trainModel(): void {
-    console.log('🤖 Training HuggingFace Powered Dataset-Based ML Model...');
+    console.log('🤖 Training Local Powered Dataset-Based ML Model...');
     
     // Reset counters
     this.spamWordCounts.clear();
@@ -214,7 +214,7 @@ class RobustEmailClassifier {
         this.hamCount++;
       }
 
-      // Enhanced tokenization with HuggingFace-style preprocessing
+      // Enhanced tokenization with local ML preprocessing
       const tokens = this.enhancedTokenize(sample.text);
       
       for (const token of tokens) {
@@ -232,11 +232,11 @@ class RobustEmailClassifier {
     console.log(`📊 Vocabulary size: ${new Set([...this.spamWordCounts.keys(), ...this.hamWordCounts.keys()]).size}`);
   }
 
-  // Enhanced tokenization with HuggingFace-inspired preprocessing
+  // Enhanced tokenization with local ML preprocessing
   enhancedTokenize(text: string): string[] {
     if (!text) return [];
     
-    // Advanced preprocessing inspired by HuggingFace transformers
+    // Advanced preprocessing with local ML techniques
     let processed = text.toLowerCase()
       .replace(/[^\w\s@.-]/g, ' ') // Keep email chars and periods
       .replace(/\s+/g, ' ')
@@ -245,7 +245,7 @@ class RobustEmailClassifier {
     // Extract basic tokens
     const tokens = processed.split(' ').filter(word => word.length > 1);
     
-    // Add HuggingFace-style special tokens for important patterns
+    // Add local ML special tokens for important patterns
     const specialTokens: string[] = [];
     
     // URL patterns
@@ -299,48 +299,39 @@ class RobustEmailClassifier {
       .trim();
   }
 
-  // HuggingFace-powered sentiment analysis
-  async analyzeWithHuggingFace(text: string): Promise<{sentiment: string, confidence: number, toxicity: number}> {
-    if (!hfToken) {
-      console.log('⚠️ No HuggingFace token, using fallback analysis');
-      return { sentiment: 'neutral', confidence: 0.5, toxicity: 0.0 };
-    }
-
+  // Local sentiment analysis (replacing HuggingFace)
+  async analyzeWithLocalML(text: string): Promise<{sentiment: string, confidence: number, toxicity: number}> {
     try {
-      // Use HuggingFace's sentiment analysis model
-      const sentimentResponse = await fetch(
-        'https://api-inference.huggingface.co/models/cardiffnlp/twitter-roberta-base-sentiment-latest',
-        {
-          headers: { Authorization: `Bearer ${hfToken}` },
-          method: 'POST',
-          body: JSON.stringify({ inputs: text.slice(0, 500) }) // Limit text length
-        }
-      );
-
-      const sentimentData = await sentimentResponse.json();
-      const sentiment = sentimentData[0]?.[0];
+      // Simple pattern-based sentiment analysis
+      const positiveWords = ['good', 'great', 'excellent', 'amazing', 'wonderful', 'fantastic', 'love', 'like'];
+      const negativeWords = ['bad', 'terrible', 'awful', 'hate', 'dislike', 'horrible', 'disgusting', 'worst'];
+      const toxicWords = ['spam', 'scam', 'fraud', 'fake', 'urgent', 'winner', 'lottery', 'congratulations'];
       
-      // Analyze toxicity/harmful content
-      const toxicityResponse = await fetch(
-        'https://api-inference.huggingface.co/models/unitary/toxic-bert',
-        {
-          headers: { Authorization: `Bearer ${hfToken}` },
-          method: 'POST',
-          body: JSON.stringify({ inputs: text.slice(0, 500) })
-        }
-      );
-
-      const toxicityData = await toxicityResponse.json();
-      const toxicityScore = toxicityData[0]?.find((item: any) => item.label === 'TOXIC')?.score || 0;
-
+      const words = text.toLowerCase().split(/\s+/);
+      let positiveScore = 0;
+      let negativeScore = 0;
+      let toxicScore = 0;
+      
+      words.forEach(word => {
+        if (positiveWords.includes(word)) positiveScore++;
+        if (negativeWords.includes(word)) negativeScore++;
+        if (toxicWords.includes(word)) toxicScore++;
+      });
+      
+      const totalWords = words.length;
+      const sentiment = positiveScore > negativeScore ? 'positive' : 
+                       negativeScore > positiveScore ? 'negative' : 'neutral';
+      const confidence = Math.max(positiveScore, negativeScore) / totalWords;
+      const toxicity = toxicScore / totalWords;
+      
       return {
-        sentiment: sentiment?.label || 'neutral',
-        confidence: sentiment?.score || 0.5,
-        toxicity: toxicityScore
+        sentiment,
+        confidence: Math.min(confidence, 1.0),
+        toxicity: Math.min(toxicity, 1.0)
       };
     } catch (error) {
-      console.error('HuggingFace analysis failed:', error);
-      return { sentiment: 'neutral', confidence: 0.5, toxicity: 0.0 };
+      console.error('Local ML analysis failed:', error);
+      return { sentiment: 'neutral', confidence: 0.5, toxicity: 0.2 };
     }
   }
 
@@ -404,7 +395,7 @@ class RobustEmailClassifier {
     };
   }
 
-  // Advanced ML classification with HuggingFace-inspired scoring
+  // Advanced ML classification with local ML scoring
   calculateNaiveBayesScore(text: string): number {
     if (!this.isInitialized) {
       console.log('⚠️ Model not initialized, using dataset-based fallback scoring');
@@ -436,7 +427,7 @@ class RobustEmailClassifier {
     // Convert to probability score (0-1)
     const spamProbability = Math.exp(spamScore) / (Math.exp(spamScore) + Math.exp(hamScore));
     
-    console.log(`🤖 HuggingFace ML Score: ${spamProbability.toFixed(4)} (${tokens.length} features processed)`);
+    console.log(`🤖 Local ML Score: ${spamProbability.toFixed(4)} (${tokens.length} features processed)`);
     
     return Math.min(Math.max(spamProbability, 0), 1);
   }
@@ -616,7 +607,7 @@ class RobustEmailClassifier {
   }
 
 
-  // Main classification method with comprehensive HuggingFace analysis
+  // Main classification method with comprehensive local ML analysis
   async classifyEmail(subject: string, sender: string, content: string): Promise<any> {
     console.log('=== ADVANCED ML SECURITY CLASSIFICATION ===');
     const startTime = performance.now();
@@ -630,9 +621,9 @@ class RobustEmailClassifier {
     
     console.log('🔍 Running comprehensive email security analysis...');
     
-    // 1. HuggingFace AI Analysis
-    const hfAnalysis = await this.analyzeWithHuggingFace(fullText);
-    console.log('🤖 HuggingFace Analysis:', hfAnalysis);
+    // 1. Local ML Analysis
+    const mlAnalysis = await this.analyzeWithLocalML(fullText);
+    console.log('🤖 Local ML Analysis:', mlAnalysis);
     
     // 2. Advanced Sender Security Analysis
     const senderSecurity = await this.analyzeSenderSecurity(sender);
@@ -665,7 +656,7 @@ class RobustEmailClassifier {
     let featureScore = 0;
     const detectedFeatures: string[] = [];
     
-    // Combine HuggingFace sentiment analysis
+    // Combine local sentiment analysis
     if (hfAnalysis.sentiment === 'NEGATIVE' && hfAnalysis.confidence > 0.7) {
       featureScore += 0.3;
       detectedFeatures.push(`Negative sentiment (${(hfAnalysis.confidence * 100).toFixed(1)}%)`);
@@ -839,7 +830,7 @@ class RobustEmailClassifier {
   }
 }
 
-console.log('🚀 Starting HuggingFace Powered Dataset-Based ML Email Classifier');
+console.log('🚀 Starting Local Dataset-Based ML Email Classifier');
 
 // Initialize the robust classifier
 const robustClassifier = new RobustEmailClassifier();
