@@ -328,39 +328,6 @@ export default function AdminEmails() {
     }
   };
 
-  const testEmailFunction = async () => {
-    try {
-      console.log('=== TESTING EMAIL FUNCTION ===');
-      const { data: result, error } = await supabase.functions.invoke('test-email', {
-        body: {
-          email: 'test@example.com'
-        }
-      });
-      
-      console.log('Test email result:', result);
-      console.log('Test email error:', error);
-      
-      if (error) {
-        toast({
-          title: 'Email Test Failed',
-          description: `Error: ${error.message}`,
-          variant: 'destructive',
-        });
-      } else {
-        toast({
-          title: 'Email Test Success',
-          description: 'Test email function is working correctly!',
-        });
-      }
-    } catch (error) {
-      console.error('Email test error:', error);
-      toast({
-        title: 'Email Test Failed',
-        description: 'Failed to test email function',
-        variant: 'destructive',
-      });
-    }
-  };
 
   const openBlockDialog = (emailId: string) => {
     console.log('=== OPENING BLOCK DIALOG ===');
@@ -502,11 +469,6 @@ export default function AdminEmails() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="mb-4">
-            <Button onClick={testEmailFunction} variant="outline" size="sm">
-              Test Email Function
-            </Button>
-          </div>
           {isLoading ? (
             <div className="text-center py-8">Loading emails...</div>
           ) : (

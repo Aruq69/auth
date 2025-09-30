@@ -9,16 +9,15 @@ const corsHeaders = {
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-const hfToken = Deno.env.get('HUGGING_FACE_ACCESS_TOKEN');
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-console.log('🤖 Advanced HuggingFace-Powered Email Security Classifier');
+console.log('🤖 Advanced Email Security Classifier');
 console.log('🔍 Multi-layered analysis: sender, content, linguistics, scam patterns');
 console.log('🧠 AI-powered misspelling detection and sentiment analysis');
-console.log('🛡️ Real-time threat assessment with HuggingFace models');
+console.log('🛡️ Real-time threat assessment with advanced patterns');
 
-// Advanced HuggingFace-Powered Email Security Classifier
+// Advanced Email Security Classifier
 class RobustEmailClassifier {
   private trainingData: Array<{label: string, text: string, sender?: string}> = [];
   private vocabulary: Map<string, number> = new Map();
