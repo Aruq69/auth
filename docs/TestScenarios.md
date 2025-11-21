@@ -186,7 +186,7 @@ This document outlines key test scenarios and test cases for the MailGuard email
 **Data Validation:**
 - Request includes `selectedEmail.id`
 - Response references actual email data
-- Uses Lovable AI Gateway (GROQ_API_KEY or OPENAI_API_KEY)
+- Uses Lovable AI Gateway (GROQ_API_KEY)
 
 ---
 
@@ -507,23 +507,6 @@ This document outlines key test scenarios and test cases for the MailGuard email
 4. **Malware Email:** Attachment with executable file extension
 5. **False Positive:** Legitimate email with security trigger words
 
-### Test Accounts
-- **Regular User:** `testuser@outlook.com`
-- **Admin User:** `admin@mailguard.app`
-- **New User:** For onboarding flow testing
 
 ---
 
-## Regression Test Checklist
-
-After each major release, verify:
-- [ ] User authentication (Outlook OAuth)
-- [ ] Email sync and classification
-- [ ] Threat detection accuracy (compare against baseline)
-- [ ] Alert generation and admin workflow
-- [ ] Privacy mode functionality
-- [ ] Chat assistant responses
-- [ ] Admin dashboard access controls
-- [ ] Edge function deployments successful
-- [ ] Database migrations applied correctly
-- [ ] RLS policies enforced
