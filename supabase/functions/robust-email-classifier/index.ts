@@ -657,15 +657,15 @@ class RobustEmailClassifier {
     const detectedFeatures: string[] = [];
     
     // Combine local sentiment analysis
-    if (hfAnalysis.sentiment === 'NEGATIVE' && hfAnalysis.confidence > 0.7) {
+    if (mlAnalysis.sentiment === 'NEGATIVE' && mlAnalysis.confidence > 0.7) {
       featureScore += 0.3;
-      detectedFeatures.push(`Negative sentiment (${(hfAnalysis.confidence * 100).toFixed(1)}%)`);
+      detectedFeatures.push(`Negative sentiment (${(mlAnalysis.confidence * 100).toFixed(1)}%)`);
     }
     
     // Add toxicity score
-    if (hfAnalysis.toxicity > 0.5) {
-      featureScore += hfAnalysis.toxicity * 0.4;
-      detectedFeatures.push(`High toxicity detected (${(hfAnalysis.toxicity * 100).toFixed(1)}%)`);
+    if (mlAnalysis.toxicity > 0.5) {
+      featureScore += mlAnalysis.toxicity * 0.4;
+      detectedFeatures.push(`High toxicity detected (${(mlAnalysis.toxicity * 100).toFixed(1)}%)`);
     }
     
     // Incorporate misspelling analysis
@@ -756,7 +756,7 @@ class RobustEmailClassifier {
     let threatType = null;
     
     // Check content analysis regardless of domain - legitimate domains get bonus but not complete override
-    if (hfAnalysis.toxicity > 0.7 || detectedScamPatterns.length >= 2) {
+    if (mlAnalysis.toxicity > 0.7 || detectedScamPatterns.length >= 2) {
       classification = 'spam';
       threatLevel = 'high';
       threatType = 'spam';
