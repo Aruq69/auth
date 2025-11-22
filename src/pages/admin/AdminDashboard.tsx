@@ -90,32 +90,6 @@ export default function AdminDashboard() {
           </Card>
         ))}
       </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
-            <CardDescription>Latest actions and alerts in the system</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center text-muted-foreground py-8">
-              Recent activity feed will be implemented here
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Threat Overview</CardTitle>
-            <CardDescription>Platform-wide security metrics</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center text-muted-foreground py-8">
-              Threat analytics chart will be implemented here
-            </div>
-          </CardContent>
-        </Card>
-      </div>
     </div>
   );
 }
