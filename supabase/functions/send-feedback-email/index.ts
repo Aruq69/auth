@@ -121,7 +121,7 @@ const handler = async (req: Request): Promise<Response> => {
           <!-- Header -->
           <div style="background: linear-gradient(135deg, #dc2626, #ef4444); padding: 30px; text-align: center; position: relative;">
             <div style="background: rgba(255,255,255,0.1); border-radius: 50%; width: 80px; height: 80px; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center;">
-              <span style="font-size: 36px;">🛡️</span>
+              <span style="font-size: 36px; color: white;">&#x26A0;</span>
             </div>
             <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">
               Security Alert
@@ -148,7 +148,7 @@ const handler = async (req: Request): Promise<Response> => {
             <!-- Blocked Email Details -->
             <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; padding: 25px; margin-bottom: 30px;">
               <h3 style="color: #374151; margin: 0 0 20px 0; font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
-                <span style="background: #6b7280; color: white; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px;">📧</span>
+                <span style="background: #6b7280; color: white; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px;">&#x2709;</span>
                 Blocked Email Details
               </h3>
               <div style="display: grid; gap: 12px;">
@@ -174,7 +174,7 @@ const handler = async (req: Request): Promise<Response> => {
             <!-- What Happens Next -->
             <div style="background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 12px; padding: 25px; margin-bottom: 30px; border-left: 6px solid #0ea5e9;">
               <h3 style="color: #0c4a6e; margin: 0 0 15px 0; font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
-                <span style="background: #0ea5e9; color: white; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px;">🛡️</span>
+                <span style="background: #0ea5e9; color: white; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px;">&#x2713;</span>
                 What We've Done
               </h3>
               <ul style="color: #374151; margin: 0; padding-left: 20px; line-height: 1.6;">
@@ -188,7 +188,7 @@ const handler = async (req: Request): Promise<Response> => {
             <!-- Security Tips -->
             <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 25px; border-left: 6px solid #16a34a;">
               <h3 style="color: #15803d; margin: 0 0 15px 0; font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
-                <span style="background: #16a34a; color: white; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px;">💡</span>
+                <span style="background: #16a34a; color: white; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px;">&#x2139;</span>
                 Security Awareness Tips
               </h3>
               <ul style="color: #374151; margin: 0; padding-left: 20px; line-height: 1.6;">
@@ -203,7 +203,7 @@ const handler = async (req: Request): Promise<Response> => {
           <!-- Footer -->
           <div style="background: #374151; padding: 20px; text-align: center; color: #d1d5db;">
             <p style="margin: 0; font-size: 14px; font-weight: 500;">
-              🤖 Mail Guard - AI-Powered Email Security
+              Mail Guard - AI-Powered Email Security
             </p>
             <p style="color: #6b7280; margin: 0; font-size: 12px;">
               Protecting your organization with machine learning and artificial intelligence
@@ -212,13 +212,13 @@ const handler = async (req: Request): Promise<Response> => {
         </div>
       `;
       
-      subject = `🛡️ Security Alert: Email Blocked by ${adminMatch} - Mail Guard`;
+      subject = `Security Alert: Email Blocked by ${adminMatch} - Mail Guard`;
     } else {
       // Standard Feedback Email Template
       emailHtml = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <div style="background: linear-gradient(135deg, #0ea5e9, #8b5cf6); padding: 20px; text-align: center;">
-            <h1 style="color: white; margin: 0; font-size: 24px;">📧 Mail Guard Feedback</h1>
+            <h1 style="color: white; margin: 0; font-size: 24px;">Mail Guard Feedback</h1>
           </div>
           
           <div style="padding: 30px; background: #f8fafc; border: 1px solid #e2e8f0;">
@@ -228,7 +228,7 @@ const handler = async (req: Request): Promise<Response> => {
               <h3 style="margin: 0 0 10px 0; color: #334155;">Feedback Details</h3>
               <p><strong>Type:</strong> <span style="background: #0ea5e9; color: white; padding: 2px 8px; border-radius: 4px; font-size: 12px;">${feedback.feedback_type.toUpperCase()}</span></p>
               <p><strong>Category:</strong> ${feedback.category}</p>
-              ${feedback.rating ? `<p><strong>Rating:</strong> ${'⭐'.repeat(feedback.rating)} (${feedback.rating}/5)</p>` : ''}
+              ${feedback.rating ? `<p><strong>Rating:</strong> ${feedback.rating}/5</p>` : ''}
               <p><strong>From:</strong> ${feedback.email}</p>
             </div>
             
@@ -258,19 +258,19 @@ const handler = async (req: Request): Promise<Response> => {
         </div>
       `;
       
-      // Set appropriate emoji for different feedback types
-      const typeEmojis: { [key: string]: string } = {
-        'bug': '🐛',
-        'feature': '✨',
-        'improvement': '📈',
-        'complaint': '😞',
-        'praise': '👏',
-        'question': '❓',
-        'security': '🛡️'
+      // Set subject for different feedback types
+      const typeLabels: { [key: string]: string } = {
+        'bug': 'Bug Report',
+        'feature': 'Feature Request',
+        'improvement': 'Improvement',
+        'complaint': 'Complaint',
+        'praise': 'Praise',
+        'question': 'Question',
+        'security': 'Security'
       };
       
-      const emoji = typeEmojis[feedback.feedback_type] || '📧';
-      subject = `${emoji} New ${feedback.feedback_type.charAt(0).toUpperCase() + feedback.feedback_type.slice(1)} Feedback from ${feedback.email}`;
+      const label = typeLabels[feedback.feedback_type] || 'Feedback';
+      subject = `[${label}] New ${feedback.feedback_type.charAt(0).toUpperCase() + feedback.feedback_type.slice(1)} Feedback from ${feedback.email}`;
     }
 
     console.log('Subject:', subject);

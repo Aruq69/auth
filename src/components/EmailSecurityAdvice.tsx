@@ -98,7 +98,7 @@ const EmailSecurityAdvice = ({ email }: EmailSecurityAdviceProps) => {
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center space-x-2 text-lg">
           <Brain className="h-5 w-5 text-orange-500" />
-          <span>🤖 AI Security Advisor</span>
+          <span>AI Security Advisor</span>
           {getIcon()}
         </CardTitle>
       </CardHeader>

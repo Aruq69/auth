@@ -273,7 +273,7 @@ export const MLDashboard: React.FC = () => {
                         <span className="font-medium text-sm">Recommendations:</span>
                         {classificationResult.recommendations.map((rec: string, index: number) => (
                           <div key={index} className="flex items-start space-x-2 text-sm">
-                            {rec.includes('⚠️') ? 
+                            {rec.toLowerCase().includes('warning') || rec.toLowerCase().includes('caution') ? 
                               <AlertTriangle className="h-3 w-3 text-orange-500 mt-0.5" /> :
                               <CheckCircle className="h-3 w-3 text-green-500 mt-0.5" />
                             }

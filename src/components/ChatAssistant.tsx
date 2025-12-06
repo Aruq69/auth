@@ -280,7 +280,7 @@ const ChatAssistant = ({ selectedEmail, emails = [] }: ChatAssistantProps) => {
               <span>MAIL GUARD ASSISTANT</span>
               <div className="flex items-center space-x-2 mt-1">
                 <Badge variant={systemStatus === 'active' ? 'default' : systemStatus === 'scanning' ? 'secondary' : 'outline'} className="text-xs">
-                  {systemStatus === 'active' ? '🟢 ACTIVE' : systemStatus === 'scanning' ? '🟡 SCANNING' : '⚪ IDLE'}
+                  {systemStatus === 'active' ? 'ACTIVE' : systemStatus === 'scanning' ? 'SCANNING' : 'IDLE'}
                 </Badge>
                 <span className="text-xs text-muted-foreground flex items-center">
                   <Activity className="h-3 w-3 mr-1" />
