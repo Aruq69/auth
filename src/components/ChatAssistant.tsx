@@ -289,12 +289,6 @@ const ChatAssistant = ({ selectedEmail, emails = [] }: ChatAssistantProps) => {
               </div>
             </div>
           </div>
-          <div className="text-right">
-            <div className="text-xs text-muted-foreground">Threat Detection</div>
-            <div className="text-lg font-bold">
-              {((animatedStats.high + animatedStats.medium) / Math.max(animatedStats.total, 1) * 100).toFixed(1)}%
-            </div>
-          </div>
         </CardTitle>
         
 

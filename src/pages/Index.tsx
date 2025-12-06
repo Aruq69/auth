@@ -1337,7 +1337,7 @@ const Index = () => {
                   {/* Email Info */}
                   <Card className="border-border/20 bg-card/80 backdrop-blur-sm hover-card transition-all duration-300 hover:bg-card/90">
                     <CardHeader>
-                      <CardTitle className="text-sm text-primary">📧 EMAIL DETAILS</CardTitle>
+                      <CardTitle className="text-sm text-primary">EMAIL DETAILS</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div>
@@ -1362,7 +1362,7 @@ const Index = () => {
                   {/* Analysis Results */}
                   <Card className="border-border/20 bg-card/50 backdrop-blur-sm hover-card">
                     <CardHeader>
-                      <CardTitle className="text-sm text-primary">🔍 ANALYSIS RESULTS</CardTitle>
+                      <CardTitle className="text-sm text-primary">ANALYSIS RESULTS</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div>
@@ -1426,7 +1426,7 @@ const Index = () => {
                  (selectedEmail.threat_level === 'medium' || selectedEmail.threat_level === 'high') && (
                   <Card className="border-border/20 bg-card/50 backdrop-blur-sm hover-card">
                     <CardHeader>
-                      <CardTitle className="text-sm text-primary">🔍 DETECTED KEYWORDS</CardTitle>
+                      <CardTitle className="text-sm text-primary">DETECTED KEYWORDS</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="flex flex-wrap gap-2">
@@ -1446,7 +1446,7 @@ const Index = () => {
                 {/* Email Content */}
                 <Card className="border-border/20 bg-card/50 backdrop-blur-sm hover-card">
                   <CardHeader>
-                    <CardTitle className="text-sm text-primary">📄 EMAIL CONTENT</CardTitle>
+                    <CardTitle className="text-sm text-primary">EMAIL CONTENT</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="bg-background/50 p-6 rounded-lg border-2 border-muted/20 min-h-[300px] max-h-[400px] overflow-y-auto">
@@ -1470,7 +1470,7 @@ const Index = () => {
                       });
                     }}
                   >
-                    📋 Copy Content
+                  Copy Content
                   </Button>
                   <Button
                     onClick={() => setShowEmailDialog(false)}
