@@ -1459,19 +1459,24 @@ const Index = () => {
 
           {/* Action Buttons */}
                 <div className="flex justify-between items-center pt-4 border-t border-primary/20">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      navigator.clipboard.writeText(selectedEmail.content || selectedEmail.raw_content || '');
-                      toast({
-                        title: "Content Copied",
-                        description: "Email content copied to clipboard",
-                      });
-                    }}
-                  >
-                    📋 Copy Content
-                  </Button>
+                  <div className="flex items-center gap-3">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        navigator.clipboard.writeText(selectedEmail.content || selectedEmail.raw_content || '');
+                        toast({
+                          title: "Content Copied",
+                          description: "Email content copied to clipboard",
+                        });
+                      }}
+                    >
+                      📋 Copy Content
+                    </Button>
+                    
+                    {/* Alert Admin Button - show for all users viewing emails */}
+                    <AlertEmailButton emailId={selectedEmail.id} size="sm" variant="destructive" />
+                  </div>
                   <Button
                     onClick={() => setShowEmailDialog(false)}
                     className="hover-button"

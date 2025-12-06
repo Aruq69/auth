@@ -358,6 +358,60 @@ serve(async (req) => {
                 console.error('Failed to create email alert:', alertError);
               }
             }
+            
+            // AUTO-BLOCK HIGH THREAT EMAILS
+            if (classificationData.threat_level === 'high') {
+              try {
+                // Insert block record
+                await supabase
+                  .from('email_blocks')
+                  .insert({
+                    email_id: insertedEmail.id,
+                    blocked_by_user_id: user.id,
+                    block_reason: `Auto-blocked: High threat ${classificationData.classification} email detected with ${Math.round((classificationData.confidence || 0) * 100)}% confidence. Threat type: ${classificationData.threat_type || 'unknown'}`,
+                    block_type: classificationData.threat_type || 'high_threat',
+                    is_active: true
+                  });
+                
+                console.log(`🚫 AUTO-BLOCKED high threat email: "${email.subject}" from ${email.from?.emailAddress?.address}`);
+                
+                // Try to create Outlook mail rule to block sender
+                try {
+                  const senderEmail = email.from?.emailAddress?.address;
+                  if (senderEmail) {
+                    const ruleResponse = await fetch('https://graph.microsoft.com/v1.0/me/mailFolders/inbox/messageRules', {
+                      method: 'POST',
+                      headers: {
+                        'Authorization': `Bearer ${tokenData.access_token}`,
+                        'Content-Type': 'application/json',
+                      },
+                      body: JSON.stringify({
+                        displayName: `MailGuard Auto-Block: ${senderEmail.substring(0, 30)}`,
+                        sequence: 1,
+                        isEnabled: true,
+                        conditions: {
+                          senderContains: [senderEmail]
+                        },
+                        actions: {
+                          delete: true,
+                          stopProcessingRules: true
+                        }
+                      })
+                    });
+                    
+                    if (ruleResponse.ok) {
+                      console.log(`✅ Outlook rule created to block sender: ${senderEmail}`);
+                    } else {
+                      console.log(`⚠️ Could not create Outlook rule: ${ruleResponse.status}`);
+                    }
+                  }
+                } catch (ruleError) {
+                  console.error('Failed to create Outlook blocking rule:', ruleError);
+                }
+              } catch (blockError) {
+                console.error('Failed to auto-block high threat email:', blockError);
+              }
+            }
           }
         }
 
