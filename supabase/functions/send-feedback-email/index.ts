@@ -1,5 +1,9 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
+import { Resend } from "npm:resend@2.0.0";
+
+const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+const ADMIN_EMAIL = "info@mailguard.live";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -353,26 +357,60 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
-    // No fallback - Microsoft Graph API with mail.send permission is required
-    console.error('Microsoft Graph API not available or failed - no fallback email service');
+    // Use Resend to send feedback to admin email
+    console.log('=== SENDING FEEDBACK VIA RESEND TO ADMIN ===');
+    console.log('Admin email:', ADMIN_EMAIL);
     
-    // For security alerts, still return success to not block the email blocking action
-    if (feedback.feedback_type === 'security') {
-      console.log('Security alert failed to send but returning success to not block email blocking');
+    try {
+      const emailResponse = await resend.emails.send({
+        from: "Mail Guard <onboarding@resend.dev>",
+        to: [ADMIN_EMAIL],
+        subject: subject,
+        html: emailHtml,
+      });
+
+      console.log("Email sent successfully via Resend:", emailResponse);
+
+      // Also send confirmation to user if it's not a security alert
+      if (feedback.feedback_type !== 'security' && feedback.email) {
+        try {
+          await resend.emails.send({
+            from: "Mail Guard <onboarding@resend.dev>",
+            to: [feedback.email],
+            subject: "We received your feedback - Mail Guard",
+            html: `
+              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                <div style="background: linear-gradient(135deg, #0ea5e9, #8b5cf6); padding: 20px; text-align: center;">
+                  <h1 style="color: white; margin: 0; font-size: 24px;">Thank You!</h1>
+                </div>
+                <div style="padding: 30px; background: #f8fafc;">
+                  <p>Hi,</p>
+                  <p>We've received your ${feedback.feedback_type} feedback and our team will review it shortly.</p>
+                  <p>Thank you for helping us improve Mail Guard!</p>
+                  <p>Best regards,<br>The Mail Guard Team</p>
+                </div>
+              </div>
+            `,
+          });
+          console.log("Confirmation email sent to user");
+        } catch (userEmailError) {
+          console.error("Failed to send confirmation to user:", userEmailError);
+        }
+      }
+
       return new Response(JSON.stringify({ 
         success: true, 
-        warning: 'Security action completed but alert email failed - Microsoft Graph API required',
-        emailSent: false 
+        message: 'Feedback sent successfully',
+        emailSent: true,
+        method: 'resend'
       }), {
         status: 200,
-        headers: {
-          "Content-Type": "application/json",
-          ...corsHeaders,
-        },
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       });
+    } catch (resendError: any) {
+      console.error("Resend email failed:", resendError);
+      throw new Error(`Failed to send email via Resend: ${resendError.message}`);
     }
-    
-    throw new Error('Email service unavailable - Microsoft Graph API with mail.send permission is required');
 
   } catch (error: any) {
     console.error("=== ERROR IN SEND-FEEDBACK-EMAIL FUNCTION ===");
