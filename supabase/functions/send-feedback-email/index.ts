@@ -363,19 +363,27 @@ const handler = async (req: Request): Promise<Response> => {
     
     try {
       const emailResponse = await resend.emails.send({
-        from: "Mail Guard <onboarding@resend.dev>",
+        from: "Mail Guard <noreply@mailguard.live>",
         to: [ADMIN_EMAIL],
         subject: subject,
         html: emailHtml,
       });
 
-      console.log("Email sent successfully via Resend:", emailResponse);
+      console.log("Resend API response:", JSON.stringify(emailResponse));
+
+      // Check if Resend returned an error
+      if (emailResponse.error) {
+        console.error("Resend returned error:", emailResponse.error);
+        throw new Error(`Resend error: ${emailResponse.error.message}`);
+      }
+
+      console.log("Email sent successfully to admin:", emailResponse.data?.id);
 
       // Also send confirmation to user if it's not a security alert
       if (feedback.feedback_type !== 'security' && feedback.email) {
         try {
-          await resend.emails.send({
-            from: "Mail Guard <onboarding@resend.dev>",
+          const userEmailResponse = await resend.emails.send({
+            from: "Mail Guard <noreply@mailguard.live>",
             to: [feedback.email],
             subject: "We received your feedback - Mail Guard",
             html: `
@@ -392,7 +400,12 @@ const handler = async (req: Request): Promise<Response> => {
               </div>
             `,
           });
-          console.log("Confirmation email sent to user");
+          
+          if (userEmailResponse.error) {
+            console.error("Failed to send confirmation to user:", userEmailResponse.error);
+          } else {
+            console.log("Confirmation email sent to user:", userEmailResponse.data?.id);
+          }
         } catch (userEmailError) {
           console.error("Failed to send confirmation to user:", userEmailError);
         }
