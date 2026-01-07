@@ -5,9 +5,8 @@ import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
-  // For GitHub Pages, set base to your repo name (e.g., '/repo-name/')
-  // Leave as '/' if using a custom domain
-  base: process.env.GITHUB_ACTIONS ? '/auth/' : '/',
+  // Using custom domain mailguard.live
+  base: '/',
   server: {
     host: "::",
     port: 8080,
